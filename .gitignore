@@ -1,0 +1,30 @@
+# Local-only original Flash archive/assets (do not redistribute unless you have rights)
+assets/original/
+
+# Node / web tooling
+node_modules/
+dist/
+build/
+.parcel-cache/
+.vite/
+
+# Mobile/desktop wrappers
+ios/
+android/
+windows/
+macos/
+.gradle/
+
+# Logs and env files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.*
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
