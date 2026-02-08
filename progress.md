@@ -17,6 +17,7 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added `capacitor.config.json` and root scripts for `cap` workflows.
 - Generated `android/` and `ios/` projects via Capacitor.
 - Smoke test passes after hardening timeouts/logging in `apps/web/scripts/smoke_test.mjs`.
+- Added an Electron desktop wrapper (`apps/desktop`) plus docs and CI pipeline for Windows packaging.
 
 ## Next up
 

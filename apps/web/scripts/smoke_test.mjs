@@ -200,13 +200,13 @@ async function main() {
     log("Running wrapper checks…");
     const checks = await withTimeout(
       page.evaluate(() => {
-      const status = document.querySelector("#status")?.textContent?.trim() ?? "";
-      const hasViewport = Boolean(document.querySelector("#viewport"));
-      const hasStage = Boolean(document.querySelector("#stage"));
-      const hasRuffle = typeof window.RufflePlayer?.newest === "function";
-      const hasRenderHook = typeof window.render_game_to_text === "function";
-      const stateText = hasRenderHook ? window.render_game_to_text() : null;
-      return { status, hasViewport, hasStage, hasRuffle, hasRenderHook, stateText };
+        const status = document.querySelector("#status")?.textContent?.trim() ?? "";
+        const hasViewport = Boolean(document.querySelector("#viewport"));
+        const hasStage = Boolean(document.querySelector("#stage"));
+        const hasRuffle = typeof window.RufflePlayer?.newest === "function";
+        const hasRenderHook = typeof window.render_game_to_text === "function";
+        const stateText = hasRenderHook ? window.render_game_to_text() : null;
+        return { status, hasViewport, hasStage, hasRuffle, hasRenderHook, stateText };
       }),
       args.timeoutMs,
       "page.evaluate wrapper checks",

@@ -20,7 +20,7 @@
 - [x] Asset download helper – Add documented scripts/instructions to fetch the SWF into `assets/original/` for local dev (without committing it).
 - [x] Android wrapper – Package the web build into an Android app (Capacitor or equivalent) and document build/signing steps.
 - [x] iOS wrapper – Package the web build into an iOS app (Capacitor or equivalent) and document build/signing steps.
-- [ ] Windows packaging path – Decide between Tauri/Electron/PWA and implement a Windows build pipeline for the chosen option.
+- [x] Windows packaging path – Decide between Tauri/Electron/PWA and implement a Windows build pipeline for the chosen option. (Chosen: Electron)
 - [ ] App icon + splash – Add initial icon/splash assets and hook them up for Android/iOS/Windows builds.
 - [ ] Debug logging mode – Add an optional debug overlay or log export so testers can share useful diagnostics.
 
@@ -30,6 +30,7 @@
 - [ ] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
 - [ ] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 - [ ] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.
+- [ ] Windows signing + metadata – Add app icon, publisher metadata, and code signing for the Electron installer.
 
 ## Low priority
 - [ ] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.

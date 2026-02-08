@@ -59,6 +59,7 @@ Start with a web wrapper that runs the SWF via **Ruffle** (WebAssembly), then pa
 - Desktop: Tauri/Electron or PWA
 
 See `docs/MOBILE_WRAPPER.md` for Android/iOS build steps.
+See `docs/DESKTOP_WRAPPER.md` for the Windows desktop wrapper (Electron).
 
 If Ruffle compatibility isn’t good enough for the full game, we can pivot to a full reimplementation using a cross‑platform engine (e.g., Godot).
 
