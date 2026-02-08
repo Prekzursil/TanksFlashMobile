@@ -23,13 +23,15 @@ Preferred: **GitHub Releases** (created on version tags like `v0.1.0`).
 
 What you’ll see attached to a Release:
 - Web: `Tanks-<tag>-web-dist.zip`
+- Web remake (Canvas/TS): `Tanks-<tag>-remake-web-dist.zip`
+- Remake (Godot): `Tanks-<tag>-remake-godot-windows.exe`, `Tanks-<tag>-remake-godot-linux.x86_64`, `Tanks-<tag>-remake-godot-macos.zip`
 - Windows: `Tanks-<tag>-windows-setup.exe` and `Tanks-<tag>-windows-portable.zip`
 - Android: `Tanks-<tag>-android-debug.apk`
 - Android (signed, optional): `Tanks-<tag>-android-release.apk` and `Tanks-<tag>-android-release.aab` (requires keystore secrets)
 - iOS (Simulator): `Tanks-<tag>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
 
 If there are no Releases yet, use **GitHub Actions artifacts** instead:
-- `web-dist`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
+- `web-dist`, `remake-web-dist`, `godot-windows`, `godot-linux`, `godot-macos`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
 
 Install/run quick notes:
 - Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL and use **Load SWF…**.

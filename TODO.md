@@ -16,10 +16,26 @@
 - [x] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
 - [x] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
 
+### Godot remake track (v1)
+- [x] Godot releases – On version tags, attach Godot desktop exports to GitHub Releases (Windows/Linux/macOS).
+- [ ] Godot HUD + menus – Add start/pause/settings screens plus an in-game HUD for turn state (wind/fuel/health/weapon).
+- [ ] Godot touch controls – Implement mobile-friendly aiming/movement/shoot UI (no hardware keyboard required).
+- [ ] Godot mobile exports – Add Android/iOS export presets and a minimal build doc for device/TestFlight builds.
+
 ### Web remake track (post-spike)
 - [x] Web remake spike – Prototype a clean-room Canvas/TypeScript remake with deterministic test hooks.
 - [x] Web remake CI smoke – Add Playwright smoke test and CI job for the remake web spike.
-- [ ] Web remake releases – On version tags, attach the remake web `dist/` zip to GitHub Releases.
+- [x] Web remake releases – On version tags, attach the remake web `dist/` zip to GitHub Releases.
+
+### Web remake track (v1)
+- [ ] Web remake HUD + menus – Add a basic HUD (angle/power/weapon) and menu screens (start/pause/settings).
+- [ ] Web remake touch controls – Add touch aiming + fire controls that work on phones/tablets.
+- [ ] Web remake gameplay parity – Track and close gaps vs the Godot ruleset (weapons, turn flow, damage model).
+
+### Store readiness
+- [ ] Store submission checklist – Document Play Store + App Store requirements (accounts, signing, screenshots, privacy).
+- [ ] Privacy policy + support URL – Add a simple privacy policy (even if “no data collected”) and a support/contact URL.
+- [ ] App metadata audit – Verify names/ids/icons/orientation/versioning are consistent across Android/iOS/Windows builds.
 
 ## Medium priority
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
