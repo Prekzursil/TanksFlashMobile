@@ -49,3 +49,4 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added a repo-level `VERSION` file and a `scripts/sync_versions.mjs` helper to keep web/desktop/Android/iOS versions aligned (CI verifies on PRs; Releases verify tag matches `VERSION`).
 - Added optional Android **release** signing on tags (signed `.apk`/`.aab` only when keystore secrets are present; PRs remain debug builds).
 - Added a Gamepad settings panel for button mapping + stick deadzone, persisted via `localStorage`.
+- Added a minimal Godot clean-room reimplementation spike (`apps/remake-godot`) with procedural terrain, destructible craters, turn-based firing, and a win condition; spike docs live in `docs/REIMPLEMENTATION_GODOT.md`.

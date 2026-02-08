@@ -10,6 +10,12 @@
 - [x] Smoke test harness – Add a Playwright script that launches the web build, waits for render, captures a screenshot, and fails on console errors.
 - [x] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
 
+### Godot remake track (post-spike)
+- [ ] Define remake v1 scope – Document must-have mechanics (movement/fuel/wind/weapons) and what we’ll defer.
+- [ ] Godot core gameplay v1 – Add tank movement + basic turn flow (fuel/timer) + wind and at least one weapon type.
+- [ ] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
+- [ ] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
+
 ## Medium priority
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
 - [x] Web tooling scaffold – Set up Vite (or similar), TypeScript, and a single-command dev loop (`npm run dev`).
@@ -43,7 +49,7 @@
 - [x] In-app help – Add a “Controls & Tips” screen explaining input, turn flow, and common gameplay mechanics.
 - [x] Build/release automation – Produce CI build artifacts (web `dist/`, Windows installer/zip, Android debug APK) for PRs/main pushes.
 - [x] Localization-ready UI – Route UI strings through a simple i18n layer (English first).
-- [ ] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
+- [x] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
 - [x] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
 - [x] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.
 - [x] iOS CI artifact (simulator) – Build an unsigned iOS Simulator `.app` on macOS runners for quick QA (no App Store signing).

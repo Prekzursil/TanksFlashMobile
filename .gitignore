@@ -24,6 +24,12 @@ pnpm-debug.log*
 # Generated outputs
 output/
 
+# Godot (reimplementation spike)
+.godot/
+.import/
+*.import
+.mono/
+
 # OS/editor cruft
 .DS_Store
 Thumbs.db
