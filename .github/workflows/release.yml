@@ -10,9 +10,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify:
+    name: Verify tag/version sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify versions match VERSION
+        run: node scripts/sync_versions.mjs --check
+
+      - name: Verify tag matches VERSION
+        run: |
+          set -euo pipefail
+          VERSION="$(cat VERSION | tr -d '\r\n')"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag does not match VERSION."
+            echo "  tag:     $GITHUB_REF_NAME"
+            echo "  VERSION: v$VERSION"
+            echo
+            echo "Fix by running: npm run sync:versions, committing, then tagging v$VERSION."
+            exit 1
+          fi
+
   build_web:
     name: Build (web dist zip)
     runs-on: ubuntu-latest
+    needs: verify
     defaults:
       run:
         working-directory: apps/web
@@ -51,6 +80,7 @@ jobs:
   build_windows:
     name: Build (Windows installer + portable zip)
     runs-on: windows-latest
+    needs: verify
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,6 +154,7 @@ jobs:
   build_android:
     name: Build (Android debug APK)
     runs-on: ubuntu-latest
+    needs: verify
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -164,6 +195,23 @@ jobs:
           ./gradlew assembleDebug
         working-directory: android
 
+      - name: Prepare Android keystore (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+        run: |
+          set -euo pipefail
+          KEYSTORE_PATH="${RUNNER_TEMP}/tanks-release.keystore"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_PATH"
+
+          echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build signed release (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+        run: ./gradlew bundleRelease assembleRelease
+        working-directory: android
+
       - name: Collect release assets
         run: |
           set -euo pipefail
@@ -177,16 +225,27 @@ jobs:
             cp android/app/build/outputs/apk/debug/output-metadata.json "release-out/Tanks-${TAG}-android-debug-metadata.json"
           fi
 
+          RELEASE_AAB="android/app/build/outputs/bundle/release/app-release.aab"
+          if [ -f "$RELEASE_AAB" ]; then
+            cp "$RELEASE_AAB" "release-out/Tanks-${TAG}-android-release.aab"
+          fi
+
+          RELEASE_APK="$(ls android/app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1 || true)"
+          if [ -n "$RELEASE_APK" ]; then
+            cp "$RELEASE_APK" "release-out/Tanks-${TAG}-android-release.apk"
+          fi
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-android
-          path: release-out/Tanks-*-android-debug*
+          path: release-out/Tanks-*-android-*
           if-no-files-found: error
 
   build_ios_simulator:
     name: Build (iOS simulator .app zip)
     runs-on: macos-latest
+    needs: verify
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -8,13 +8,67 @@ export type GamepadInput = {
   dispose: () => void;
 };
 
+export type GamepadSettings = {
+  actionAButtonIndex: number;
+  actionBButtonIndex: number;
+  axisPressThreshold: number;
+  axisReleaseThreshold: number;
+};
+
 export type GamepadInputOptions = {
   onStatusChange?: () => void;
   log?: (level: "info" | "warn" | "error", msg: string, data?: unknown) => void;
+  getSettings?: () => Partial<GamepadSettings>;
 };
 
-const AXIS_PRESS_THRESHOLD = 0.45;
-const AXIS_RELEASE_THRESHOLD = 0.35;
+const DEFAULT_SETTINGS: GamepadSettings = {
+  actionAButtonIndex: 0,
+  actionBButtonIndex: 1,
+  axisPressThreshold: 0.45,
+  axisReleaseThreshold: 0.35,
+};
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}
+
+function normalizeSettings(raw: Partial<GamepadSettings> | undefined): GamepadSettings {
+  const actionAButtonIndex = clampInt(raw?.actionAButtonIndex, 0, 15, DEFAULT_SETTINGS.actionAButtonIndex);
+  const actionBButtonIndex = clampInt(raw?.actionBButtonIndex, 0, 15, DEFAULT_SETTINGS.actionBButtonIndex);
+  const axisPressThreshold = clampNumber(
+    raw?.axisPressThreshold,
+    0.1,
+    0.95,
+    DEFAULT_SETTINGS.axisPressThreshold,
+  );
+  let axisReleaseThreshold = clampNumber(
+    raw?.axisReleaseThreshold,
+    0.05,
+    0.9,
+    DEFAULT_SETTINGS.axisReleaseThreshold,
+  );
+
+  // Ensure hysteresis; release threshold must be below press threshold.
+  if (axisReleaseThreshold >= axisPressThreshold) {
+    axisReleaseThreshold = Math.max(0.05, axisPressThreshold - 0.1);
+  }
+
+  // Keep at least a tiny gap so we don't thrash on the boundary.
+  axisReleaseThreshold = Math.min(axisReleaseThreshold, axisPressThreshold - 0.01);
+
+  return {
+    actionAButtonIndex,
+    actionBButtonIndex,
+    axisPressThreshold,
+    axisReleaseThreshold,
+  };
+}
 
 function getAxis(gamepad: Gamepad, index: number): number {
   const v = gamepad.axes?.[index];
@@ -26,17 +80,31 @@ function buttonPressed(gamepad: Gamepad, index: number): boolean {
   return Boolean(gamepad.buttons?.[index]?.pressed);
 }
 
-function axisNegativeActive(value: number, wasActive: boolean): boolean {
-  if (wasActive) return value < -AXIS_RELEASE_THRESHOLD;
-  return value < -AXIS_PRESS_THRESHOLD;
+function axisNegativeActive(
+  value: number,
+  wasActive: boolean,
+  pressThreshold: number,
+  releaseThreshold: number,
+): boolean {
+  if (wasActive) return value < -releaseThreshold;
+  return value < -pressThreshold;
 }
 
-function axisPositiveActive(value: number, wasActive: boolean): boolean {
-  if (wasActive) return value > AXIS_RELEASE_THRESHOLD;
-  return value > AXIS_PRESS_THRESHOLD;
+function axisPositiveActive(
+  value: number,
+  wasActive: boolean,
+  pressThreshold: number,
+  releaseThreshold: number,
+): boolean {
+  if (wasActive) return value > releaseThreshold;
+  return value > pressThreshold;
 }
 
-function computeDesired(gamepad: Gamepad, prev: Set<KeyCode>): Set<KeyCode> {
+function computeDesired(
+  gamepad: Gamepad,
+  prev: Set<KeyCode>,
+  settings: GamepadSettings,
+): Set<KeyCode> {
   const out = new Set<KeyCode>();
 
   const dpadUp = buttonPressed(gamepad, 12);
@@ -47,18 +115,41 @@ function computeDesired(gamepad: Gamepad, prev: Set<KeyCode>): Set<KeyCode> {
   const axisX = getAxis(gamepad, 0);
   const axisY = getAxis(gamepad, 1);
 
+  const pressThreshold = settings.axisPressThreshold;
+  const releaseThreshold = settings.axisReleaseThreshold;
+
   let left =
     dpadLeft ||
-    axisNegativeActive(axisX, prev.has("ArrowLeft") && !prev.has("ArrowRight") && !dpadRight);
+    axisNegativeActive(
+      axisX,
+      prev.has("ArrowLeft") && !prev.has("ArrowRight") && !dpadRight,
+      pressThreshold,
+      releaseThreshold,
+    );
   let right =
     dpadRight ||
-    axisPositiveActive(axisX, prev.has("ArrowRight") && !prev.has("ArrowLeft") && !dpadLeft);
+    axisPositiveActive(
+      axisX,
+      prev.has("ArrowRight") && !prev.has("ArrowLeft") && !dpadLeft,
+      pressThreshold,
+      releaseThreshold,
+    );
   let up =
     dpadUp ||
-    axisNegativeActive(axisY, prev.has("ArrowUp") && !prev.has("ArrowDown") && !dpadDown);
+    axisNegativeActive(
+      axisY,
+      prev.has("ArrowUp") && !prev.has("ArrowDown") && !dpadDown,
+      pressThreshold,
+      releaseThreshold,
+    );
   let down =
     dpadDown ||
-    axisPositiveActive(axisY, prev.has("ArrowDown") && !prev.has("ArrowUp") && !dpadUp);
+    axisPositiveActive(
+      axisY,
+      prev.has("ArrowDown") && !prev.has("ArrowUp") && !dpadUp,
+      pressThreshold,
+      releaseThreshold,
+    );
 
   // If both directions are active (stick + dpad disagreement, or jitter), drop both.
   if (left && right) {
@@ -75,11 +166,8 @@ function computeDesired(gamepad: Gamepad, prev: Set<KeyCode>): Set<KeyCode> {
   if (up) out.add("ArrowUp");
   if (down) out.add("ArrowDown");
 
-  // Standard mapping:
-  // - Button 0 (bottom) => Action A (Space)
-  // - Button 1 (right)  => Action B (Enter)
-  if (buttonPressed(gamepad, 0)) out.add("Space");
-  if (buttonPressed(gamepad, 1)) out.add("Enter");
+  if (buttonPressed(gamepad, settings.actionAButtonIndex)) out.add("Space");
+  if (buttonPressed(gamepad, settings.actionBButtonIndex)) out.add("Enter");
 
   return out;
 }
@@ -129,6 +217,8 @@ export function createGamepadInput(
     const gamepads = supported ? Array.from(navigator.getGamepads()) : [];
     updateConnectedCount(gamepads);
 
+    const settings = normalizeSettings(options.getSettings?.());
+
     if (!enabled) {
       for (const index of [...activeByIndex.keys()]) releaseIndex(index);
       rafId = window.requestAnimationFrame(tick);
@@ -143,7 +233,7 @@ export function createGamepadInput(
       }
 
       const prev = activeByIndex.get(index) ?? new Set<KeyCode>();
-      const desired = computeDesired(gp, prev);
+      const desired = computeDesired(gp, prev, settings);
       const source = sourceId(index);
 
       for (const code of desired) {

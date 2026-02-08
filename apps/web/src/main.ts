@@ -7,6 +7,8 @@ import { createInputMapper, type KeyCode } from "./input";
 import { createTouchControls, type TouchLayout, type TouchPreset } from "./touchControls";
 import { computeStageLayout, type ScaleMode } from "./viewport";
 
+declare const __APP_VERSION__: string;
+
 type LoadState = "idle" | "loading" | "ready" | "error";
 type SwfSource =
   | { type: "none" }
@@ -47,6 +49,31 @@ const KEY_OPTIONS: { code: string; label: string }[] = [
 ];
 
 const VALID_KEY_CODES = new Set(KEY_OPTIONS.map((o) => o.code));
+
+const GAMEPAD_BUTTON_OPTIONS: { index: number; label: string }[] = [
+  { index: 0, label: "Button 0 (Bottom / A / Cross)" },
+  { index: 1, label: "Button 1 (Right / B / Circle)" },
+  { index: 2, label: "Button 2 (Left / X / Square)" },
+  { index: 3, label: "Button 3 (Top / Y / Triangle)" },
+  { index: 4, label: "Button 4 (Left bumper)" },
+  { index: 5, label: "Button 5 (Right bumper)" },
+  { index: 6, label: "Button 6 (Left trigger)" },
+  { index: 7, label: "Button 7 (Right trigger)" },
+  { index: 8, label: "Button 8 (Back / Share)" },
+  { index: 9, label: "Button 9 (Start / Options)" },
+  { index: 10, label: "Button 10 (Left stick click)" },
+  { index: 11, label: "Button 11 (Right stick click)" },
+  { index: 12, label: "Button 12 (D-pad Up)" },
+  { index: 13, label: "Button 13 (D-pad Down)" },
+  { index: 14, label: "Button 14 (D-pad Left)" },
+  { index: 15, label: "Button 15 (D-pad Right)" },
+];
+
+const GAMEPAD_BUTTON_LABELS = new Map(GAMEPAD_BUTTON_OPTIONS.map((o) => [o.index, o.label]));
+
+function gamepadButtonLabel(index: number): string {
+  return GAMEPAD_BUTTON_LABELS.get(index) ?? `Button ${index}`;
+}
 
 const PRESET_TOUCH_SIZE: Record<TouchPreset, number> = {
   compact: 56,
@@ -176,6 +203,9 @@ const state: {
   isFullscreen: boolean;
   volume: number;
   gamepadEnabled: boolean;
+  gamepadActionAButtonIndex: number;
+  gamepadActionBButtonIndex: number;
+  gamepadAxisDeadzone: number;
   touchEnabled: boolean;
   touchPreset: TouchPreset;
   touchSize: number;
@@ -195,6 +225,9 @@ const state: {
   isFullscreen: Boolean(document.fullscreenElement),
   volume: loadInt(STORAGE_KEYS.volume, 100, 0, 100),
   gamepadEnabled: loadBool(STORAGE_KEYS.gamepadEnabled, true),
+  gamepadActionAButtonIndex: loadInt(STORAGE_KEYS.gamepadActionAButton, 0, 0, 15),
+  gamepadActionBButtonIndex: loadInt(STORAGE_KEYS.gamepadActionBButton, 1, 0, 15),
+  gamepadAxisDeadzone: loadInt(STORAGE_KEYS.gamepadAxisDeadzone, 45, 20, 80),
   touchEnabled: false,
   touchPreset: loadTouchPreset(),
   touchSize: 56,
@@ -214,6 +247,12 @@ state.touchSize = loadInt(
   40,
   96,
 );
+
+// Keep gamepad action buttons distinct by default to avoid accidental double-binding.
+if (state.gamepadActionAButtonIndex === state.gamepadActionBButtonIndex) {
+  state.gamepadActionBButtonIndex = state.gamepadActionAButtonIndex === 0 ? 1 : 0;
+  localStorage.setItem(STORAGE_KEYS.gamepadActionBButton, String(state.gamepadActionBButtonIndex));
+}
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Missing #app root element");
@@ -392,9 +431,25 @@ app.innerHTML = `
             <input id="gamepadEnabled" type="checkbox" />
           </label>
           <div id="gamepadStatus" class="hint"></div>
-          <div class="hint">
-            ${S.settings.gamepad.mappingHint}
+
+          <div class="grid2">
+            <label class="field">
+              <span class="label">${S.settings.gamepad.actionAButton}</span>
+              <select id="gamepadActionA"></select>
+            </label>
+            <label class="field">
+              <span class="label">${S.settings.gamepad.actionBButton}</span>
+              <select id="gamepadActionB"></select>
+            </label>
           </div>
+
+          <label class="field rangeField">
+            <span class="label">${S.settings.gamepad.stickDeadzone}</span>
+            <input id="gamepadDeadzone" type="range" min="20" max="80" step="5" />
+            <span id="gamepadDeadzoneValue" class="value"></span>
+          </label>
+          <div class="hint">${S.settings.gamepad.deadzoneHint}</div>
+          <div id="gamepadMappingHint" class="hint"></div>
         </section>
 
         <section class="panel">
@@ -431,6 +486,11 @@ app.innerHTML = `
           <div class="hint">
             ${S.settings.storage.hint}
           </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">${S.settings.about.title}</div>
+          <div class="hint">${format(S.settings.about.version, { version: __APP_VERSION__ })}</div>
         </section>
 
         <section class="panel">
@@ -579,6 +639,11 @@ const volumeEl = required<HTMLInputElement>("#volume");
 const volumeValueEl = required<HTMLSpanElement>("#volumeValue");
 const gamepadEnabledEl = required<HTMLInputElement>("#gamepadEnabled");
 const gamepadStatusEl = required<HTMLDivElement>("#gamepadStatus");
+const gamepadActionAEl = required<HTMLSelectElement>("#gamepadActionA");
+const gamepadActionBEl = required<HTMLSelectElement>("#gamepadActionB");
+const gamepadDeadzoneEl = required<HTMLInputElement>("#gamepadDeadzone");
+const gamepadDeadzoneValueEl = required<HTMLSpanElement>("#gamepadDeadzoneValue");
+const gamepadMappingHintEl = required<HTMLDivElement>("#gamepadMappingHint");
 const keyRemapEnabledEl = required<HTMLInputElement>("#keyRemapEnabled");
 const keyUpEl = required<HTMLSelectElement>("#keyUp");
 const keyDownEl = required<HTMLSelectElement>("#keyDown");
@@ -644,11 +709,21 @@ function addLog(level: LogLevel, msg: string, data?: unknown) {
 }
 hookGlobalErrors(addLog);
 
+function currentGamepadSettings() {
+  const press = clampInt(state.gamepadAxisDeadzone, 20, 80) / 100;
+  const release = Math.max(0.05, Math.min(press - 0.01, press - 0.1));
+  return {
+    actionAButtonIndex: clampInt(state.gamepadActionAButtonIndex, 0, 15),
+    actionBButtonIndex: clampInt(state.gamepadActionBButtonIndex, 0, 15),
+    axisPressThreshold: press,
+    axisReleaseThreshold: release,
+  };
+}
+
 const gamepadInput = createGamepadInput(inputMapper, {
   log: addLog,
-  onStatusChange() {
-    renderGamepadStatus();
-  },
+  onStatusChange: renderGamepadStatus,
+  getSettings: currentGamepadSettings,
 });
 gamepadInput.setEnabled(state.gamepadEnabled);
 
@@ -683,6 +758,7 @@ function renderDebugOverlay() {
   const lastErr = state.lastError ? truncate(state.lastError) : "-";
   debugOverlayEl.textContent = [
     "TANKS debug",
+    `version: ${__APP_VERSION__}`,
     `load: ${state.loadState}`,
     `swf: ${swfLabel}`,
     `scale: ${state.scaleMode}  full: ${state.isFullscreen ? "yes" : "no"}`,
@@ -715,6 +791,7 @@ function applyDebugUi() {
 addLog("info", "wrapper.start", {
   mode: import.meta.env.MODE,
   baseUrl: import.meta.env.BASE_URL,
+  version: __APP_VERSION__,
 });
 applyDebugUi();
 
@@ -989,6 +1066,31 @@ function populateKeySelect(select: HTMLSelectElement) {
   );
 }
 
+function populateGamepadButtonSelect(select: HTMLSelectElement) {
+  select.replaceChildren(
+    ...GAMEPAD_BUTTON_OPTIONS.map((opt) => {
+      const o = document.createElement("option");
+      o.value = String(opt.index);
+      o.textContent = opt.label;
+      return o;
+    }),
+  );
+}
+
+function updateGamepadButtonSelectDisabledOptions() {
+  const selects = [gamepadActionAEl, gamepadActionBEl];
+  const selected = new Map(selects.map((s) => [s, s.value]));
+
+  for (const select of selects) {
+    for (const option of select.options) {
+      const usedByOther = [...selected.entries()].some(
+        ([s, v]) => s !== select && v === option.value,
+      );
+      option.disabled = usedByOther;
+    }
+  }
+}
+
 function updateKeybindSelectDisabledOptions() {
   const selects = [keyUpEl, keyDownEl, keyLeftEl, keyRightEl, keyAEl, keyBEl];
   const selected = new Map(selects.map((s) => [s, s.value]));
@@ -1058,6 +1160,21 @@ function syncSettingsUi() {
   gamepadEnabledEl.checked = state.gamepadEnabled;
   renderGamepadStatus();
 
+  gamepadActionAEl.value = String(state.gamepadActionAButtonIndex);
+  gamepadActionBEl.value = String(state.gamepadActionBButtonIndex);
+  gamepadDeadzoneEl.value = String(state.gamepadAxisDeadzone);
+  gamepadDeadzoneValueEl.textContent = `${state.gamepadAxisDeadzone}%`;
+
+  const gamepadSupported = gamepadInput.isSupported();
+  gamepadActionAEl.disabled = !gamepadSupported;
+  gamepadActionBEl.disabled = !gamepadSupported;
+  gamepadDeadzoneEl.disabled = !gamepadSupported;
+  gamepadMappingHintEl.textContent = format(S.settings.gamepad.mappingHint, {
+    actionA: gamepadButtonLabel(state.gamepadActionAButtonIndex),
+    actionB: gamepadButtonLabel(state.gamepadActionBButtonIndex),
+  });
+  updateGamepadButtonSelectDisabledOptions();
+
   touchEnabledEl.checked = state.touchEnabled;
   touchControlsFields.style.display = state.touchEnabled ? "" : "none";
 
@@ -1089,6 +1206,9 @@ populateKeySelect(keyLeftEl);
 populateKeySelect(keyRightEl);
 populateKeySelect(keyAEl);
 populateKeySelect(keyBEl);
+
+populateGamepadButtonSelect(gamepadActionAEl);
+populateGamepadButtonSelect(gamepadActionBEl);
 
 syncSettingsUi();
 
@@ -1147,6 +1267,29 @@ gamepadEnabledEl.addEventListener("change", () => {
   localStorage.setItem(STORAGE_KEYS.gamepadEnabled, state.gamepadEnabled ? "1" : "0");
   addLog("info", "gamepad.enabled", { enabled: state.gamepadEnabled });
   gamepadInput.setEnabled(state.gamepadEnabled);
+  syncSettingsUi();
+});
+
+gamepadActionAEl.addEventListener("change", () => {
+  state.gamepadActionAButtonIndex = clampInt(Number(gamepadActionAEl.value), 0, 15);
+  localStorage.setItem(STORAGE_KEYS.gamepadActionAButton, String(state.gamepadActionAButtonIndex));
+  addLog("info", "gamepad.map.actionA", { index: state.gamepadActionAButtonIndex });
+  updateGamepadButtonSelectDisabledOptions();
+  syncSettingsUi();
+});
+
+gamepadActionBEl.addEventListener("change", () => {
+  state.gamepadActionBButtonIndex = clampInt(Number(gamepadActionBEl.value), 0, 15);
+  localStorage.setItem(STORAGE_KEYS.gamepadActionBButton, String(state.gamepadActionBButtonIndex));
+  addLog("info", "gamepad.map.actionB", { index: state.gamepadActionBButtonIndex });
+  updateGamepadButtonSelectDisabledOptions();
+  syncSettingsUi();
+});
+
+gamepadDeadzoneEl.addEventListener("input", () => {
+  state.gamepadAxisDeadzone = clampInt(Number(gamepadDeadzoneEl.value), 20, 80);
+  localStorage.setItem(STORAGE_KEYS.gamepadAxisDeadzone, String(state.gamepadAxisDeadzone));
+  addLog("info", "gamepad.deadzone", { deadzone: state.gamepadAxisDeadzone });
   syncSettingsUi();
 });
 
@@ -1358,6 +1501,7 @@ async function collectDiagnostics() {
       protocol: window.location.protocol,
     },
     env: {
+      appVersion: __APP_VERSION__,
       mode: import.meta.env.MODE,
       baseUrl: import.meta.env.BASE_URL,
       dev: import.meta.env.DEV,
@@ -1394,6 +1538,11 @@ async function collectDiagnostics() {
         supported: gamepadInput.isSupported(),
         enabled: state.gamepadEnabled,
         connected: gamepadInput.getConnectedCount(),
+        mapping: {
+          actionAButtonIndex: state.gamepadActionAButtonIndex,
+          actionBButtonIndex: state.gamepadActionBButtonIndex,
+          axisDeadzone: state.gamepadAxisDeadzone,
+        },
       },
       pressed: inputMapper.snapshotPressed(),
       touch: {
@@ -1584,6 +1733,11 @@ window.render_game_to_text = () =>
       supported: gamepadInput.isSupported(),
       enabled: state.gamepadEnabled,
       connected: gamepadInput.getConnectedCount(),
+      mapping: {
+        actionAButtonIndex: state.gamepadActionAButtonIndex,
+        actionBButtonIndex: state.gamepadActionBButtonIndex,
+        axisDeadzone: state.gamepadAxisDeadzone,
+      },
     },
     pressed: inputMapper.snapshotPressed(),
     touch: {

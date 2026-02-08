@@ -33,6 +33,18 @@ This opens Android Studio. From there:
 2. Use **Run** to build and install.
 3. For release builds, configure signing in `android/app/build.gradle` and build a signed APK/AAB.
 
+### CI release signing (optional)
+
+On version tags (e.g. `v0.1.0`), the Release workflow can also produce **signed** Android artifacts if a keystore is
+provided via GitHub Secrets:
+
+- `ANDROID_KEYSTORE_BASE64` (base64 of your `.jks`/`.keystore`)
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+PR CI stays on debug builds; the signed release output is only attempted for tags when all secrets are present.
+
 ## iOS
 
 ```bash

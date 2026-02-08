@@ -22,10 +22,11 @@ CI note:
 Preferred: **GitHub Releases** (created on version tags like `v0.1.0`).
 
 What you’ll see attached to a Release:
-- Web: `Tanks-<version>-web-dist.zip`
-- Windows: `Tanks-<version>-windows-setup.exe` and `Tanks-<version>-windows-portable.zip`
-- Android: `Tanks-<version>-android-debug.apk`
-- iOS (Simulator): `Tanks-<version>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
+- Web: `Tanks-<tag>-web-dist.zip`
+- Windows: `Tanks-<tag>-windows-setup.exe` and `Tanks-<tag>-windows-portable.zip`
+- Android: `Tanks-<tag>-android-debug.apk`
+- Android (signed, optional): `Tanks-<tag>-android-release.apk` and `Tanks-<tag>-android-release.aab` (requires keystore secrets)
+- iOS (Simulator): `Tanks-<tag>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
 
 If there are no Releases yet, use **GitHub Actions artifacts** instead:
 - `web-dist`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
@@ -38,6 +39,10 @@ Install/run quick notes:
 
 SWF note:
 - Releases/artifacts **do not** include the original game SWF. Use the in-app **Load SWF…** button or place it at `assets/original/tanks.swf` for local dev.
+
+Maintainers note (version tags):
+- Bump `VERSION`, run `npm run sync:versions`, commit, then tag `v<same-version>` and push the tag.
+- The Release workflow verifies the tag matches `VERSION` before publishing artifacts.
 
 ## Quick start (web)
 
@@ -59,7 +64,7 @@ Notes:
 - If you don’t have `assets/original/tanks.swf`, you can still use the **Load SWF…** button in the UI.
 - Fullscreen: button or press `f`
 - Touch overlay: Settings → Touch Controls (auto-defaults on coarse pointers)
-- Gamepad: Settings → Gamepad (standard mapping; move with d-pad/left stick, action buttons map to Space/Enter)
+- Gamepad: Settings → Gamepad (configure buttons + deadzone; defaults map to Space/Enter)
 - Controls & tips: click **Help**
 
 ### Smoke test

@@ -251,6 +251,48 @@ async function main() {
       throw new Error(`UI scale did not apply (expected ~1.2, got ${String(uiScale)})`);
     }
 
+    // Exercise gamepad settings controls once.
+    /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
+    await page.evaluate(() => {
+      const actionA = document.querySelector("#gamepadActionA");
+      if (!(actionA instanceof HTMLSelectElement)) {
+        throw new Error("Missing #gamepadActionA select");
+      }
+      actionA.value = "2";
+      actionA.dispatchEvent(new Event("change", { bubbles: true }));
+
+      const deadzone = document.querySelector("#gamepadDeadzone");
+      if (!(deadzone instanceof HTMLInputElement)) {
+        throw new Error("Missing #gamepadDeadzone range input");
+      }
+      deadzone.value = "60";
+      deadzone.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    const gamepadSettings = await page.evaluate(() => {
+      const hint = document.querySelector("#gamepadMappingHint")?.textContent?.trim() ?? "";
+      return {
+        actionA: localStorage.getItem("tanks.gamepadActionAButton"),
+        deadzone: localStorage.getItem("tanks.gamepadAxisDeadzone"),
+        hint,
+      };
+    });
+    /* eslint-enable no-undef */
+
+    if (gamepadSettings.actionA !== "2") {
+      throw new Error(
+        `Gamepad Action A mapping did not persist (expected "2", got ${String(gamepadSettings.actionA)})`,
+      );
+    }
+    if (gamepadSettings.deadzone !== "60") {
+      throw new Error(
+        `Gamepad deadzone did not persist (expected "60", got ${String(gamepadSettings.deadzone)})`,
+      );
+    }
+    if (!gamepadSettings.hint) {
+      throw new Error("Gamepad mapping hint did not render.");
+    }
+
     log("Capturing screenshot…");
     await withTimeout(
       page.screenshot({ path: path.join(args.outDir, "smoke.png"), fullPage: true }),

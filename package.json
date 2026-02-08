@@ -2,6 +2,7 @@
   "name": "tanks-flash-mobile",
   "private": true,
   "scripts": {
+    "sync:versions": "node scripts/sync_versions.mjs",
     "dev:web": "npm --prefix apps/web run dev",
     "build:web": "npm --prefix apps/web run build",
     "test:web": "npm --prefix apps/web test",

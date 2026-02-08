@@ -33,9 +33,9 @@
 - [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
 - [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
 - [x] Helper for Windows signing secrets – Add a script to base64-encode a `.pfx` for GitHub Secrets without printing it.
-- [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI.
-- [ ] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
-- [ ] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
+- [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI (optional; shipping unsigned for now).
+- [x] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
+- [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
@@ -45,6 +45,6 @@
 - [x] Localization-ready UI – Route UI strings through a simple i18n layer (English first).
 - [ ] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
 - [x] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
-- [ ] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.
+- [x] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.
 - [x] iOS CI artifact (simulator) – Build an unsigned iOS Simulator `.app` on macOS runners for quick QA (no App Store signing).
 - [x] Tag-based releases – On version tags, attach artifacts to a GitHub Release (keeps PR CI as-is).

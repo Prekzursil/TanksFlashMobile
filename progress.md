@@ -46,3 +46,6 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added an iOS Simulator CI artifact (`ios-simulator-app`) for PRs/main so QA can install on Simulator without App Store signing.
 - Added a tag-based release workflow that attaches web/windows/android/ios-simulator artifacts (plus checksums) to GitHub Releases.
 - Added a README “Downloads” section with a screenshot and quick install/run notes per platform.
+- Added a repo-level `VERSION` file and a `scripts/sync_versions.mjs` helper to keep web/desktop/Android/iOS versions aligned (CI verifies on PRs; Releases verify tag matches `VERSION`).
+- Added optional Android **release** signing on tags (signed `.apk`/`.aab` only when keystore secrets are present; PRs remain debug builds).
+- Added a Gamepad settings panel for button mapping + stick deadzone, persisted via `localStorage`.

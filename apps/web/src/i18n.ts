@@ -64,8 +64,11 @@ export const STRINGS = {
         statusConnectedPrefix: "Connected:",
         statusConnectedSuffixSingular: "gamepad.",
         statusConnectedSuffixPlural: "gamepads.",
-        mappingHint:
-          "Mapping: D-pad/left stick = move, bottom face button = Action A (Space), right face button = Action B (Enter).",
+        actionAButton: "Action A button",
+        actionBButton: "Action B button",
+        stickDeadzone: "Stick deadzone",
+        deadzoneHint: "Higher = less jitter, but needs more stick travel to trigger movement.",
+        mappingHint: "Mapping: D-pad/left stick = move. Action A = {actionA}. Action B = {actionB}.",
       },
       storage: {
         title: "Storage",
@@ -89,6 +92,10 @@ export const STRINGS = {
         clearLogs: "Clear logs",
         hint:
           "Diagnostics include wrapper settings + runtime info + recent wrapper logs. It does not include the SWF itself.",
+      },
+      about: {
+        title: "About",
+        version: "Wrapper version: {version}",
       },
     },
     help: {
@@ -123,11 +130,11 @@ export const STRINGS = {
         move: "Move:",
         moveSuffix: "D-pad or left stick",
         actionA: "Action A:",
-        actionASuffix: "bottom face button (often A / Cross / B depending on controller)",
+        actionASuffix: "configured in Settings → Gamepad",
         actionB: "Action B:",
-        actionBSuffix: "right face button (often B / Circle / A depending on controller)",
+        actionBSuffix: "configured in Settings → Gamepad",
         note:
-          "The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves strangely, we can add a mapping customization screen as a follow-up.",
+          "The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves strangely, try adjusting the button mapping and stick deadzone in Settings.",
       },
       troubleshooting: {
         title: "Troubleshooting",
