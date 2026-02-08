@@ -18,6 +18,7 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Generated `android/` and `ios/` projects via Capacitor.
 - Smoke test passes after hardening timeouts/logging in `apps/web/scripts/smoke_test.mjs`.
 - Added an Electron desktop wrapper (`apps/desktop`) plus docs and CI pipeline for Windows packaging.
+- Added original branding assets + generator script and wired icons/splashes for Android/iOS/Windows (`assets/branding/`, `scripts/generate_branding_assets.py`).
 
 ## Next up
 

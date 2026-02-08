@@ -21,7 +21,7 @@
 - [x] Android wrapper – Package the web build into an Android app (Capacitor or equivalent) and document build/signing steps.
 - [x] iOS wrapper – Package the web build into an iOS app (Capacitor or equivalent) and document build/signing steps.
 - [x] Windows packaging path – Decide between Tauri/Electron/PWA and implement a Windows build pipeline for the chosen option. (Chosen: Electron)
-- [ ] App icon + splash – Add initial icon/splash assets and hook them up for Android/iOS/Windows builds.
+- [x] App icon + splash – Add initial icon/splash assets and hook them up for Android/iOS/Windows builds.
 - [ ] Debug logging mode – Add an optional debug overlay or log export so testers can share useful diagnostics.
 
 ### Discovered follow-ups

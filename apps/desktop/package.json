@@ -36,12 +36,14 @@
       }
     ],
     "directories": {
+      "buildResources": "build",
       "output": "dist"
     },
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "build/icon.ico"
     }
   }
 }

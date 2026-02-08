@@ -49,3 +49,4 @@ This opens Xcode. From there:
 
 - The app id and name are defined in `capacitor.config.json`. Update those before publishing.
 - If the web wrapper changes, re-run `npm run cap:sync` to refresh native assets.
+- Icons/splash assets live under `assets/branding/` and can be regenerated via `python3 scripts/generate_branding_assets.py`.
