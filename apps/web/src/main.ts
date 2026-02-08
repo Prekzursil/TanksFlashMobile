@@ -2,7 +2,7 @@ import "./style.css";
 import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from "./config";
 import { createLogBuffer, hookGlobalErrors, type LogLevel } from "./debug";
 import { createInputMapper, type KeyCode } from "./input";
-import { createTouchControls, type TouchPreset } from "./touchControls";
+import { createTouchControls, type TouchLayout, type TouchPreset } from "./touchControls";
 import { computeStageLayout, type ScaleMode } from "./viewport";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
@@ -12,6 +12,7 @@ type SwfSource =
   | { type: "file"; name: string; url: string };
 
 type Keybinds = Record<KeyCode, string>;
+type TouchLayouts = Partial<Record<TouchPreset, TouchLayout>>;
 
 const DEFAULT_KEYBINDS: Keybinds = {
   ArrowUp: "ArrowUp",
@@ -46,11 +47,75 @@ const VALID_KEY_CODES = new Set(KEY_OPTIONS.map((o) => o.code));
 const PRESET_TOUCH_SIZE: Record<TouchPreset, number> = {
   compact: 56,
   comfortable: 72,
+  leftHanded: 56,
+  tablet: 80,
 };
 
 function clampInt(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+const VALID_TOUCH_PRESETS = new Set<TouchPreset>([
+  "compact",
+  "comfortable",
+  "leftHanded",
+  "tablet",
+]);
+
+function defaultTouchLayout(): TouchLayout {
+  return {
+    left: { x: 0, y: 0 },
+    right: { x: 0, y: 0 },
+  };
+}
+
+function parseTouchLayout(raw: unknown): TouchLayout | null {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+  const left = (raw as { left?: unknown }).left;
+  const right = (raw as { right?: unknown }).right;
+  if (typeof left !== "object" || left === null || Array.isArray(left)) return null;
+  if (typeof right !== "object" || right === null || Array.isArray(right)) return null;
+
+  const clampOffset = (value: unknown): number | null => {
+    if (typeof value !== "number" || !Number.isFinite(value)) return null;
+    // Layout offsets are relative to screen CSS px; clamp to avoid absurd values.
+    return clampInt(value, -5000, 5000);
+  };
+
+  const leftX = clampOffset((left as { x?: unknown }).x);
+  const leftY = clampOffset((left as { y?: unknown }).y);
+  const rightX = clampOffset((right as { x?: unknown }).x);
+  const rightY = clampOffset((right as { y?: unknown }).y);
+  if (leftX == null || leftY == null || rightX == null || rightY == null) return null;
+
+  return { left: { x: leftX, y: leftY }, right: { x: rightX, y: rightY } };
+}
+
+function loadTouchPreset(): TouchPreset {
+  const raw = localStorage.getItem(STORAGE_KEYS.touchPreset);
+  if (!raw) return "compact";
+  if (VALID_TOUCH_PRESETS.has(raw as TouchPreset)) return raw as TouchPreset;
+  return "compact";
+}
+
+function loadTouchLayouts(): TouchLayouts {
+  const raw = localStorage.getItem(STORAGE_KEYS.touchLayouts);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+
+    const out: TouchLayouts = {};
+    for (const [preset, value] of Object.entries(parsed)) {
+      if (!VALID_TOUCH_PRESETS.has(preset as TouchPreset)) continue;
+      const layout = parseTouchLayout(value);
+      if (layout) out[preset as TouchPreset] = layout;
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 function jsonDownload(payload: unknown, filename: string) {
@@ -109,6 +174,9 @@ const state: {
   touchPreset: TouchPreset;
   touchSize: number;
   touchOpacity: number;
+  touchEditing: boolean;
+  touchLayouts: TouchLayouts;
+  keyRemapEnabled: boolean;
   keybinds: Keybinds;
   debugEnabled: boolean;
   debugOverlay: boolean;
@@ -120,9 +188,12 @@ const state: {
   isFullscreen: Boolean(document.fullscreenElement),
   volume: loadInt(STORAGE_KEYS.volume, 100, 0, 100),
   touchEnabled: false,
-  touchPreset: (localStorage.getItem(STORAGE_KEYS.touchPreset) as TouchPreset) ?? "compact",
+  touchPreset: loadTouchPreset(),
   touchSize: 56,
   touchOpacity: loadInt(STORAGE_KEYS.touchOpacity, 90, 20, 100),
+  touchEditing: false,
+  touchLayouts: loadTouchLayouts(),
+  keyRemapEnabled: loadBool(STORAGE_KEYS.keyRemapEnabled, true),
   keybinds: loadKeybinds(),
   debugEnabled: loadBool(STORAGE_KEYS.debugEnabled, false),
   debugOverlay: loadBool(STORAGE_KEYS.debugOverlay, false),
@@ -206,14 +277,16 @@ app.innerHTML = `
             <input id="touchEnabled" type="checkbox" />
           </label>
 
-          <div id="touchControlsFields" class="stack">
-            <label class="field">
-              <span class="label">Preset</span>
-              <select id="touchPreset">
-                <option value="compact">Compact</option>
-                <option value="comfortable">Comfortable</option>
-              </select>
-            </label>
+	          <div id="touchControlsFields" class="stack">
+	            <label class="field">
+	              <span class="label">Preset</span>
+	              <select id="touchPreset">
+	                <option value="compact">Compact</option>
+	                <option value="comfortable">Comfortable</option>
+	                <option value="leftHanded">Left-handed</option>
+	                <option value="tablet">Tablet</option>
+	              </select>
+	            </label>
 
             <label class="field rangeField">
               <span class="label">Size</span>
@@ -221,21 +294,47 @@ app.innerHTML = `
               <span id="touchSizeValue" class="value"></span>
             </label>
 
-            <label class="field rangeField">
-              <span class="label">Opacity</span>
-              <input id="touchOpacity" type="range" min="20" max="100" step="1" />
-              <span id="touchOpacityValue" class="value"></span>
-            </label>
-          </div>
-        </section>
+	            <label class="field rangeField">
+	              <span class="label">Opacity</span>
+	              <input id="touchOpacity" type="range" min="20" max="100" step="1" />
+	              <span id="touchOpacityValue" class="value"></span>
+	            </label>
 
-        <section class="panel">
-          <div class="panelTitle">Keybinds</div>
-          <div class="grid2">
-            <label class="field">
-              <span class="label">Up</span>
-              <select id="keyUp"></select>
-            </label>
+	            <label class="field">
+	              <span class="label">Edit layout</span>
+	              <input id="touchEditLayout" type="checkbox" />
+	            </label>
+
+	            <div class="row rowWrap">
+	              <button id="touchResetLayoutBtn" type="button" class="btn btnSecondary">
+	                Reset layout
+	              </button>
+	            </div>
+
+	            <div class="hint">
+	              Enable “Edit layout”, close Settings, then drag the handles on the overlay to reposition
+	              controls.
+	            </div>
+	          </div>
+	        </section>
+
+	        <section class="panel">
+	          <div class="panelTitle">Keybinds</div>
+
+	          <label class="field">
+	            <span class="label">Enable remap</span>
+	            <input id="keyRemapEnabled" type="checkbox" />
+	          </label>
+	          <div class="hint">
+	            When enabled, the wrapper intercepts key presses and sends your mapped keys to the game.
+	            Disable if the SWF UI behaves oddly.
+	          </div>
+
+	          <div class="grid2">
+	            <label class="field">
+	              <span class="label">Up</span>
+	              <select id="keyUp"></select>
+	            </label>
             <label class="field">
               <span class="label">Down</span>
               <select id="keyDown"></select>
@@ -365,9 +464,12 @@ const touchSizeEl = required<HTMLInputElement>("#touchSize");
 const touchSizeValueEl = required<HTMLSpanElement>("#touchSizeValue");
 const touchOpacityEl = required<HTMLInputElement>("#touchOpacity");
 const touchOpacityValueEl = required<HTMLSpanElement>("#touchOpacityValue");
+const touchEditLayoutEl = required<HTMLInputElement>("#touchEditLayout");
+const touchResetLayoutBtn = required<HTMLButtonElement>("#touchResetLayoutBtn");
 const muteEl = required<HTMLInputElement>("#mute");
 const volumeEl = required<HTMLInputElement>("#volume");
 const volumeValueEl = required<HTMLSpanElement>("#volumeValue");
+const keyRemapEnabledEl = required<HTMLInputElement>("#keyRemapEnabled");
 const keyUpEl = required<HTMLSelectElement>("#keyUp");
 const keyDownEl = required<HTMLSelectElement>("#keyDown");
 const keyLeftEl = required<HTMLSelectElement>("#keyLeft");
@@ -400,7 +502,27 @@ const inputMapper = createInputMapper(() => {
   if (playerEl) targets.push(playerEl);
   return targets;
 });
-const touchControls = createTouchControls(inputMapper);
+
+function touchLayoutForPreset(preset: TouchPreset): TouchLayout {
+  return state.touchLayouts[preset] ?? defaultTouchLayout();
+}
+
+let persistTouchLayoutsRaf = 0;
+function schedulePersistTouchLayouts() {
+  if (persistTouchLayoutsRaf) return;
+  persistTouchLayoutsRaf = window.requestAnimationFrame(() => {
+    persistTouchLayoutsRaf = 0;
+    localStorage.setItem(STORAGE_KEYS.touchLayouts, JSON.stringify(state.touchLayouts));
+  });
+}
+
+const touchControls = createTouchControls(inputMapper, {
+  onLayoutChange(layout) {
+    state.touchLayouts[state.touchPreset] = layout;
+    schedulePersistTouchLayouts();
+    scheduleDebugOverlayRender();
+  },
+});
 viewport.appendChild(touchControls.el);
 
 const logs = createLogBuffer(250);
@@ -722,6 +844,8 @@ function detectDefaultTouchEnabled(): boolean {
 state.touchEnabled = detectDefaultTouchEnabled();
 touchControls.setEnabled(state.touchEnabled);
 touchControls.setPreset(state.touchPreset);
+touchControls.setLayout(touchLayoutForPreset(state.touchPreset));
+touchControls.setEditMode(state.touchEditing);
 applyTouchStyle();
 
 function persistKeybinds() {
@@ -785,6 +909,12 @@ function syncSettingsUi() {
   touchOpacityEl.value = String(state.touchOpacity);
   touchOpacityValueEl.textContent = `${state.touchOpacity}%`;
 
+  touchEditLayoutEl.checked = state.touchEditing;
+  touchEditLayoutEl.disabled = !state.touchEnabled;
+  touchResetLayoutBtn.disabled = !state.touchEnabled;
+
+  keyRemapEnabledEl.checked = state.keyRemapEnabled;
+
   keyUpEl.value = state.keybinds.ArrowUp;
   keyDownEl.value = state.keybinds.ArrowDown;
   keyLeftEl.value = state.keybinds.ArrowLeft;
@@ -845,6 +975,10 @@ touchEnabledEl.addEventListener("change", () => {
   state.touchEnabled = Boolean(touchEnabledEl.checked);
   localStorage.setItem(STORAGE_KEYS.touchEnabled, state.touchEnabled ? "1" : "0");
   touchControls.setEnabled(state.touchEnabled);
+  if (!state.touchEnabled && state.touchEditing) {
+    state.touchEditing = false;
+    touchControls.setEditMode(false);
+  }
   syncSettingsUi();
 });
 
@@ -854,6 +988,7 @@ touchPresetEl.addEventListener("change", () => {
   state.touchSize = PRESET_TOUCH_SIZE[state.touchPreset] ?? state.touchSize;
   localStorage.setItem(STORAGE_KEYS.touchSize, String(state.touchSize));
   touchControls.setPreset(state.touchPreset);
+  touchControls.setLayout(touchLayoutForPreset(state.touchPreset));
   applyTouchStyle();
   syncSettingsUi();
 });
@@ -869,6 +1004,32 @@ touchOpacityEl.addEventListener("input", () => {
   state.touchOpacity = clampInt(Number(touchOpacityEl.value), 20, 100);
   localStorage.setItem(STORAGE_KEYS.touchOpacity, String(state.touchOpacity));
   applyTouchStyle();
+  syncSettingsUi();
+});
+
+touchEditLayoutEl.addEventListener("change", () => {
+  state.touchEditing = Boolean(touchEditLayoutEl.checked);
+  touchControls.setEditMode(state.touchEditing);
+  if (state.touchEditing) {
+    setStatus(
+      "Touch layout edit mode enabled. Close Settings, then drag the handles to reposition controls.",
+    );
+  }
+  syncSettingsUi();
+});
+
+touchResetLayoutBtn.addEventListener("click", () => {
+  state.touchLayouts[state.touchPreset] = defaultTouchLayout();
+  schedulePersistTouchLayouts();
+  touchControls.setLayout(touchLayoutForPreset(state.touchPreset));
+  setStatus("Touch layout reset.");
+});
+
+keyRemapEnabledEl.addEventListener("change", () => {
+  state.keyRemapEnabled = Boolean(keyRemapEnabledEl.checked);
+  localStorage.setItem(STORAGE_KEYS.keyRemapEnabled, state.keyRemapEnabled ? "1" : "0");
+  addLog("info", "keyremap.enabled", { enabled: state.keyRemapEnabled });
+  inputMapper.releaseAll();
   syncSettingsUi();
 });
 
@@ -1050,7 +1211,10 @@ async function collectDiagnostics() {
         preset: state.touchPreset,
         size: state.touchSize,
         opacity: state.touchOpacity,
+        editing: state.touchEditing,
+        layout: touchLayoutForPreset(state.touchPreset),
       },
+      keyRemapEnabled: state.keyRemapEnabled,
       keybinds: state.keybinds,
       lastError: state.lastError,
       debug: { enabled: state.debugEnabled, overlay: state.debugOverlay },
@@ -1185,6 +1349,7 @@ document.addEventListener("keydown", (ev) => {
 function handleRemapKey(ev: KeyboardEvent, type: "down" | "up") {
   if (!ev.isTrusted) return;
   if (isTextInputLike(ev.target)) return;
+  if (!state.keyRemapEnabled) return;
 
   const mapped = lookupMappedKey(ev.code);
   if (!mapped) return;
@@ -1229,7 +1394,10 @@ window.render_game_to_text = () =>
       preset: state.touchPreset,
       size: state.touchSize,
       opacity: state.touchOpacity,
+      editing: state.touchEditing,
+      layout: touchLayoutForPreset(state.touchPreset),
     },
+    keyRemapEnabled: state.keyRemapEnabled,
     keybinds: state.keybinds,
     debug: {
       enabled: state.debugEnabled,

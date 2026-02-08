@@ -27,3 +27,9 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Touch overlay layout presets (left-handed / tablet) and draggable positioning.
 - Store polish: finalize Capacitor identifiers, Windows signing + metadata.
 - Reduce input conflicts: consider ignoring remaps while SWF UI is focused.
+
+## 2026-02-08 (later)
+
+- Added touch layout presets in the web wrapper: `leftHanded` and `tablet`, plus an “Edit layout” mode that lets you drag the D-pad/action clusters and persists offsets per preset (`tanks.touchLayouts`).
+- Added a key remap enable/disable toggle to avoid conflicts with SWF UI (`tanks.keyRemapEnabled`); when disabled, physical keys are no longer intercepted by the wrapper remapper.
+- Tweaked `DEFAULT_SWF_URL` to respect Vite `base` so Electron `file://` builds can still auto-load `./original/tanks.swf`.

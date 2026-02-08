@@ -27,8 +27,8 @@
 ### Discovered follow-ups
 - [x] Pin Ruffle update cadence – Decide how often to bump `@ruffle-rs/ruffle` nightly and document the process.
 - [x] Fix Playwright tool warning – Silence the Node ESM warning in the bundled `web_game_playwright_client.js` setup (optional cleanup).
-- [ ] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
-- [ ] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
+- [x] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
+- [x] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 - [ ] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.
 - [ ] Windows signing + metadata – Add app icon, publisher metadata, and code signing for the Electron installer.
 

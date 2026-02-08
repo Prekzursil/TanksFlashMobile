@@ -1,4 +1,4 @@
-export const DEFAULT_SWF_URL = "/original/tanks.swf";
+export const DEFAULT_SWF_URL = `${import.meta.env.BASE_URL}original/tanks.swf`;
 
 // The original SWF stage size varies by game; many Flash games are 4:3.
 // We use this as a layout baseline for scaling modes.
@@ -11,9 +11,11 @@ export const STORAGE_KEYS = {
   scaleMode: "tanks.scaleMode",
   touchEnabled: "tanks.touchEnabled",
   touchPreset: "tanks.touchPreset",
+  touchLayouts: "tanks.touchLayouts",
   touchSize: "tanks.touchSize",
   touchOpacity: "tanks.touchOpacity",
   volume: "tanks.volume",
+  keyRemapEnabled: "tanks.keyRemapEnabled",
   keybinds: "tanks.keybinds",
   debugEnabled: "tanks.debugEnabled",
   debugOverlay: "tanks.debugOverlay",

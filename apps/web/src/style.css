@@ -286,6 +286,23 @@ kbd {
   display: none;
 }
 
+.touchOverlay[data-preset="leftHanded"] {
+  flex-direction: row-reverse;
+}
+
+.touchOverlay[data-preset="tablet"] {
+  padding: 24px;
+}
+
+.touchOverlay[data-editing="1"] .touchBtn {
+  pointer-events: none;
+}
+
+.touchOverlay[data-editing="1"] .touchCluster {
+  outline: 2px dashed rgba(88, 166, 255, 0.45);
+  outline-offset: 10px;
+}
+
 .touchOverlay[data-preset="comfortable"] {
   --touch-size: 72px;
   --touch-gap: 12px;
@@ -296,6 +313,54 @@ kbd {
   display: grid;
   gap: var(--touch-gap);
   pointer-events: none;
+  position: relative;
+}
+
+.touchDragHandle {
+  display: none;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+
+  position: absolute;
+  top: calc(var(--touch-gap) * -0.6);
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(22, 27, 34, 0.75);
+  color: rgba(230, 237, 243, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: grab;
+}
+
+.touchDragHandle:active {
+  cursor: grabbing;
+}
+
+.touchOverlay[data-editing="1"] .touchDragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dragHandleLeft {
+  left: 0;
+}
+
+.dragHandleRight {
+  right: 0;
+}
+
+.touchOverlay[data-preset="leftHanded"] .dragHandleLeft {
+  left: auto;
+  right: 0;
+}
+
+.touchOverlay[data-preset="leftHanded"] .dragHandleRight {
+  right: auto;
+  left: 0;
 }
 
 .dpad {
