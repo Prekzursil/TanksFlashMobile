@@ -192,6 +192,8 @@ async function main() {
     }
 
     // Enable touch overlay once to ensure the input layer doesn't throw.
+    await page.click("#settingsBtn");
+    await page.waitForSelector("#settingsDialog[open]", { timeout: 5000 });
     await page.click("#touchEnabled");
     await page.waitForTimeout(200);
 

@@ -2,6 +2,7 @@ export {};
 
 declare global {
   type RufflePlayerElement = HTMLElement & {
+    volume: number;
     ruffle: () => {
       load: (options: string | { url: string }) => unknown;
     };

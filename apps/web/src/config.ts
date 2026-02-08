@@ -11,4 +11,8 @@ export const STORAGE_KEYS = {
   scaleMode: "tanks.scaleMode",
   touchEnabled: "tanks.touchEnabled",
   touchPreset: "tanks.touchPreset",
+  touchSize: "tanks.touchSize",
+  touchOpacity: "tanks.touchOpacity",
+  volume: "tanks.volume",
+  keybinds: "tanks.keybinds",
 } as const;

@@ -10,9 +10,9 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added an in-repo Playwright smoke test harness (`apps/web/scripts/smoke_test.mjs`) and GitHub Actions CI to run build + smoke on PRs.
 - Added MIT licensing (`LICENSE`) plus a lightweight third-party attribution policy (`THIRD_PARTY_NOTICES.md`).
 - Added ESLint + Prettier to `apps/web` and wired lint/format checks into CI.
+- Added a Settings dialog for scale mode, audio (mute/volume), touch overlay configuration (enable/preset/size/opacity), and keybind customization (persisted + reset).
 
 ## Next up
 
-- Add a basic Settings UI (sound toggle, touch overlay sizing/opacity, persistent settings).
-- Add keybind customization and local save management utilities.
+- Add local save management utilities (clear/export/import local storage) for debugging and user support.
 - Start mobile/desktop wrappers once the web UX is stable.

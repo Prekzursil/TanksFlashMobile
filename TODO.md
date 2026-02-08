@@ -14,8 +14,8 @@
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
 - [x] Web tooling scaffold – Set up Vite (or similar), TypeScript, and a single-command dev loop (`npm run dev`).
 - [x] Lint/format baseline – Add ESLint + Prettier (or equivalent) with consistent rules and CI enforcement.
-- [ ] Settings UI – Add an in-game settings panel for scaling mode, fullscreen, sound, and touch-overlay size/opacity.
-- [ ] Keybind customization – Allow remapping keys via the settings UI, persisted locally (with a “reset to defaults” option).
+- [x] Settings UI – Add an in-game settings panel for scaling mode, fullscreen, sound, and touch-overlay size/opacity.
+- [x] Keybind customization – Allow remapping keys via the settings UI, persisted locally (with a “reset to defaults” option).
 - [ ] Local save management – Provide an easy way to clear/export/import local storage for debugging and user support.
 - [ ] Asset download helper – Add documented scripts/instructions to fetch the SWF into `assets/original/` for local dev (without committing it).
 - [ ] Android wrapper – Package the web build into an Android app (Capacitor or equivalent) and document build/signing steps.
@@ -27,6 +27,8 @@
 ### Discovered follow-ups
 - [ ] Pin Ruffle update cadence – Decide how often to bump `@ruffle-rs/ruffle` nightly and document the process.
 - [ ] Fix Playwright tool warning – Silence the Node ESM warning in the bundled `web_game_playwright_client.js` setup (optional cleanup).
+- [ ] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
+- [ ] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 
 ## Low priority
 - [ ] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
