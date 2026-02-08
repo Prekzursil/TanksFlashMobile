@@ -48,6 +48,38 @@ npm run package:win
 
 Artifacts land in `apps/desktop/dist/`.
 
+## Code signing (Windows, optional but recommended)
+
+Windows code signing requires a code-signing certificate (usually a `.pfx`) tied to your identity (individual or company).
+We cannot “download” a real trusted certificate for you — you obtain one from a Certificate Authority (CA) or use a signing
+service (e.g., Azure Trusted Signing).
+
+This repo is set up so that **unsigned builds still work**, but if signing secrets are present, Electron Builder will sign
+the installer/executables automatically.
+
+### Local signing
+
+Set environment variables and then package:
+
+```bash
+cd apps/desktop
+
+# Windows cmd.exe
+set WIN_CSC_LINK=C:\\path\\to\\codesign.pfx
+set WIN_CSC_KEY_PASSWORD=your_password_here
+npm run package:win
+```
+
+### CI signing (GitHub Actions)
+
+Add these repository secrets:
+
+- `WINDOWS_CERT_PFX_BASE64`: base64-encoded `.pfx`
+- `WINDOWS_CERT_PASSWORD`: password for the `.pfx`
+
+The Windows CI job will decode the `.pfx` into the runner temp directory and set `WIN_CSC_LINK`/`WIN_CSC_KEY_PASSWORD` for
+Electron Builder.
+
 ## Notes
 
 - The Electron app loads the built web app from packaged files. For this to work, web build assets are configured to use relative paths (`apps/web/vite.config.ts`).

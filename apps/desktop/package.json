@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.prekzursil.tanks",
     "productName": "Tanks",
+    "copyright": "Copyright (c) 2026 Prekzursil",
     "asar": true,
     "files": [
       "main.cjs",
@@ -43,7 +44,18 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tanks",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     }
   }
 }

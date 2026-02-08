@@ -34,3 +34,4 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added a key remap enable/disable toggle to avoid conflicts with SWF UI (`tanks.keyRemapEnabled`); when disabled, physical keys are no longer intercepted by the wrapper remapper.
 - Tweaked `DEFAULT_SWF_URL` to respect Vite `base` so Electron `file://` builds can still auto-load `./original/tanks.swf`.
 - Finalized app identifiers for publishing: `appName` = `Tanks`, `appId` = `com.prekzursil.tanks` (Capacitor + Android + iOS + Electron aligned).
+- Added Windows installer metadata defaults for Electron Builder (NSIS options + explicit execution level) and wired optional code signing in CI (requires a real `.pfx` + secrets).

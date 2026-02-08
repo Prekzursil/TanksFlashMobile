@@ -30,7 +30,8 @@
 - [x] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
 - [x] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 - [x] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.
-- [ ] Windows signing + metadata – Add app icon, publisher metadata, and code signing for the Electron installer.
+- [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
+- [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI.
 
 ## Low priority
 - [ ] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
