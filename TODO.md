@@ -42,7 +42,7 @@
 - [x] Build/release automation – Produce CI build artifacts (web `dist/`, Windows installer/zip, Android debug APK) for PRs/main pushes.
 - [x] Localization-ready UI – Route UI strings through a simple i18n layer (English first).
 - [ ] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
-- [ ] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
+- [x] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
 - [ ] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.
-- [ ] iOS CI artifact (simulator) – Build an unsigned iOS Simulator `.app` on macOS runners for quick QA (no App Store signing).
-- [ ] Tag-based releases – On version tags, attach artifacts to a GitHub Release (keeps PR CI as-is).
+- [x] iOS CI artifact (simulator) – Build an unsigned iOS Simulator `.app` on macOS runners for quick QA (no App Store signing).
+- [x] Tag-based releases – On version tags, attach artifacts to a GitHub Release (keeps PR CI as-is).

@@ -43,3 +43,6 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Accessibility pass: added wrapper UI scaling (Settings → Display → UI scale), larger default UI hit targets (44px min), and clearer focus-visible outlines; touch buttons now have descriptive ARIA labels/state.
 - Build/release automation (option 1): CI now uploads build artifacts for web (`web-dist`), Windows (`desktop-windows`), and Android debug APK (`android-debug-apk`) via GitHub Actions artifacts.
 - Localization-ready UI: routed wrapper UI strings through a simple i18n module (`apps/web/src/i18n.ts`) with English as the first locale.
+- Added an iOS Simulator CI artifact (`ios-simulator-app`) for PRs/main so QA can install on Simulator without App Store signing.
+- Added a tag-based release workflow that attaches web/windows/android/ios-simulator artifacts (plus checksums) to GitHub Releases.
+- Added a README “Downloads” section with a screenshot and quick install/run notes per platform.

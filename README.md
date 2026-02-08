@@ -6,6 +6,8 @@ Fan project to bring back the classic Flash game **TANKS** (a Scorched Earth–s
 - Android + iOS (wrapped web build)
 - Windows (desktop wrapper or PWA)
 
+![Tanks wrapper – Controls & Tips](docs/screenshots/web-help.png)
+
 ## Status
 
 This repo is in early setup, but the web wrapper is already scaffolded under `apps/web`.
@@ -14,6 +16,28 @@ The actionable backlog lives in `TODO.md`.
 
 CI note:
 - Pull Requests publish build artifacts to GitHub Actions (web `dist/`, Windows installer/zip, Android debug APK). See the workflow run’s “Artifacts” section.
+
+## Downloads
+
+Preferred: **GitHub Releases** (created on version tags like `v0.1.0`).
+
+What you’ll see attached to a Release:
+- Web: `Tanks-<version>-web-dist.zip`
+- Windows: `Tanks-<version>-windows-setup.exe` and `Tanks-<version>-windows-portable.zip`
+- Android: `Tanks-<version>-android-debug.apk`
+- iOS (Simulator): `Tanks-<version>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
+
+If there are no Releases yet, use **GitHub Actions artifacts** instead:
+- `web-dist`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
+
+Install/run quick notes:
+- Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL and use **Load SWF…**.
+- Windows: run the setup `.exe`, or unzip the portable build and run `Tanks.exe`.
+- Android: install the `.apk` on-device (you may need to allow “Install unknown apps”).
+- iOS (Simulator): unzip, then install to a running Simulator (e.g. `xcrun simctl install booted App.app`).
+
+SWF note:
+- Releases/artifacts **do not** include the original game SWF. Use the in-app **Load SWF…** button or place it at `assets/original/tanks.swf` for local dev.
 
 ## Quick start (web)
 
