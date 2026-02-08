@@ -7,8 +7,8 @@
 - [x] Responsive scaling & fullscreen – Add scaling modes (fit/fill/integer scale) plus a fullscreen toggle that works on desktop and mobile.
 - [x] Input mapping layer – Centralize input so keyboard, touch overlay, and (later) gamepad can drive the SWF consistently.
 - [x] Mobile touch controls v1 – Implement an on-screen controls overlay suitable for phones/tablets (D‑pad/buttons + layout presets).
-- [ ] Smoke test harness – Add a Playwright script that launches the web build, waits for render, captures a screenshot, and fails on console errors.
-- [ ] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
+- [x] Smoke test harness – Add a Playwright script that launches the web build, waits for render, captures a screenshot, and fails on console errors.
+- [x] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
 
 ## Medium priority
 - [ ] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
