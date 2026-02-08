@@ -66,17 +66,18 @@ function createButton(
   el.setAttribute("aria-label", btn.id);
 
   const activePointerIds = new Set<number>();
+  const sourceId = `touch:${btn.id}`;
 
   function press(pointerId: number) {
     activePointerIds.add(pointerId);
-    input.press(btn.code);
+    input.pressFrom(sourceId, btn.code);
     el.dataset.pressed = "1";
   }
 
   function release(pointerId: number) {
     activePointerIds.delete(pointerId);
     if (activePointerIds.size === 0) {
-      input.release(btn.code);
+      input.releaseFrom(sourceId, btn.code);
       delete el.dataset.pressed;
     }
   }
@@ -90,7 +91,7 @@ function createButton(
       }
     }
     activePointerIds.clear();
-    input.release(btn.code);
+    input.releaseFrom(sourceId, btn.code);
     delete el.dataset.pressed;
   }
 
@@ -118,7 +119,7 @@ function createButton(
 
   el.addEventListener("lostpointercapture", () => {
     // Safety: if capture is lost mid-press, release the key.
-    input.release(btn.code);
+    input.releaseFrom(sourceId, btn.code);
     delete el.dataset.pressed;
     activePointerIds.clear();
   });
@@ -262,7 +263,6 @@ export function createTouchControls(
         editing = false;
         root.dataset.editing = "0";
         cancelAllButtons();
-        input.releaseAll();
       }
     },
     setPreset(preset) {
@@ -273,7 +273,6 @@ export function createTouchControls(
       root.dataset.editing = editing ? "1" : "0";
       if (editing) {
         cancelAllButtons();
-        input.releaseAll();
       }
     },
     setLayout(next) {

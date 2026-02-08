@@ -31,7 +31,9 @@ Notes:
   - `npm run swf:import -- --from /path/to/tanks.swf`
 - If you don’t have `assets/original/tanks.swf`, you can still use the **Load SWF…** button in the UI.
 - Fullscreen: button or press `f`
-- Touch overlay: toggle **Touch** in the toolbar (auto-defaults on coarse pointers)
+- Touch overlay: Settings → Touch Controls (auto-defaults on coarse pointers)
+- Gamepad: Settings → Gamepad (standard mapping; move with d-pad/left stick, action buttons map to Space/Enter)
+- Controls & tips: click **Help**
 
 ### Smoke test
 

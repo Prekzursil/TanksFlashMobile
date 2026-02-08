@@ -117,6 +117,30 @@ select {
   opacity: 0.75;
 }
 
+.helpText {
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.helpText p {
+  margin: 0 0 10px 0;
+}
+
+.helpText ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.helpText li {
+  margin: 6px 0;
+}
+
+.helpText .helpNote {
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
 .hint code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;

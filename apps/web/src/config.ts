@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   touchSize: "tanks.touchSize",
   touchOpacity: "tanks.touchOpacity",
   volume: "tanks.volume",
+  gamepadEnabled: "tanks.gamepadEnabled",
   keyRemapEnabled: "tanks.keyRemapEnabled",
   keybinds: "tanks.keybinds",
   debugEnabled: "tanks.debugEnabled",

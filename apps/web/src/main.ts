@@ -1,6 +1,7 @@
 import "./style.css";
 import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from "./config";
 import { createLogBuffer, hookGlobalErrors, type LogLevel } from "./debug";
+import { createGamepadInput } from "./gamepad";
 import { createInputMapper, type KeyCode } from "./input";
 import { createTouchControls, type TouchLayout, type TouchPreset } from "./touchControls";
 import { computeStageLayout, type ScaleMode } from "./viewport";
@@ -170,6 +171,7 @@ const state: {
   scaleMode: ScaleMode;
   isFullscreen: boolean;
   volume: number;
+  gamepadEnabled: boolean;
   touchEnabled: boolean;
   touchPreset: TouchPreset;
   touchSize: number;
@@ -187,6 +189,7 @@ const state: {
   scaleMode: (localStorage.getItem(STORAGE_KEYS.scaleMode) as ScaleMode) ?? "fit",
   isFullscreen: Boolean(document.fullscreenElement),
   volume: loadInt(STORAGE_KEYS.volume, 100, 0, 100),
+  gamepadEnabled: loadBool(STORAGE_KEYS.gamepadEnabled, true),
   touchEnabled: false,
   touchPreset: loadTouchPreset(),
   touchSize: 56,
@@ -220,6 +223,7 @@ app.innerHTML = `
 
       <div class="toolbar">
         <button id="settingsBtn" type="button" class="btn">Settings</button>
+        <button id="helpBtn" type="button" class="btn btnSecondary">Help</button>
         <button id="fullscreenBtn" type="button" class="btn">Fullscreen</button>
         <button id="loadFileBtn" type="button" class="btn">Load SWF…</button>
         <input id="fileInput" type="file" accept=".swf" class="hidden" />
@@ -318,8 +322,8 @@ app.innerHTML = `
 	          </div>
 	        </section>
 
-	        <section class="panel">
-	          <div class="panelTitle">Keybinds</div>
+        <section class="panel">
+          <div class="panelTitle">Keybinds</div>
 
 	          <label class="field">
 	            <span class="label">Enable remap</span>
@@ -361,6 +365,20 @@ app.innerHTML = `
             <button id="resetKeybindsBtn" type="button" class="btn btnSecondary">
               Reset to defaults
             </button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">Gamepad</div>
+
+          <label class="field">
+            <span class="label">Enable</span>
+            <input id="gamepadEnabled" type="checkbox" />
+          </label>
+          <div id="gamepadStatus" class="hint"></div>
+          <div class="hint">
+            Mapping: D-pad/left stick = move, bottom face button = Action A (Space), right face button
+            = Action B (Enter).
           </div>
         </section>
 
@@ -438,6 +456,89 @@ app.innerHTML = `
       </div>
     </dialog>
 
+    <dialog id="helpDialog" class="dialog">
+      <div class="dialogHeader">
+        <div class="dialogTitle">Controls & Tips</div>
+        <button id="helpCloseBtn" type="button" class="btn btnSecondary">Close</button>
+      </div>
+
+      <div class="dialogBody">
+        <section class="panel">
+          <div class="panelTitle">Quick Start</div>
+          <div class="helpText">
+            <p>
+              This project is a wrapper around the original Flash game running inside Ruffle. The wrapper’s job is to
+              provide clean input, scaling, and packaging across devices.
+            </p>
+            <p>
+              If the game doesn’t load automatically, click <strong>Load SWF…</strong> and choose your <code>.swf</code>
+              file.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">Keyboard</div>
+          <div class="helpText">
+            <ul>
+              <li>Move: <kbd>Arrow</kbd> keys (remappable in Settings)</li>
+              <li>Action A: <kbd>Space</kbd></li>
+              <li>Action B: <kbd>Enter</kbd></li>
+              <li>Fullscreen: <kbd>f</kbd></li>
+            </ul>
+            <p class="helpNote">
+              If the SWF UI behaves oddly, try disabling “Enable remap” in Settings. When disabled, the wrapper won’t
+              intercept keyboard events.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">Touch</div>
+          <div class="helpText">
+            <p>Enable the on-screen overlay in Settings → Touch Controls.</p>
+            <ul>
+              <li>Presets: Compact / Comfortable / Left-handed / Tablet</li>
+              <li>Edit layout: toggle “Edit layout”, close Settings, then drag the handles</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">Gamepad</div>
+          <div class="helpText">
+            <p>Enable gamepad input in Settings → Gamepad.</p>
+            <ul>
+              <li>Move: D-pad or left stick</li>
+              <li>Action A: bottom face button (often A / Cross / B depending on controller)</li>
+              <li>Action B: right face button (often B / Circle / A depending on controller)</li>
+            </ul>
+            <p class="helpNote">
+              The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves
+              strangely, we can add a mapping customization screen as a follow-up.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelTitle">Troubleshooting</div>
+          <div class="helpText">
+            <ul>
+              <li>
+                If inputs feel “stuck”, switch tabs/windows and come back (the wrapper releases all inputs on blur).
+              </li>
+              <li>
+                Saves are managed by Ruffle (typically via IndexedDB). Use Settings → Storage if you need to clear data.
+              </li>
+              <li>
+                For bug reports, enable Settings → Debug and export diagnostics/logs.
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </dialog>
+
     <div id="debugOverlayEl" class="debugOverlay hidden" aria-hidden="true"></div>
   </div>
 `;
@@ -453,8 +554,11 @@ const stage = required<HTMLDivElement>("#stage");
 const playerContainer = required<HTMLDivElement>("#playerContainer");
 const status = required<HTMLDivElement>("#status");
 const settingsBtn = required<HTMLButtonElement>("#settingsBtn");
+const helpBtn = required<HTMLButtonElement>("#helpBtn");
 const settingsDialog = required<HTMLDialogElement>("#settingsDialog");
 const settingsCloseBtn = required<HTMLButtonElement>("#settingsCloseBtn");
+const helpDialog = required<HTMLDialogElement>("#helpDialog");
+const helpCloseBtn = required<HTMLButtonElement>("#helpCloseBtn");
 const scaleSelect = required<HTMLSelectElement>("#scaleMode");
 const fullscreenBtn = required<HTMLButtonElement>("#fullscreenBtn");
 const touchEnabledEl = required<HTMLInputElement>("#touchEnabled");
@@ -469,6 +573,8 @@ const touchResetLayoutBtn = required<HTMLButtonElement>("#touchResetLayoutBtn");
 const muteEl = required<HTMLInputElement>("#mute");
 const volumeEl = required<HTMLInputElement>("#volume");
 const volumeValueEl = required<HTMLSpanElement>("#volumeValue");
+const gamepadEnabledEl = required<HTMLInputElement>("#gamepadEnabled");
+const gamepadStatusEl = required<HTMLDivElement>("#gamepadStatus");
 const keyRemapEnabledEl = required<HTMLInputElement>("#keyRemapEnabled");
 const keyUpEl = required<HTMLSelectElement>("#keyUp");
 const keyDownEl = required<HTMLSelectElement>("#keyDown");
@@ -534,6 +640,14 @@ function addLog(level: LogLevel, msg: string, data?: unknown) {
 }
 hookGlobalErrors(addLog);
 
+const gamepadInput = createGamepadInput(inputMapper, {
+  log: addLog,
+  onStatusChange() {
+    renderGamepadStatus();
+  },
+});
+gamepadInput.setEnabled(state.gamepadEnabled);
+
 let debugOverlayRaf = 0;
 function scheduleDebugOverlayRender() {
   if (!(state.debugEnabled && state.debugOverlay)) return;
@@ -568,7 +682,7 @@ function renderDebugOverlay() {
     `load: ${state.loadState}`,
     `swf: ${swfLabel}`,
     `scale: ${state.scaleMode}  full: ${state.isFullscreen ? "yes" : "no"}`,
-    `touch: ${state.touchEnabled ? "on" : "off"}  vol: ${state.volume}`,
+    `touch: ${state.touchEnabled ? "on" : "off"}  pad: ${state.gamepadEnabled ? "on" : "off"} (${gamepadInput.getConnectedCount()})  vol: ${state.volume}`,
     `logs: ${counts.total} (err ${counts.error}, warn ${counts.warn})`,
     `error: ${lastErr}`,
   ].join("\n");
@@ -606,6 +720,14 @@ function openSettings() {
 
 function closeSettings() {
   if (settingsDialog.open) settingsDialog.close();
+}
+
+function openHelp() {
+  if (!helpDialog.open) helpDialog.showModal();
+}
+
+function closeHelp() {
+  if (helpDialog.open) helpDialog.close();
 }
 
 function isTextInputLike(el: EventTarget | null): boolean {
@@ -881,7 +1003,7 @@ function setKeybindValue(target: KeyCode, physicalCode: string) {
   if (!VALID_KEY_CODES.has(physicalCode)) return;
   state.keybinds[target] = physicalCode;
   persistKeybinds();
-  inputMapper.releaseAll();
+  inputMapper.releaseAllFrom("keyboard");
   updateKeybindSelectDisabledOptions();
 }
 
@@ -893,12 +1015,34 @@ function lookupMappedKey(physicalCode: string): KeyCode | null {
   return null;
 }
 
+function renderGamepadStatus() {
+  const supported = gamepadInput.isSupported();
+  gamepadEnabledEl.disabled = !supported;
+
+  if (!supported) {
+    gamepadStatusEl.textContent = "Gamepad not supported in this environment.";
+    return;
+  }
+
+  if (!state.gamepadEnabled) {
+    gamepadStatusEl.textContent = "Disabled.";
+    return;
+  }
+
+  const count = gamepadInput.getConnectedCount();
+  const label = count === 1 ? "gamepad" : "gamepads";
+  gamepadStatusEl.textContent = count ? `Connected: ${count} ${label}.` : "No gamepad detected.";
+}
+
 function syncSettingsUi() {
   scaleSelect.value = state.scaleMode;
 
   muteEl.checked = state.volume === 0;
   volumeEl.value = String(state.volume);
   volumeValueEl.textContent = `${state.volume}%`;
+
+  gamepadEnabledEl.checked = state.gamepadEnabled;
+  renderGamepadStatus();
 
   touchEnabledEl.checked = state.touchEnabled;
   touchControlsFields.style.display = state.touchEnabled ? "" : "none";
@@ -950,6 +1094,12 @@ settingsDialog.addEventListener("click", (ev) => {
   if (ev.target === settingsDialog) closeSettings();
 });
 
+helpBtn.addEventListener("click", () => openHelp());
+helpCloseBtn.addEventListener("click", () => closeHelp());
+helpDialog.addEventListener("click", (ev) => {
+  if (ev.target === helpDialog) closeHelp();
+});
+
 muteEl.addEventListener("change", () => {
   if (muteEl.checked) {
     if (state.volume > 0) lastNonZeroVolume = state.volume;
@@ -969,6 +1119,14 @@ volumeEl.addEventListener("input", () => {
   localStorage.setItem(STORAGE_KEYS.volume, String(state.volume));
   syncSettingsUi();
   applyVolume();
+});
+
+gamepadEnabledEl.addEventListener("change", () => {
+  state.gamepadEnabled = Boolean(gamepadEnabledEl.checked);
+  localStorage.setItem(STORAGE_KEYS.gamepadEnabled, state.gamepadEnabled ? "1" : "0");
+  addLog("info", "gamepad.enabled", { enabled: state.gamepadEnabled });
+  gamepadInput.setEnabled(state.gamepadEnabled);
+  syncSettingsUi();
 });
 
 touchEnabledEl.addEventListener("change", () => {
@@ -1029,7 +1187,7 @@ keyRemapEnabledEl.addEventListener("change", () => {
   state.keyRemapEnabled = Boolean(keyRemapEnabledEl.checked);
   localStorage.setItem(STORAGE_KEYS.keyRemapEnabled, state.keyRemapEnabled ? "1" : "0");
   addLog("info", "keyremap.enabled", { enabled: state.keyRemapEnabled });
-  inputMapper.releaseAll();
+  inputMapper.releaseAllFrom("keyboard");
   syncSettingsUi();
 });
 
@@ -1043,7 +1201,7 @@ keyBEl.addEventListener("change", () => setKeybindValue("Enter", keyBEl.value));
 resetKeybindsBtn.addEventListener("click", () => {
   state.keybinds = { ...DEFAULT_KEYBINDS };
   persistKeybinds();
-  inputMapper.releaseAll();
+  inputMapper.releaseAllFrom("keyboard");
   syncSettingsUi();
 });
 
@@ -1206,6 +1364,12 @@ async function collectDiagnostics() {
       scaleMode: state.scaleMode,
       isFullscreen: state.isFullscreen,
       volume: state.volume,
+      gamepad: {
+        supported: gamepadInput.isSupported(),
+        enabled: state.gamepadEnabled,
+        connected: gamepadInput.getConnectedCount(),
+      },
+      pressed: inputMapper.snapshotPressed(),
       touch: {
         enabled: state.touchEnabled,
         preset: state.touchPreset,
@@ -1358,8 +1522,8 @@ function handleRemapKey(ev: KeyboardEvent, type: "down" | "up") {
   ev.preventDefault();
   ev.stopPropagation();
 
-  if (type === "down") inputMapper.press(mapped);
-  else inputMapper.release(mapped);
+  if (type === "down") inputMapper.pressFrom("keyboard", mapped);
+  else inputMapper.releaseFrom("keyboard", mapped);
 }
 
 document.addEventListener(
@@ -1389,6 +1553,12 @@ window.render_game_to_text = () =>
     scaleMode: state.scaleMode,
     isFullscreen: state.isFullscreen,
     volume: state.volume,
+    gamepad: {
+      supported: gamepadInput.isSupported(),
+      enabled: state.gamepadEnabled,
+      connected: gamepadInput.getConnectedCount(),
+    },
+    pressed: inputMapper.snapshotPressed(),
     touch: {
       enabled: state.touchEnabled,
       preset: state.touchPreset,
