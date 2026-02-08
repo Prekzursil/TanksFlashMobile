@@ -19,8 +19,11 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Smoke test passes after hardening timeouts/logging in `apps/web/scripts/smoke_test.mjs`.
 - Added an Electron desktop wrapper (`apps/desktop`) plus docs and CI pipeline for Windows packaging.
 - Added original branding assets + generator script and wired icons/splashes for Android/iOS/Windows (`assets/branding/`, `scripts/generate_branding_assets.py`).
+- Added debug tools (Settings → Debug) with overlay + diagnostics/log export to help testers share issues.
+- Documented a monthly Ruffle nightly update cadence (`docs/RUFFLE_UPDATES.md`) and added a wrapper to run the Playwright choreography client without the Node ESM warning (`scripts/run_web_game_client.mjs`).
 
 ## Next up
 
-- Decide the Windows packaging path (Tauri/Electron/PWA) and implement the chosen pipeline.
-- Add initial icon/splash assets and wire them into Android/iOS/Windows.
+- Touch overlay layout presets (left-handed / tablet) and draggable positioning.
+- Store polish: finalize Capacitor identifiers, Windows signing + metadata.
+- Reduce input conflicts: consider ignoring remaps while SWF UI is focused.

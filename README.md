@@ -41,6 +41,18 @@ npm run build
 npm run test:smoke
 ```
 
+### Playwright choreography (optional)
+
+For a tighter local dev loop (runs the bundled Playwright client and suppresses the Node ESM warning):
+
+```bash
+# In another terminal:
+npm --prefix apps/web run dev
+
+# Then:
+node scripts/run_web_game_client.mjs --url http://127.0.0.1:5173 --actions-file "$HOME/.codex/skills/develop-web-game/references/action_payloads.json" --iterations 1 --pause-ms 250 --screenshot-dir output/web-game
+```
+
 ## About assets / legality
 
 This repo intentionally **does not** commit the original Flash binary or archive artifacts.

@@ -1,5 +1,6 @@
 import "./style.css";
 import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from "./config";
+import { createLogBuffer, hookGlobalErrors, type LogLevel } from "./debug";
 import { createInputMapper, type KeyCode } from "./input";
 import { createTouchControls, type TouchPreset } from "./touchControls";
 import { computeStageLayout, type ScaleMode } from "./viewport";
@@ -73,6 +74,13 @@ function loadInt(key: string, fallback: number, min: number, max: number) {
   return clampInt(parsed, min, max);
 }
 
+function loadBool(key: string, fallback: boolean): boolean {
+  const raw = localStorage.getItem(key);
+  if (raw === "1") return true;
+  if (raw === "0") return false;
+  return fallback;
+}
+
 function loadKeybinds(): Keybinds {
   const raw = localStorage.getItem(STORAGE_KEYS.keybinds);
   if (!raw) return { ...DEFAULT_KEYBINDS };
@@ -102,6 +110,8 @@ const state: {
   touchSize: number;
   touchOpacity: number;
   keybinds: Keybinds;
+  debugEnabled: boolean;
+  debugOverlay: boolean;
   lastError: string | null;
 } = {
   loadState: "idle",
@@ -114,6 +124,8 @@ const state: {
   touchSize: 56,
   touchOpacity: loadInt(STORAGE_KEYS.touchOpacity, 90, 20, 100),
   keybinds: loadKeybinds(),
+  debugEnabled: loadBool(STORAGE_KEYS.debugEnabled, false),
+  debugOverlay: loadBool(STORAGE_KEYS.debugOverlay, false),
   lastError: null,
 };
 
@@ -290,8 +302,44 @@ app.innerHTML = `
             stored by Ruffle.
           </div>
         </section>
+
+        <section class="panel">
+          <div class="panelTitle">Debug</div>
+
+          <label class="field">
+            <span class="label">Enable</span>
+            <input id="debugEnabled" type="checkbox" />
+          </label>
+
+          <label class="field">
+            <span class="label">Overlay</span>
+            <input id="debugOverlay" type="checkbox" />
+          </label>
+
+          <div class="row rowWrap">
+            <button id="copyDiagnosticsBtn" type="button" class="btn btnSecondary">
+              Copy diagnostics
+            </button>
+            <button id="downloadDiagnosticsBtn" type="button" class="btn btnSecondary">
+              Download diagnostics
+            </button>
+          </div>
+
+          <div class="row rowWrap">
+            <button id="downloadLogsBtn" type="button" class="btn btnSecondary">Download logs</button>
+            <button id="clearLogsBtn" type="button" class="btn btnDanger">Clear logs</button>
+          </div>
+
+          <div id="logCounts" class="hint"></div>
+          <div class="hint">
+            Diagnostics include wrapper settings + runtime info + recent wrapper logs. It does not include the SWF
+            itself.
+          </div>
+        </section>
       </div>
     </dialog>
+
+    <div id="debugOverlayEl" class="debugOverlay hidden" aria-hidden="true"></div>
   </div>
 `;
 
@@ -333,6 +381,14 @@ const importStorageBtn = required<HTMLButtonElement>("#importStorageBtn");
 const importStorageInput = required<HTMLInputElement>("#importStorageInput");
 const clearWrapperBtn = required<HTMLButtonElement>("#clearWrapperBtn");
 const clearAllBtn = required<HTMLButtonElement>("#clearAllBtn");
+const debugEnabledEl = required<HTMLInputElement>("#debugEnabled");
+const debugOverlayCheckboxEl = required<HTMLInputElement>("#debugOverlay");
+const copyDiagnosticsBtn = required<HTMLButtonElement>("#copyDiagnosticsBtn");
+const downloadDiagnosticsBtn = required<HTMLButtonElement>("#downloadDiagnosticsBtn");
+const downloadLogsBtn = required<HTMLButtonElement>("#downloadLogsBtn");
+const clearLogsBtn = required<HTMLButtonElement>("#clearLogsBtn");
+const logCountsEl = required<HTMLDivElement>("#logCounts");
+const debugOverlayEl = required<HTMLDivElement>("#debugOverlayEl");
 const loadFileBtn = required<HTMLButtonElement>("#loadFileBtn");
 const fileInput = required<HTMLInputElement>("#fileInput");
 
@@ -346,6 +402,81 @@ const inputMapper = createInputMapper(() => {
 });
 const touchControls = createTouchControls(inputMapper);
 viewport.appendChild(touchControls.el);
+
+const logs = createLogBuffer(250);
+function addLog(level: LogLevel, msg: string, data?: unknown) {
+  logs.add(level, msg, data);
+  const c = logs.counts();
+  logCountsEl.textContent = `Logs: ${c.total} (errors ${c.error}, warnings ${c.warn})`;
+  scheduleDebugOverlayRender();
+}
+hookGlobalErrors(addLog);
+
+let debugOverlayRaf = 0;
+function scheduleDebugOverlayRender() {
+  if (!(state.debugEnabled && state.debugOverlay)) return;
+  if (debugOverlayRaf) return;
+  debugOverlayRaf = window.requestAnimationFrame(() => {
+    debugOverlayRaf = 0;
+    renderDebugOverlay();
+  });
+}
+
+function truncate(text: string, max = 160): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, Math.max(0, max - 1))}…`;
+}
+
+function renderDebugOverlay() {
+  const visible = state.debugEnabled && state.debugOverlay;
+  debugOverlayEl.classList.toggle("hidden", !visible);
+  if (!visible) return;
+
+  const counts = logs.counts();
+  const swfLabel =
+    state.swf.type === "url"
+      ? state.swf.url
+      : state.swf.type === "file"
+        ? state.swf.name
+        : "(none)";
+
+  const lastErr = state.lastError ? truncate(state.lastError) : "-";
+  debugOverlayEl.textContent = [
+    "TANKS debug",
+    `load: ${state.loadState}`,
+    `swf: ${swfLabel}`,
+    `scale: ${state.scaleMode}  full: ${state.isFullscreen ? "yes" : "no"}`,
+    `touch: ${state.touchEnabled ? "on" : "off"}  vol: ${state.volume}`,
+    `logs: ${counts.total} (err ${counts.error}, warn ${counts.warn})`,
+    `error: ${lastErr}`,
+  ].join("\n");
+}
+
+function persistDebugSettings() {
+  localStorage.setItem(STORAGE_KEYS.debugEnabled, state.debugEnabled ? "1" : "0");
+  localStorage.setItem(STORAGE_KEYS.debugOverlay, state.debugOverlay ? "1" : "0");
+}
+
+function applyDebugUi() {
+  debugEnabledEl.checked = state.debugEnabled;
+  debugOverlayCheckboxEl.checked = state.debugOverlay;
+
+  debugOverlayCheckboxEl.disabled = !state.debugEnabled;
+  copyDiagnosticsBtn.disabled = !state.debugEnabled;
+  downloadDiagnosticsBtn.disabled = !state.debugEnabled;
+  downloadLogsBtn.disabled = !state.debugEnabled;
+  clearLogsBtn.disabled = !state.debugEnabled;
+
+  debugOverlayEl.classList.toggle("hidden", !(state.debugEnabled && state.debugOverlay));
+  scheduleDebugOverlayRender();
+}
+
+// Init debug UI state
+addLog("info", "wrapper.start", {
+  mode: import.meta.env.MODE,
+  baseUrl: import.meta.env.BASE_URL,
+});
+applyDebugUi();
 
 function openSettings() {
   if (!settingsDialog.open) settingsDialog.showModal();
@@ -444,17 +575,22 @@ function setError(message: string) {
   state.loadState = "error";
   state.lastError = message;
   setStatus(message);
+  addLog("error", "wrapper.error", { message });
+  scheduleDebugOverlayRender();
 }
 
 function setReady(message?: string) {
   state.loadState = "ready";
   state.lastError = null;
   if (message) setStatus(message);
+  addLog("info", "wrapper.ready", { message: message ?? null });
+  scheduleDebugOverlayRender();
 }
 
 function updateFullscreenState() {
   state.isFullscreen = Boolean(document.fullscreenElement);
   fullscreenBtn.textContent = state.isFullscreen ? "Exit Fullscreen" : "Fullscreen";
+  scheduleDebugOverlayRender();
 }
 
 function resizeStage() {
@@ -470,6 +606,7 @@ function resizeStage() {
   stage.style.height = `${layout.height}px`;
 
   viewport.dataset.scaleMode = state.scaleMode;
+  scheduleDebugOverlayRender();
 }
 
 function applyTouchStyle() {
@@ -513,22 +650,30 @@ async function loadSwfUrl(url: string, source: SwfSource) {
   state.loadState = "loading";
   state.lastError = null;
   setStatus(`Loading SWF…`);
+  addLog("info", "swf.load.start", {
+    urlType: url.startsWith("blob:") ? "blob" : url.startsWith("http") ? "http" : "other",
+    source: source.type === "file" ? { type: "file", name: source.name } : source,
+  });
 
   try {
     const el = ensurePlayer();
     const result = el.ruffle().load(url);
     await Promise.resolve(result);
     state.swf = source;
+    addLog("info", "swf.load.ok", { source: source.type });
     setReady(source.type === "file" ? `Loaded: ${source.name}` : `Loaded: ${url}`);
   } catch (err) {
+    addLog("error", "swf.load.failed", { err: String(err) });
     setError(`Failed to load SWF: ${String(err)}`);
   }
 }
 
 async function tryAutoLoadDefaultSwf() {
+  addLog("info", "swf.autoload.check", { url: DEFAULT_SWF_URL });
   try {
     const resp = await fetch(DEFAULT_SWF_URL, { method: "HEAD" });
     if (!resp.ok) {
+      addLog("warn", "swf.autoload.missing", { url: DEFAULT_SWF_URL, status: resp.status });
       setError(
         [
           `Missing SWF at ${DEFAULT_SWF_URL}`,
@@ -538,6 +683,7 @@ async function tryAutoLoadDefaultSwf() {
       return;
     }
   } catch {
+    addLog("warn", "swf.autoload.check_failed", { url: DEFAULT_SWF_URL });
     setError(
       [`Could not check SWF at ${DEFAULT_SWF_URL}`, "Use “Load SWF…” to select a file."].join(
         " — ",
@@ -551,12 +697,14 @@ async function tryAutoLoadDefaultSwf() {
 
 async function toggleFullscreen() {
   try {
+    addLog("info", "fullscreen.toggle", { from: Boolean(document.fullscreenElement) });
     if (!document.fullscreenElement) {
       await viewport.requestFullscreen?.({ navigationUI: "hide" } as unknown as FullscreenOptions);
     } else {
       await document.exitFullscreen?.();
     }
   } catch (err) {
+    addLog("error", "fullscreen.failed", { err: String(err) });
     setError(`Fullscreen failed: ${String(err)}`);
   }
 }
@@ -740,6 +888,7 @@ resetKeybindsBtn.addEventListener("click", () => {
 
 exportStorageBtn.addEventListener("click", () => {
   const scope = storageExportScopeEl.value === "all" ? "all" : "tanks";
+  addLog("info", "storage.export", { scope });
   const payload = {
     version: 1,
     createdAt: new Date().toISOString(),
@@ -748,10 +897,12 @@ exportStorageBtn.addEventListener("click", () => {
     note: "Export includes localStorage only (not IndexedDB).",
     localStorage: readLocalStorage(scope),
   };
+  addLog("info", "storage.export.ok", { scope, keys: Object.keys(payload.localStorage).length });
   jsonDownload(payload, `tanks-storage-${scope}-${new Date().toISOString().slice(0, 19)}.json`);
 });
 
 importStorageBtn.addEventListener("click", () => {
+  addLog("info", "storage.import.open", {});
   importStorageInput.value = "";
   importStorageInput.click();
 });
@@ -781,9 +932,11 @@ importStorageInput.addEventListener("change", async () => {
     const tanksOnly = tanksKeysOnly(entries);
     for (const [k, v] of Object.entries(tanksOnly)) localStorage.setItem(k, v);
 
+    addLog("info", "storage.import.ok", { keys: Object.keys(tanksOnly).length });
     setStatus(`Imported ${Object.keys(tanksOnly).length} wrapper keys. Reloading…`);
     window.location.reload();
   } catch (err) {
+    addLog("error", "storage.import.failed", { err: String(err) });
     setError(`Import failed: ${String(err)}`);
   }
 });
@@ -791,6 +944,7 @@ importStorageInput.addEventListener("change", async () => {
 clearWrapperBtn.addEventListener("click", () => {
   const ok = window.confirm("Clear wrapper settings (tanks.* keys) and reload?");
   if (!ok) return;
+  addLog("warn", "storage.clear_wrapper", {});
   removeLocalStorageKeys("tanks");
   setStatus("Cleared wrapper settings. Reloading…");
   window.location.reload();
@@ -801,9 +955,15 @@ clearAllBtn.addEventListener("click", async () => {
     "Clear ALL site data (localStorage + IndexedDB where supported) and reload?\n\nThis may remove game saves.",
   );
   if (!ok) return;
+  addLog("warn", "storage.clear_all", {});
   setStatus("Clearing site data…");
   try {
     const result = await clearSiteData();
+    addLog("info", "storage.clear_all.ok", {
+      deleted: result.deleted.length,
+      blocked: result.blocked.length,
+      errors: result.errors.length,
+    });
     const noteParts = [
       result.deleted.length ? `Deleted DBs: ${result.deleted.length}` : null,
       result.blocked.length ? `Blocked DBs: ${result.blocked.length}` : null,
@@ -812,8 +972,182 @@ clearAllBtn.addEventListener("click", async () => {
     setStatus(noteParts.length ? `${noteParts.join(" — ")}. Reloading…` : "Reloading…");
     window.location.reload();
   } catch (err) {
+    addLog("error", "storage.clear_all.failed", { err: String(err) });
     setError(`Clear failed: ${String(err)}`);
   }
+});
+
+function safeJsonValue(value: unknown): unknown {
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return null;
+  }
+}
+
+async function listIndexedDbNames(): Promise<string[] | null> {
+  const idbAny = indexedDB as unknown as { databases?: () => Promise<Array<{ name?: string }>> };
+  if (typeof idbAny.databases !== "function") return null;
+  try {
+    const dbs = await idbAny.databases();
+    return dbs
+      .map((d) => d.name)
+      .filter((n): n is string => Boolean(n))
+      .sort();
+  } catch {
+    return null;
+  }
+}
+
+async function collectDiagnostics() {
+  const idbNames = await listIndexedDbNames();
+  const hasRuffle = typeof window.RufflePlayer?.newest === "function";
+  const ruffleConfig = safeJsonValue(window.RufflePlayer?.config ?? null);
+  const logEntries = logs.snapshot();
+
+  return {
+    kind: "tanks-diagnostics",
+    generatedAt: new Date().toISOString(),
+    location: {
+      href: window.location.href,
+      origin: window.location.origin,
+      protocol: window.location.protocol,
+    },
+    env: {
+      mode: import.meta.env.MODE,
+      baseUrl: import.meta.env.BASE_URL,
+      dev: import.meta.env.DEV,
+      prod: import.meta.env.PROD,
+    },
+    runtime: {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      languages: Array.isArray(navigator.languages) ? navigator.languages : [],
+      deviceMemory:
+        "deviceMemory" in navigator
+          ? (navigator as unknown as { deviceMemory?: number }).deviceMemory
+          : null,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+    },
+    display: {
+      devicePixelRatio: window.devicePixelRatio,
+      screen: { width: window.screen.width, height: window.screen.height },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      stage: {
+        base: DEFAULT_STAGE_SIZE,
+        cssPx: { width: stage.clientWidth, height: stage.clientHeight },
+      },
+    },
+    wrapper: {
+      loadState: state.loadState,
+      swf: state.swf,
+      scaleMode: state.scaleMode,
+      isFullscreen: state.isFullscreen,
+      volume: state.volume,
+      touch: {
+        enabled: state.touchEnabled,
+        preset: state.touchPreset,
+        size: state.touchSize,
+        opacity: state.touchOpacity,
+      },
+      keybinds: state.keybinds,
+      lastError: state.lastError,
+      debug: { enabled: state.debugEnabled, overlay: state.debugOverlay },
+    },
+    ruffle: {
+      hasRuffle,
+      config: ruffleConfig,
+    },
+    storage: {
+      localStorageWrapperKeys: listLocalStorageKeys().filter((k) => k.startsWith("tanks.")),
+      indexedDbNames: idbNames,
+    },
+    logs: {
+      counts: logs.counts(),
+      entries: logEntries,
+    },
+  };
+}
+
+function diagnosticsFilename(prefix: string) {
+  const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
+  return `${prefix}-${stamp}.json`;
+}
+
+async function copyToClipboard(text: string) {
+  if (!navigator.clipboard?.writeText) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+debugEnabledEl.addEventListener("change", () => {
+  state.debugEnabled = Boolean(debugEnabledEl.checked);
+  persistDebugSettings();
+  addLog("info", "debug.enabled", { enabled: state.debugEnabled });
+  applyDebugUi();
+});
+
+debugOverlayCheckboxEl.addEventListener("change", () => {
+  state.debugOverlay = Boolean(debugOverlayCheckboxEl.checked);
+  persistDebugSettings();
+  addLog("info", "debug.overlay", { overlay: state.debugOverlay });
+  applyDebugUi();
+});
+
+copyDiagnosticsBtn.addEventListener("click", async () => {
+  if (!state.debugEnabled) return;
+  try {
+    const payload = await collectDiagnostics();
+    const text = JSON.stringify(payload, null, 2);
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setStatus("Diagnostics copied to clipboard.");
+      addLog("info", "debug.diagnostics.copied", { bytes: text.length });
+    } else {
+      jsonDownload(payload, diagnosticsFilename("tanks-diagnostics"));
+      setStatus("Clipboard not available; downloaded diagnostics instead.");
+      addLog("warn", "debug.diagnostics.copy_failed", {});
+    }
+  } catch (err) {
+    setError(`Diagnostics failed: ${String(err)}`);
+    addLog("error", "debug.diagnostics.failed", { err: String(err) });
+  }
+});
+
+downloadDiagnosticsBtn.addEventListener("click", async () => {
+  if (!state.debugEnabled) return;
+  try {
+    const payload = await collectDiagnostics();
+    jsonDownload(payload, diagnosticsFilename("tanks-diagnostics"));
+    addLog("info", "debug.diagnostics.downloaded", {});
+  } catch (err) {
+    setError(`Diagnostics failed: ${String(err)}`);
+    addLog("error", "debug.diagnostics.failed", { err: String(err) });
+  }
+});
+
+downloadLogsBtn.addEventListener("click", () => {
+  if (!state.debugEnabled) return;
+  const payload = {
+    kind: "tanks-logs",
+    generatedAt: new Date().toISOString(),
+    counts: logs.counts(),
+    entries: logs.snapshot(),
+  };
+  jsonDownload(payload, diagnosticsFilename("tanks-logs"));
+  addLog("info", "debug.logs.downloaded", {});
+});
+
+clearLogsBtn.addEventListener("click", () => {
+  if (!state.debugEnabled) return;
+  logs.clear();
+  addLog("info", "debug.logs.cleared", {});
+  applyDebugUi();
 });
 
 document.addEventListener("fullscreenchange", () => {
@@ -836,6 +1170,7 @@ fileInput.addEventListener("change", () => {
   if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
   lastObjectUrl = URL.createObjectURL(file);
 
+  addLog("info", "swf.file.selected", { name: file.name, size: file.size, type: file.type });
   void loadSwfUrl(lastObjectUrl, { type: "file", name: file.name, url: lastObjectUrl });
 });
 
@@ -896,6 +1231,11 @@ window.render_game_to_text = () =>
       opacity: state.touchOpacity,
     },
     keybinds: state.keybinds,
+    debug: {
+      enabled: state.debugEnabled,
+      overlay: state.debugOverlay,
+      logs: logs.counts(),
+    },
     lastError: state.lastError,
   });
 

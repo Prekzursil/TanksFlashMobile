@@ -22,11 +22,11 @@
 - [x] iOS wrapper – Package the web build into an iOS app (Capacitor or equivalent) and document build/signing steps.
 - [x] Windows packaging path – Decide between Tauri/Electron/PWA and implement a Windows build pipeline for the chosen option. (Chosen: Electron)
 - [x] App icon + splash – Add initial icon/splash assets and hook them up for Android/iOS/Windows builds.
-- [ ] Debug logging mode – Add an optional debug overlay or log export so testers can share useful diagnostics.
+- [x] Debug logging mode – Add an optional debug overlay or log export so testers can share useful diagnostics.
 
 ### Discovered follow-ups
-- [ ] Pin Ruffle update cadence – Decide how often to bump `@ruffle-rs/ruffle` nightly and document the process.
-- [ ] Fix Playwright tool warning – Silence the Node ESM warning in the bundled `web_game_playwright_client.js` setup (optional cleanup).
+- [x] Pin Ruffle update cadence – Decide how often to bump `@ruffle-rs/ruffle` nightly and document the process.
+- [x] Fix Playwright tool warning – Silence the Node ESM warning in the bundled `web_game_playwright_client.js` setup (optional cleanup).
 - [ ] Touch overlay layout presets – Add “left-handed” / “tablet” layouts and allow dragging controls to reposition.
 - [ ] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 - [ ] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.

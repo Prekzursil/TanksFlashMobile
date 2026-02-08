@@ -15,4 +15,6 @@ export const STORAGE_KEYS = {
   touchOpacity: "tanks.touchOpacity",
   volume: "tanks.volume",
   keybinds: "tanks.keybinds",
+  debugEnabled: "tanks.debugEnabled",
+  debugOverlay: "tanks.debugOverlay",
 } as const;
