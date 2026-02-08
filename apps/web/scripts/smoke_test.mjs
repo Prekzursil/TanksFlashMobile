@@ -232,6 +232,7 @@ async function main() {
     await page.waitForTimeout(200);
 
     // Exercise UI scale setting once.
+    /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
     await page.evaluate(() => {
       const el = document.querySelector("#uiScale");
       if (!(el instanceof HTMLInputElement)) throw new Error("Missing #uiScale range input");
@@ -245,6 +246,7 @@ async function main() {
       const parsed = Number(raw);
       return Number.isFinite(parsed) ? parsed : null;
     });
+    /* eslint-enable no-undef */
     if (uiScale == null || Math.abs(uiScale - 1.2) > 0.05) {
       throw new Error(`UI scale did not apply (expected ~1.2, got ${String(uiScale)})`);
     }

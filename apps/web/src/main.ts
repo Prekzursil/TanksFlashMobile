@@ -2,6 +2,7 @@ import "./style.css";
 import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from "./config";
 import { createLogBuffer, hookGlobalErrors, type LogLevel } from "./debug";
 import { createGamepadInput } from "./gamepad";
+import { format, getStrings } from "./i18n";
 import { createInputMapper, type KeyCode } from "./input";
 import { createTouchControls, type TouchLayout, type TouchPreset } from "./touchControls";
 import { computeStageLayout, type ScaleMode } from "./viewport";
@@ -14,6 +15,8 @@ type SwfSource =
 
 type Keybinds = Record<KeyCode, string>;
 type TouchLayouts = Partial<Record<TouchPreset, TouchLayout>>;
+
+const S = getStrings("en");
 
 const DEFAULT_KEYBINDS: Keybinds = {
   ArrowUp: "ArrowUp",
@@ -226,15 +229,15 @@ app.innerHTML = `
   <div class="layout">
     <header class="topbar">
       <div class="brand">
-        <div class="title">TANKS</div>
-        <div class="subtitle">Flash revival (Ruffle wrapper)</div>
+        <div class="title">${S.app.title}</div>
+        <div class="subtitle">${S.app.subtitle}</div>
       </div>
 
       <div class="toolbar">
-        <button id="settingsBtn" type="button" class="btn">Settings</button>
-        <button id="helpBtn" type="button" class="btn btnSecondary">Help</button>
-        <button id="fullscreenBtn" type="button" class="btn">Fullscreen</button>
-        <button id="loadFileBtn" type="button" class="btn">Load SWF…</button>
+        <button id="settingsBtn" type="button" class="btn">${S.toolbar.settings}</button>
+        <button id="helpBtn" type="button" class="btn btnSecondary">${S.toolbar.help}</button>
+        <button id="fullscreenBtn" type="button" class="btn">${S.toolbar.fullscreen}</button>
+        <button id="loadFileBtn" type="button" class="btn">${S.toolbar.loadSwf}</button>
         <input id="fileInput" type="file" accept=".swf" class="hidden" />
       </div>
     </header>
@@ -250,15 +253,15 @@ app.innerHTML = `
 
     <dialog id="settingsDialog" class="dialog">
       <div class="dialogHeader">
-        <div class="dialogTitle">Settings</div>
-        <button id="settingsCloseBtn" type="button" class="btn btnSecondary">Close</button>
+        <div class="dialogTitle">${S.settings.title}</div>
+        <button id="settingsCloseBtn" type="button" class="btn btnSecondary">${S.common.close}</button>
       </div>
 
       <div class="dialogBody">
         <section class="panel">
-          <div class="panelTitle">Display</div>
+          <div class="panelTitle">${S.settings.display.title}</div>
           <label class="field">
-            <span class="label">Scale</span>
+            <span class="label">${S.settings.display.scale}</span>
             <select id="scaleMode">
               <option value="fit">Fit</option>
               <option value="fill">Fill</option>
@@ -266,151 +269,148 @@ app.innerHTML = `
             </select>
           </label>
           <label class="field rangeField">
-            <span class="label">UI scale</span>
+            <span class="label">${S.settings.display.uiScale}</span>
             <input id="uiScale" type="range" min="80" max="140" step="5" />
             <span id="uiScaleValue" class="value"></span>
           </label>
-          <div class="hint">Scales wrapper UI only (not the game canvas).</div>
-          <div class="hint">Tip: press <kbd>f</kbd> to toggle fullscreen.</div>
+          <div class="hint">${S.settings.display.uiScaleHint}</div>
+          <div class="hint">${S.settings.display.fullscreenTip} <kbd>f</kbd> ${S.settings.display.fullscreenTipSuffix}</div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Audio</div>
+          <div class="panelTitle">${S.settings.audio.title}</div>
           <label class="field">
-            <span class="label">Mute</span>
+            <span class="label">${S.settings.audio.mute}</span>
             <input id="mute" type="checkbox" />
           </label>
 
           <label class="field rangeField">
-            <span class="label">Volume</span>
+            <span class="label">${S.settings.audio.volume}</span>
             <input id="volume" type="range" min="0" max="100" step="1" />
             <span id="volumeValue" class="value"></span>
           </label>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Touch Controls</div>
+          <div class="panelTitle">${S.settings.touch.title}</div>
 
           <label class="field">
-            <span class="label">Enable</span>
+            <span class="label">${S.common.enabled}</span>
             <input id="touchEnabled" type="checkbox" />
           </label>
 
 	          <div id="touchControlsFields" class="stack">
 	            <label class="field">
-	              <span class="label">Preset</span>
+	              <span class="label">${S.settings.touch.preset}</span>
 	              <select id="touchPreset">
-	                <option value="compact">Compact</option>
-	                <option value="comfortable">Comfortable</option>
-	                <option value="leftHanded">Left-handed</option>
-	                <option value="tablet">Tablet</option>
+	                <option value="compact">${S.settings.touch.presetCompact}</option>
+	                <option value="comfortable">${S.settings.touch.presetComfortable}</option>
+	                <option value="leftHanded">${S.settings.touch.presetLeftHanded}</option>
+	                <option value="tablet">${S.settings.touch.presetTablet}</option>
 	              </select>
 	            </label>
 
             <label class="field rangeField">
-              <span class="label">Size</span>
+              <span class="label">${S.settings.touch.size}</span>
               <input id="touchSize" type="range" min="40" max="96" step="1" />
               <span id="touchSizeValue" class="value"></span>
             </label>
 
 	            <label class="field rangeField">
-	              <span class="label">Opacity</span>
+	              <span class="label">${S.settings.touch.opacity}</span>
 	              <input id="touchOpacity" type="range" min="20" max="100" step="1" />
 	              <span id="touchOpacityValue" class="value"></span>
 	            </label>
 
 	            <label class="field">
-	              <span class="label">Edit layout</span>
+	              <span class="label">${S.settings.touch.editLayout}</span>
 	              <input id="touchEditLayout" type="checkbox" />
 	            </label>
 
 	            <div class="row rowWrap">
 	              <button id="touchResetLayoutBtn" type="button" class="btn btnSecondary">
-	                Reset layout
+	                ${S.settings.touch.resetLayout}
 	              </button>
 	            </div>
 
 	            <div class="hint">
-	              Enable “Edit layout”, close Settings, then drag the handles on the overlay to reposition
-	              controls.
+	              ${S.settings.touch.editHint}
 	            </div>
 	          </div>
 	        </section>
 
-        <section class="panel">
-          <div class="panelTitle">Keybinds</div>
+	        <section class="panel">
+	          <div class="panelTitle">${S.settings.keybinds.title}</div>
 
 	          <label class="field">
-	            <span class="label">Enable remap</span>
+	            <span class="label">${S.settings.keybinds.enableRemap}</span>
 	            <input id="keyRemapEnabled" type="checkbox" />
 	          </label>
 	          <div class="hint">
-	            When enabled, the wrapper intercepts key presses and sends your mapped keys to the game.
-	            Disable if the SWF UI behaves oddly.
+	            ${S.settings.keybinds.remapHint}
 	          </div>
 
 	          <div class="grid2">
 	            <label class="field">
-	              <span class="label">Up</span>
+	              <span class="label">${S.settings.keybinds.up}</span>
 	              <select id="keyUp"></select>
 	            </label>
             <label class="field">
-              <span class="label">Down</span>
+              <span class="label">${S.settings.keybinds.down}</span>
               <select id="keyDown"></select>
             </label>
             <label class="field">
-              <span class="label">Left</span>
+              <span class="label">${S.settings.keybinds.left}</span>
               <select id="keyLeft"></select>
             </label>
             <label class="field">
-              <span class="label">Right</span>
+              <span class="label">${S.settings.keybinds.right}</span>
               <select id="keyRight"></select>
             </label>
             <label class="field">
-              <span class="label">Action A</span>
+              <span class="label">${S.settings.keybinds.actionA}</span>
               <select id="keyA"></select>
             </label>
             <label class="field">
-              <span class="label">Action B</span>
+              <span class="label">${S.settings.keybinds.actionB}</span>
               <select id="keyB"></select>
             </label>
-          </div>
+	          </div>
 
-          <div class="row">
-            <button id="resetKeybindsBtn" type="button" class="btn btnSecondary">
-              Reset to defaults
-            </button>
-          </div>
-        </section>
+	          <div class="row">
+	            <button id="resetKeybindsBtn" type="button" class="btn btnSecondary">
+	              ${S.settings.keybinds.reset}
+	            </button>
+	          </div>
+	        </section>
 
         <section class="panel">
-          <div class="panelTitle">Gamepad</div>
+          <div class="panelTitle">${S.settings.gamepad.title}</div>
 
           <label class="field">
-            <span class="label">Enable</span>
+            <span class="label">${S.common.enabled}</span>
             <input id="gamepadEnabled" type="checkbox" />
           </label>
           <div id="gamepadStatus" class="hint"></div>
           <div class="hint">
-            Mapping: D-pad/left stick = move, bottom face button = Action A (Space), right face button
-            = Action B (Enter).
+            ${S.settings.gamepad.mappingHint}
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Storage</div>
+          <div class="panelTitle">${S.settings.storage.title}</div>
 
           <label class="field">
-            <span class="label">Export scope</span>
+            <span class="label">${S.settings.storage.exportScope}</span>
             <select id="storageExportScope">
-              <option value="tanks">Only tanks.* keys</option>
-              <option value="all">All localStorage keys</option>
+              <option value="tanks">${S.settings.storage.exportScopeTanks}</option>
+              <option value="all">${S.settings.storage.exportScopeAll}</option>
             </select>
           </label>
 
           <div class="row rowWrap">
-            <button id="exportStorageBtn" type="button" class="btn btnSecondary">Export</button>
-            <button id="importStorageBtn" type="button" class="btn btnSecondary">Import</button>
+            <button id="exportStorageBtn" type="button" class="btn btnSecondary">${S.settings.storage.export}</button>
+            <button id="importStorageBtn" type="button" class="btn btnSecondary">${S.settings.storage.import}</button>
             <input
               id="importStorageInput"
               type="file"
@@ -421,51 +421,48 @@ app.innerHTML = `
 
           <div class="row rowWrap">
             <button id="clearWrapperBtn" type="button" class="btn btnDanger">
-              Clear wrapper settings
+              ${S.settings.storage.clearWrapper}
             </button>
             <button id="clearAllBtn" type="button" class="btn btnDanger">
-              Clear all site data (incl. saves)
+              ${S.settings.storage.clearAll}
             </button>
           </div>
 
           <div class="hint">
-            Export/import manages <code>localStorage</code> (wrapper settings). Clearing “all site data” also
-            attempts to delete <code>IndexedDB</code> databases (where supported), which may remove game saves
-            stored by Ruffle.
+            ${S.settings.storage.hint}
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Debug</div>
+          <div class="panelTitle">${S.settings.debug.title}</div>
 
           <label class="field">
-            <span class="label">Enable</span>
+            <span class="label">${S.settings.debug.enable}</span>
             <input id="debugEnabled" type="checkbox" />
           </label>
 
           <label class="field">
-            <span class="label">Overlay</span>
+            <span class="label">${S.settings.debug.overlay}</span>
             <input id="debugOverlay" type="checkbox" />
           </label>
 
           <div class="row rowWrap">
             <button id="copyDiagnosticsBtn" type="button" class="btn btnSecondary">
-              Copy diagnostics
+              ${S.settings.debug.copyDiagnostics}
             </button>
             <button id="downloadDiagnosticsBtn" type="button" class="btn btnSecondary">
-              Download diagnostics
+              ${S.settings.debug.downloadDiagnostics}
             </button>
           </div>
 
           <div class="row rowWrap">
-            <button id="downloadLogsBtn" type="button" class="btn btnSecondary">Download logs</button>
-            <button id="clearLogsBtn" type="button" class="btn btnDanger">Clear logs</button>
+            <button id="downloadLogsBtn" type="button" class="btn btnSecondary">${S.settings.debug.downloadLogs}</button>
+            <button id="clearLogsBtn" type="button" class="btn btnDanger">${S.settings.debug.clearLogs}</button>
           </div>
 
           <div id="logCounts" class="hint"></div>
           <div class="hint">
-            Diagnostics include wrapper settings + runtime info + recent wrapper logs. It does not include the SWF
-            itself.
+            ${S.settings.debug.hint}
           </div>
         </section>
       </div>
@@ -473,81 +470,71 @@ app.innerHTML = `
 
     <dialog id="helpDialog" class="dialog">
       <div class="dialogHeader">
-        <div class="dialogTitle">Controls & Tips</div>
-        <button id="helpCloseBtn" type="button" class="btn btnSecondary">Close</button>
+        <div class="dialogTitle">${S.help.title}</div>
+        <button id="helpCloseBtn" type="button" class="btn btnSecondary">${S.common.close}</button>
       </div>
 
       <div class="dialogBody">
         <section class="panel">
-          <div class="panelTitle">Quick Start</div>
+          <div class="panelTitle">${S.help.quickStart.title}</div>
           <div class="helpText">
             <p>
-              This project is a wrapper around the original Flash game running inside Ruffle. The wrapper’s job is to
-              provide clean input, scaling, and packaging across devices.
+              ${S.help.quickStart.p1}
             </p>
             <p>
-              If the game doesn’t load automatically, click <strong>Load SWF…</strong> and choose your <code>.swf</code>
-              file.
+              ${S.help.quickStart.p2} <strong>${S.toolbar.loadSwf}</strong> ${S.help.quickStart.p2Suffix}
             </p>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Keyboard</div>
+          <div class="panelTitle">${S.help.keyboard.title}</div>
           <div class="helpText">
             <ul>
-              <li>Move: <kbd>Arrow</kbd> keys (remappable in Settings)</li>
-              <li>Action A: <kbd>Space</kbd></li>
-              <li>Action B: <kbd>Enter</kbd></li>
-              <li>Fullscreen: <kbd>f</kbd></li>
+              <li>${S.help.keyboard.move} <kbd>Arrow</kbd> ${S.help.keyboard.moveSuffix}</li>
+              <li>${S.help.keyboard.actionA} <kbd>Space</kbd></li>
+              <li>${S.help.keyboard.actionB} <kbd>Enter</kbd></li>
+              <li>${S.help.keyboard.fullscreen} <kbd>f</kbd></li>
             </ul>
             <p class="helpNote">
-              If the SWF UI behaves oddly, try disabling “Enable remap” in Settings. When disabled, the wrapper won’t
-              intercept keyboard events.
+              ${S.help.keyboard.note}
             </p>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Touch</div>
+          <div class="panelTitle">${S.help.touch.title}</div>
           <div class="helpText">
-            <p>Enable the on-screen overlay in Settings → Touch Controls.</p>
+            <p>${S.help.touch.p1}</p>
             <ul>
-              <li>Presets: Compact / Comfortable / Left-handed / Tablet</li>
-              <li>Edit layout: toggle “Edit layout”, close Settings, then drag the handles</li>
+              <li>${S.help.touch.presets} ${S.settings.touch.presetCompact} / ${S.settings.touch.presetComfortable} / ${S.settings.touch.presetLeftHanded} / ${S.settings.touch.presetTablet}</li>
+              <li>${S.help.touch.edit} ${S.help.touch.editSuffix}</li>
             </ul>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Gamepad</div>
+          <div class="panelTitle">${S.help.gamepad.title}</div>
           <div class="helpText">
-            <p>Enable gamepad input in Settings → Gamepad.</p>
+            <p>${S.help.gamepad.p1}</p>
             <ul>
-              <li>Move: D-pad or left stick</li>
-              <li>Action A: bottom face button (often A / Cross / B depending on controller)</li>
-              <li>Action B: right face button (often B / Circle / A depending on controller)</li>
+              <li>${S.help.gamepad.move} ${S.help.gamepad.moveSuffix}</li>
+              <li>${S.help.gamepad.actionA} ${S.help.gamepad.actionASuffix}</li>
+              <li>${S.help.gamepad.actionB} ${S.help.gamepad.actionBSuffix}</li>
             </ul>
             <p class="helpNote">
-              The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves
-              strangely, we can add a mapping customization screen as a follow-up.
+              ${S.help.gamepad.note}
             </p>
           </div>
         </section>
 
         <section class="panel">
-          <div class="panelTitle">Troubleshooting</div>
+          <div class="panelTitle">${S.help.troubleshooting.title}</div>
           <div class="helpText">
             <ul>
-              <li>
-                If inputs feel “stuck”, switch tabs/windows and come back (the wrapper releases all inputs on blur).
-              </li>
-              <li>
-                Saves are managed by Ruffle (typically via IndexedDB). Use Settings → Storage if you need to clear data.
-              </li>
-              <li>
-                For bug reports, enable Settings → Debug and export diagnostics/logs.
-              </li>
+              <li>${S.help.troubleshooting.stuck}</li>
+              <li>${S.help.troubleshooting.saves}</li>
+              <li>${S.help.troubleshooting.bugReports}</li>
             </ul>
           </div>
         </section>
@@ -910,7 +897,7 @@ function ensurePlayer(): RufflePlayerElement {
 async function loadSwfUrl(url: string, source: SwfSource) {
   state.loadState = "loading";
   state.lastError = null;
-  setStatus(`Loading SWF…`);
+  setStatus(S.status.loadingSwf);
   addLog("info", "swf.load.start", {
     urlType: url.startsWith("blob:") ? "blob" : url.startsWith("http") ? "http" : "other",
     source: source.type === "file" ? { type: "file", name: source.name } : source,
@@ -1037,18 +1024,26 @@ function renderGamepadStatus() {
   gamepadEnabledEl.disabled = !supported;
 
   if (!supported) {
-    gamepadStatusEl.textContent = "Gamepad not supported in this environment.";
+    gamepadStatusEl.textContent = S.settings.gamepad.statusNotSupported;
     return;
   }
 
   if (!state.gamepadEnabled) {
-    gamepadStatusEl.textContent = "Disabled.";
+    gamepadStatusEl.textContent = S.common.disabled;
     return;
   }
 
   const count = gamepadInput.getConnectedCount();
-  const label = count === 1 ? "gamepad" : "gamepads";
-  gamepadStatusEl.textContent = count ? `Connected: ${count} ${label}.` : "No gamepad detected.";
+  if (!count) {
+    gamepadStatusEl.textContent = S.settings.gamepad.statusNoGamepad;
+    return;
+  }
+
+  const suffix =
+    count === 1
+      ? S.settings.gamepad.statusConnectedSuffixSingular
+      : S.settings.gamepad.statusConnectedSuffixPlural;
+  gamepadStatusEl.textContent = `${S.settings.gamepad.statusConnectedPrefix} ${count} ${suffix}`;
 }
 
 function syncSettingsUi() {
@@ -1195,9 +1190,7 @@ touchEditLayoutEl.addEventListener("change", () => {
   state.touchEditing = Boolean(touchEditLayoutEl.checked);
   touchControls.setEditMode(state.touchEditing);
   if (state.touchEditing) {
-    setStatus(
-      "Touch layout edit mode enabled. Close Settings, then drag the handles to reposition controls.",
-    );
+    setStatus(S.status.touchEditEnabled);
   }
   syncSettingsUi();
 });
@@ -1206,7 +1199,7 @@ touchResetLayoutBtn.addEventListener("click", () => {
   state.touchLayouts[state.touchPreset] = defaultTouchLayout();
   schedulePersistTouchLayouts();
   touchControls.setLayout(touchLayoutForPreset(state.touchPreset));
-  setStatus("Touch layout reset.");
+  setStatus(S.status.touchLayoutReset);
 });
 
 keyRemapEnabledEl.addEventListener("change", () => {
@@ -1278,7 +1271,9 @@ importStorageInput.addEventListener("change", async () => {
     for (const [k, v] of Object.entries(tanksOnly)) localStorage.setItem(k, v);
 
     addLog("info", "storage.import.ok", { keys: Object.keys(tanksOnly).length });
-    setStatus(`Imported ${Object.keys(tanksOnly).length} wrapper keys. Reloading…`);
+    setStatus(
+      format(S.status.importedWrapperKeysReloading, { count: Object.keys(tanksOnly).length }),
+    );
     window.location.reload();
   } catch (err) {
     addLog("error", "storage.import.failed", { err: String(err) });
@@ -1291,7 +1286,7 @@ clearWrapperBtn.addEventListener("click", () => {
   if (!ok) return;
   addLog("warn", "storage.clear_wrapper", {});
   removeLocalStorageKeys("tanks");
-  setStatus("Cleared wrapper settings. Reloading…");
+  setStatus(S.status.clearedWrapperReloading);
   window.location.reload();
 });
 
@@ -1301,7 +1296,7 @@ clearAllBtn.addEventListener("click", async () => {
   );
   if (!ok) return;
   addLog("warn", "storage.clear_all", {});
-  setStatus("Clearing site data…");
+  setStatus(S.status.clearingSiteData);
   try {
     const result = await clearSiteData();
     addLog("info", "storage.clear_all.ok", {
@@ -1314,7 +1309,11 @@ clearAllBtn.addEventListener("click", async () => {
       result.blocked.length ? `Blocked DBs: ${result.blocked.length}` : null,
       result.errors.length ? `Failed DBs: ${result.errors.length}` : null,
     ].filter(Boolean);
-    setStatus(noteParts.length ? `${noteParts.join(" — ")}. Reloading…` : "Reloading…");
+    setStatus(
+      noteParts.length
+        ? format(S.status.reloadingWithNotes, { notes: noteParts.join(" — ") })
+        : S.status.reloading,
+    );
     window.location.reload();
   } catch (err) {
     addLog("error", "storage.clear_all.failed", { err: String(err) });
@@ -1461,11 +1460,11 @@ copyDiagnosticsBtn.addEventListener("click", async () => {
     const text = JSON.stringify(payload, null, 2);
     const ok = await copyToClipboard(text);
     if (ok) {
-      setStatus("Diagnostics copied to clipboard.");
+      setStatus(S.status.diagnosticsCopied);
       addLog("info", "debug.diagnostics.copied", { bytes: text.length });
     } else {
       jsonDownload(payload, diagnosticsFilename("tanks-diagnostics"));
-      setStatus("Clipboard not available; downloaded diagnostics instead.");
+      setStatus(S.status.clipboardUnavailableDownloaded);
       addLog("warn", "debug.diagnostics.copy_failed", {});
     }
   } catch (err) {
@@ -1605,5 +1604,5 @@ window.render_game_to_text = () =>
     lastError: state.lastError,
   });
 
-setStatus("Ready. Attempting to load default SWF…");
+setStatus(S.status.readyAutoLoad);
 void tryAutoLoadDefaultSwf();
