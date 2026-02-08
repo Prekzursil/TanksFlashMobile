@@ -41,3 +41,4 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added an in-app “Controls & Tips” Help dialog and updated README notes to match the current UI.
 - Added a helper script for base64-encoding a `.pfx` into a GitHub Secret without printing it (`scripts/pfx_to_base64.mjs`).
 - Accessibility pass: added wrapper UI scaling (Settings → Display → UI scale), larger default UI hit targets (44px min), and clearer focus-visible outlines; touch buttons now have descriptive ARIA labels/state.
+- Build/release automation (option 1): CI now uploads build artifacts for web (`web-dist`), Windows (`desktop-windows`), and Android debug APK (`android-debug-apk`) via GitHub Actions artifacts.

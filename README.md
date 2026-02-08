@@ -12,6 +12,9 @@ This repo is in early setup, but the web wrapper is already scaffolded under `ap
 
 The actionable backlog lives in `TODO.md`.
 
+CI note:
+- Pull Requests publish build artifacts to GitHub Actions (web `dist/`, Windows installer/zip, Android debug APK). See the workflow run’s “Artifacts” section.
+
 ## Quick start (web)
 
 ```bash

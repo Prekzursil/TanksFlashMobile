@@ -39,8 +39,10 @@
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
 - [x] Accessibility pass – Larger touch targets, configurable UI scale, and basic contrast checks for menus/overlays.
 - [x] In-app help – Add a “Controls & Tips” screen explaining input, turn flow, and common gameplay mechanics.
-- [ ] Build/release automation – Add scripts for versioning and producing release artifacts (APK/IPA/EXE) consistently.
+- [x] Build/release automation – Produce CI build artifacts (web `dist/`, Windows installer/zip, Android debug APK) for PRs/main pushes.
 - [ ] Localization-ready UI – Route UI strings through a simple i18n layer (English first).
 - [ ] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
 - [ ] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
 - [ ] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.
+- [ ] iOS CI artifact (simulator) – Build an unsigned iOS Simulator `.app` on macOS runners for quick QA (no App Store signing).
+- [ ] Tag-based releases – On version tags, attach artifacts to a GitHub Release (keeps PR CI as-is).
