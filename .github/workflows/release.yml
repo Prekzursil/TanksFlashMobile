@@ -1,0 +1,354 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify tag/version sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify versions match VERSION
+        run: node scripts/sync_versions.mjs --check
+
+      - name: Verify tag matches VERSION
+        run: |
+          set -euo pipefail
+          VERSION="$(cat VERSION | tr -d '\r\n')"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag does not match VERSION."
+            echo "  tag:     $GITHUB_REF_NAME"
+            echo "  VERSION: v$VERSION"
+            echo
+            echo "Fix by running: npm run sync:versions, committing, then tagging v$VERSION."
+            exit 1
+          fi
+
+  build_web:
+    name: Build (web dist zip)
+    runs-on: ubuntu-latest
+    needs: verify
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Zip dist
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p ../../release-out
+          cd dist
+          zip -r "../../release-out/Tanks-${TAG}-web-dist.zip" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-web
+          path: release-out/Tanks-*-web-dist.zip
+          if-no-files-found: error
+
+  build_windows:
+    name: Build (Windows installer + portable zip)
+    runs-on: windows-latest
+    needs: verify
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            apps/web/package-lock.json
+            apps/desktop/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build web
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: apps/desktop
+
+      - name: Prepare Windows code signing certificate (optional)
+        if: ${{ secrets.WINDOWS_CERT_PFX_BASE64 != '' && secrets.WINDOWS_CERT_PASSWORD != '' }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "tanks-codesign.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_PFX_BASE64 }}"))
+          "WIN_CSC_LINK=$certPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "WIN_CSC_KEY_PASSWORD=${{ secrets.WINDOWS_CERT_PASSWORD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Package Windows app
+        run: npm run package:win
+        working-directory: apps/desktop
+
+      - name: Collect release assets
+        shell: pwsh
+        run: |
+          $tag = "${env:GITHUB_REF_NAME}"
+          $outDir = "release-out"
+          $distDir = "apps/desktop/dist"
+
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+          $installer = Get-ChildItem $distDir -Filter *.exe | Where-Object { $_.Name -match 'Setup' } | Select-Object -First 1
+          if (-not $installer) {
+            $installer = Get-ChildItem $distDir -Filter *.exe | Select-Object -First 1
+          }
+          if (-not $installer) {
+            throw "No Windows installer (.exe) found in $distDir"
+          }
+
+          $portableZip = Get-ChildItem $distDir -Filter *.zip | Where-Object { $_.Name -notmatch 'blockmap' } | Select-Object -First 1
+          if (-not $portableZip) {
+            throw "No portable Windows zip (.zip) found in $distDir"
+          }
+
+          Copy-Item $installer.FullName "$outDir/Tanks-$tag-windows-setup.exe" -Force
+          Copy-Item $portableZip.FullName "$outDir/Tanks-$tag-windows-portable.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: release-out/Tanks-*-windows-*
+          if-no-files-found: error
+
+  build_android:
+    name: Build (Android debug APK)
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/web/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build web
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Capacitor sync (Android)
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Prepare Android keystore (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+        run: |
+          set -euo pipefail
+          KEYSTORE_PATH="${RUNNER_TEMP}/tanks-release.keystore"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_PATH"
+
+          echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build signed release (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+        run: ./gradlew bundleRelease assembleRelease
+        working-directory: android
+
+      - name: Collect release assets
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p release-out
+
+          APK_PATH="$(ls android/app/build/outputs/apk/debug/*.apk | head -n 1)"
+          cp "$APK_PATH" "release-out/Tanks-${TAG}-android-debug.apk"
+
+          if [ -f android/app/build/outputs/apk/debug/output-metadata.json ]; then
+            cp android/app/build/outputs/apk/debug/output-metadata.json "release-out/Tanks-${TAG}-android-debug-metadata.json"
+          fi
+
+          RELEASE_AAB="android/app/build/outputs/bundle/release/app-release.aab"
+          if [ -f "$RELEASE_AAB" ]; then
+            cp "$RELEASE_AAB" "release-out/Tanks-${TAG}-android-release.aab"
+          fi
+
+          RELEASE_APK="$(ls android/app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1 || true)"
+          if [ -n "$RELEASE_APK" ]; then
+            cp "$RELEASE_APK" "release-out/Tanks-${TAG}-android-release.apk"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: release-out/Tanks-*-android-*
+          if-no-files-found: error
+
+  build_ios_simulator:
+    name: Build (iOS simulator .app zip)
+    runs-on: macos-latest
+    needs: verify
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/web/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build web
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Capacitor sync (iOS)
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: pod install
+        working-directory: ios/App
+
+      - name: Build iOS simulator app
+        working-directory: ios/App
+        run: |
+          set -euo pipefail
+          DERIVED_DATA="${RUNNER_TEMP}/DerivedData"
+
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee xcodebuild.log
+
+      - name: Collect release assets
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          DERIVED_DATA="${RUNNER_TEMP}/DerivedData"
+          APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/App.app"
+          OUT_DIR="release-out"
+          OUT_ZIP="$OUT_DIR/Tanks-${TAG}-ios-simulator-app.zip"
+
+          mkdir -p "$OUT_DIR"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Expected .app not found at: $APP_PATH"
+            echo "Searching DerivedData for .app bundles:"
+            find "$DERIVED_DATA" -maxdepth 6 -type d -name '*.app' -print || true
+            exit 1
+          fi
+
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$OUT_ZIP"
+          echo "Created: $OUT_ZIP"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ios
+          path: |
+            release-out/Tanks-*-ios-simulator-app.zip
+            ios/App/xcodebuild.log
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - build_web
+      - build_windows
+      - build_android
+      - build_ios_simulator
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Generate checksums
+        run: |
+          set -euo pipefail
+          find release-artifacts -type f -name 'Tanks-*' -print0 | sort -z | xargs -0 sha256sum > release-artifacts/SHA256SUMS.txt
+          echo "Wrote release-artifacts/SHA256SUMS.txt"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/Tanks-*
+            release-artifacts/SHA256SUMS.txt

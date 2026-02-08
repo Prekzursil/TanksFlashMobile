@@ -1,0 +1,492 @@
+:root {
+  color-scheme: dark;
+  --ui-scale: 1;
+  --ui-focus: rgba(88, 166, 255, 0.9);
+
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0e1117;
+  color: #e6edf3;
+}
+
+#app {
+  height: 100%;
+}
+
+.layout {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(16px * var(--ui-scale));
+  padding: calc(12px * var(--ui-scale)) calc(14px * var(--ui-scale));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 17, 23, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.brand .title {
+  font-size: calc(14px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.brand .subtitle {
+  font-size: calc(12px * var(--ui-scale));
+  opacity: 0.75;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: calc(10px * var(--ui-scale));
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--ui-scale));
+  font-size: calc(12px * var(--ui-scale));
+  opacity: 0.95;
+}
+
+.label {
+  opacity: 0.8;
+}
+
+select {
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: calc(10px * var(--ui-scale));
+  padding: calc(8px * var(--ui-scale)) calc(10px * var(--ui-scale));
+  min-height: calc(44px * var(--ui-scale));
+}
+
+.btn {
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: calc(10px * var(--ui-scale));
+  padding: calc(8px * var(--ui-scale)) calc(12px * var(--ui-scale));
+  min-height: calc(44px * var(--ui-scale));
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn:focus-visible,
+select:focus-visible,
+input:focus-visible,
+.touchBtn:focus-visible,
+.touchDragHandle:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.btnSecondary {
+  background: transparent;
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.btnDanger {
+  border-color: rgba(248, 81, 73, 0.35);
+}
+
+.btnDanger:hover {
+  border-color: rgba(248, 81, 73, 0.6);
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.hint {
+  margin-top: calc(8px * var(--ui-scale));
+  font-size: calc(12px * var(--ui-scale));
+  opacity: 0.75;
+}
+
+.helpText {
+  font-size: calc(12px * var(--ui-scale));
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.helpText p {
+  margin: 0 0 10px 0;
+}
+
+.helpText ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.helpText li {
+  margin: 6px 0;
+}
+
+.helpText .helpNote {
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+.hint code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: calc(11px * var(--ui-scale));
+  padding: calc(1px * var(--ui-scale)) calc(6px * var(--ui-scale));
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(22, 27, 34, 0.65);
+}
+
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: calc(11px * var(--ui-scale));
+  padding: calc(2px * var(--ui-scale)) calc(6px * var(--ui-scale));
+  border-radius: calc(8px * var(--ui-scale));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 27, 34, 0.8);
+}
+
+.dialog {
+  width: min(720px, calc(100vw - 24px));
+  max-height: min(80vh, 860px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: calc(16px * var(--ui-scale));
+  padding: 0;
+  background: #0e1117;
+  color: #e6edf3;
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(12px * var(--ui-scale)) calc(14px * var(--ui-scale));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dialogTitle {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.dialogBody {
+  padding: calc(14px * var(--ui-scale));
+  display: grid;
+  gap: calc(12px * var(--ui-scale));
+  overflow: auto;
+}
+
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: calc(14px * var(--ui-scale));
+  padding: calc(12px * var(--ui-scale));
+  background: rgba(22, 27, 34, 0.35);
+}
+
+.panelTitle {
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  margin-bottom: calc(10px * var(--ui-scale));
+}
+
+.stack {
+  margin-top: calc(10px * var(--ui-scale));
+  display: grid;
+  gap: calc(10px * var(--ui-scale));
+}
+
+.rangeField {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: calc(10px * var(--ui-scale));
+}
+
+.rangeField input[type="range"] {
+  width: 100%;
+}
+
+.value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: calc(12px * var(--ui-scale));
+  opacity: 0.85;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(10px * var(--ui-scale));
+}
+
+.row {
+  margin-top: calc(10px * var(--ui-scale));
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rowWrap {
+  flex-wrap: wrap;
+  gap: calc(10px * var(--ui-scale));
+  justify-content: flex-start;
+}
+
+.hidden {
+  display: none;
+}
+
+.main {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+}
+
+.viewport {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(12px * var(--ui-scale));
+  overflow: hidden;
+}
+
+.stage {
+  display: grid;
+  place-items: center;
+  background: #000;
+  border-radius: calc(12px * var(--ui-scale));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.playerContainer,
+.rufflePlayer {
+  width: 100%;
+  height: 100%;
+}
+
+.status {
+  padding: calc(10px * var(--ui-scale)) calc(14px * var(--ui-scale));
+  font-size: calc(12px * var(--ui-scale));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0.9;
+  user-select: text;
+}
+
+.touchOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: calc(14px * var(--ui-scale));
+  opacity: var(--touch-opacity, 1);
+  pointer-events: none;
+
+  --touch-size: 56px;
+  --touch-gap: 10px;
+  --touch-font: 18px;
+}
+
+.touchOverlay[data-enabled="0"] {
+  display: none;
+}
+
+.touchOverlay[data-preset="leftHanded"] {
+  flex-direction: row-reverse;
+}
+
+.touchOverlay[data-preset="tablet"] {
+  padding: calc(24px * var(--ui-scale));
+}
+
+.touchOverlay[data-editing="1"] .touchBtn {
+  pointer-events: none;
+}
+
+.touchOverlay[data-editing="1"] .touchCluster {
+  outline: 2px dashed rgba(88, 166, 255, 0.45);
+  outline-offset: calc(10px * var(--ui-scale));
+}
+
+.touchOverlay[data-preset="comfortable"] {
+  --touch-size: 72px;
+  --touch-gap: 12px;
+  --touch-font: 22px;
+}
+
+.touchCluster {
+  display: grid;
+  gap: var(--touch-gap);
+  pointer-events: none;
+  position: relative;
+}
+
+.touchDragHandle {
+  display: none;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+
+  position: absolute;
+  top: calc(var(--touch-gap) * -0.6);
+
+  padding: calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(22, 27, 34, 0.75);
+  color: rgba(230, 237, 243, 0.92);
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 700;
+  cursor: grab;
+}
+
+.touchDragHandle:active {
+  cursor: grabbing;
+}
+
+.touchOverlay[data-editing="1"] .touchDragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dragHandleLeft {
+  left: 0;
+}
+
+.dragHandleRight {
+  right: 0;
+}
+
+.touchOverlay[data-preset="leftHanded"] .dragHandleLeft {
+  left: auto;
+  right: 0;
+}
+
+.touchOverlay[data-preset="leftHanded"] .dragHandleRight {
+  right: auto;
+  left: 0;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, var(--touch-size));
+  grid-template-rows: repeat(3, var(--touch-size));
+  gap: var(--touch-gap);
+  pointer-events: none;
+}
+
+.touchBtn {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+
+  width: var(--touch-size);
+  height: var(--touch-size);
+  border-radius: calc(18px * var(--ui-scale));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(22, 27, 34, 0.75);
+  color: #e6edf3;
+  font-size: var(--touch-font);
+  font-weight: 700;
+}
+
+.touchBtn[data-pressed="1"] {
+  transform: translateY(1px);
+  background: rgba(88, 166, 255, 0.22);
+  border-color: rgba(88, 166, 255, 0.55);
+}
+
+.dpadUp {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpadLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpadRight {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpadDown {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.clusterRight {
+  display: grid;
+  gap: var(--touch-gap);
+  justify-items: end;
+}
+
+.action {
+  border-radius: 999px;
+}
+
+@media (max-width: 560px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.debugOverlay {
+  position: fixed;
+  left: calc(14px * var(--ui-scale));
+  bottom: calc(14px * var(--ui-scale));
+  z-index: 50;
+
+  max-width: min(520px, calc(100vw - 28px));
+  white-space: pre-wrap;
+
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: calc(12px * var(--ui-scale));
+  line-height: 1.35;
+  color: rgba(230, 237, 243, 0.92);
+
+  background: rgba(8, 10, 13, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: calc(12px * var(--ui-scale));
+  padding: calc(10px * var(--ui-scale)) calc(12px * var(--ui-scale));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+  pointer-events: none;
+}

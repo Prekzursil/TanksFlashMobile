@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tanks</string>
+    <string name="title_activity_main">Tanks</string>
+    <string name="package_name">com.prekzursil.tanks</string>
+    <string name="custom_url_scheme">com.prekzursil.tanks</string>
+</resources>

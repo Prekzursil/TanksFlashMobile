@@ -1,0 +1,62 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Electron wrapper for the Tanks Flash web build",
+  "author": "Prekzursil",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Prekzursil/TanksFlashMobile.git"
+  },
+  "main": "main.cjs",
+  "scripts": {
+    "sync:web": "node ./scripts/sync_web_dist.mjs",
+    "dev": "node ./scripts/dev.mjs",
+    "start": "electron .",
+    "package:dir": "npm run sync:web && electron-builder --dir --publish never",
+    "package:win": "npm run sync:web && electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "40.2.1",
+    "electron-builder": "26.7.0"
+  },
+  "build": {
+    "appId": "com.prekzursil.tanks",
+    "productName": "Tanks",
+    "copyright": "Copyright (c) 2026 Prekzursil",
+    "asar": true,
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "web",
+        "to": "web"
+      }
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tanks",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    }
+  }
+}
