@@ -6,6 +6,10 @@ feasible if Ruffle compatibility becomes a blocker.
 
 The spike lives in `apps/remake-godot/`.
 
+Related docs:
+- Scope: `docs/REMAKE_V1_SCOPE.md`
+- Input plan: `docs/GODOT_INPUT_MAPPING.md`
+
 ## Goals (What This Spike Is For)
 
 - Validate core artillery mechanics (aim → fire → ballistic arc → impact → damage).
@@ -37,18 +41,23 @@ godot --path apps/remake-godot --run
 
 ## Controls
 
+- `A/D`: move (limited fuel)
 - `Left/Right`: adjust firing angle
 - `Up/Down`: adjust power
 - `Space`: fire
+- `1/2/3`: weapon select
 - `R`: reset match / regenerate terrain
 
 ## What’s Implemented
 
 - Procedural heightmap terrain (noise + smoothing).
 - Two tanks, turn-based.
+- Turn timer + fuel-limited movement.
 - Projectile motion with gravity.
+- Wind affecting projectiles.
 - Terrain collision + tank collision.
-- Explosion damage with a falloff radius.
+- Multiple weapons with different blast/crater tuning.
+- Explosion damage with falloff radius.
 - Terrain deformation via crater carving.
 - Win condition (last tank alive).
 

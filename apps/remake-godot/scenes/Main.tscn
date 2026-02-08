@@ -22,14 +22,14 @@ mouse_filter = 2
 anchors_preset = 0
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 560.0
-offset_bottom = 220.0
+offset_right = 660.0
+offset_bottom = 290.0
 
 [node name="VBox" type="VBoxContainer" parent="UI/Hud/Panel"]
 offset_left = 10.0
 offset_top = 10.0
-offset_right = 534.0
-offset_bottom = 194.0
+offset_right = 634.0
+offset_bottom = 264.0
 
 [node name="TitleLabel" type="Label" parent="UI/Hud/Panel/VBox"]
 text = "Tanks Remake (Godot Spike)"

@@ -11,10 +11,19 @@ const TERRAIN_MAX_Y := VIEWPORT_HEIGHT - 60.0
 
 const GRAVITY := 900.0
 
+const MOVE_SPEED_PX_PER_SEC := 210.0
+const TURN_FUEL_MAX := 180.0
+const FUEL_COST_PER_PX := 1.0
+const TURN_TIME_SEC := 20.0
+
+const WIND_ACCEL_MIN := -240.0
+const WIND_ACCEL_MAX := 240.0
+
 const TANK_RADIUS := 18.0
-const PROJECTILE_RADIUS := 4.0
-const BLAST_RADIUS := 72.0
-const CRATER_RADIUS := 56.0
+
+const DEFAULT_PROJECTILE_RADIUS := 4.0
+const DEFAULT_BLAST_RADIUS := 72.0
+const DEFAULT_CRATER_RADIUS := 56.0
 
 const ANGLE_MIN_DEG := 5.0
 const ANGLE_MAX_DEG := 85.0
@@ -26,6 +35,32 @@ const POWER_SPEED_PER_SEC := 360.0
 
 const EXPLOSION_COOLDOWN_SEC := 0.65
 
+class Weapon:
+	var name: String
+	var blast_radius: float
+	var crater_radius: float
+	var max_damage: float
+	var speed_multiplier: float
+	var projectile_radius: float
+	var projectile_color: Color
+
+	func _init(
+		weapon_name: String,
+		blast_radius_value: float,
+		crater_radius_value: float,
+		max_damage_value: float,
+		speed_multiplier_value: float,
+		projectile_radius_value: float,
+		projectile_color_value: Color
+	) -> void:
+		name = weapon_name
+		blast_radius = blast_radius_value
+		crater_radius = crater_radius_value
+		max_damage = max_damage_value
+		speed_multiplier = speed_multiplier_value
+		projectile_radius = projectile_radius_value
+		projectile_color = projectile_color_value
+
 class Tank:
 	var id: int
 	var pos: Vector2
@@ -33,6 +68,7 @@ class Tank:
 	var hp := 100.0
 	var aim_angle_deg := 45.0
 	var power := 520.0
+	var weapon_idx := 0
 	var color: Color
 
 	func _init(id_value: int, start_pos: Vector2, color_value: Color) -> void:
@@ -49,6 +85,11 @@ var _phase := Phase.AIM
 var _message := ""
 var _cooldown := 0.0
 
+var _weapons: Array[Weapon] = []
+var _wind_accel := 0.0
+var _turn_fuel_left := TURN_FUEL_MAX
+var _turn_time_left := TURN_TIME_SEC
+
 var _terrain_y := PackedFloat32Array()
 var _terrain_polyline := PackedVector2Array()
 var _terrain_fill := PackedVector2Array()
@@ -59,12 +100,16 @@ var _current_tank_idx := 0
 var _projectile_active := false
 var _projectile_pos := Vector2.ZERO
 var _projectile_vel := Vector2.ZERO
+var _projectile_weapon_idx := 0
+var _projectile_radius := DEFAULT_PROJECTILE_RADIUS
+var _projectile_color := Color(1.0, 0.9, 0.4)
 
 @onready var _status_label: Label = $"UI/Hud/Panel/VBox/StatusLabel"
 @onready var _help_label: Label = $"UI/Hud/Panel/VBox/HelpLabel"
 
 func _ready() -> void:
 	randomize()
+	_init_weapons()
 	_init_match()
 
 func _init_match() -> void:
@@ -77,8 +122,47 @@ func _init_match() -> void:
 	_current_tank_idx = 0
 	_init_terrain()
 	_init_tanks()
+	_start_turn(_current_tank_idx)
 	_update_ui()
 	queue_redraw()
+
+func _init_weapons() -> void:
+	_weapons.clear()
+	_weapons.append(Weapon.new(
+		"Cannon",
+		DEFAULT_BLAST_RADIUS,
+		DEFAULT_CRATER_RADIUS,
+		70.0,
+		1.0,
+		DEFAULT_PROJECTILE_RADIUS,
+		Color(1.0, 0.9, 0.4)
+	))
+	_weapons.append(Weapon.new(
+		"Heavy",
+		92.0,
+		72.0,
+		90.0,
+		0.85,
+		5.0,
+		Color(1.0, 0.75, 0.35)
+	))
+	_weapons.append(Weapon.new(
+		"Sniper",
+		56.0,
+		36.0,
+		60.0,
+		1.25,
+		3.0,
+		Color(0.75, 0.9, 1.0)
+	))
+
+func _start_turn(player_idx: int) -> void:
+	_current_tank_idx = clampi(player_idx, 0, _tanks.size() - 1)
+	_turn_fuel_left = TURN_FUEL_MAX
+	_turn_time_left = TURN_TIME_SEC
+	_wind_accel = randf_range(WIND_ACCEL_MIN, WIND_ACCEL_MAX)
+	if absf(_wind_accel) < 25.0:
+		_wind_accel = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey):
@@ -93,6 +177,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_SPACE:
 			if _phase == Phase.AIM and not _projectile_active and _cooldown <= 0.0:
 				_fire(_tanks[_current_tank_idx])
+		KEY_1:
+			_set_weapon_for_current(0)
+		KEY_2:
+			_set_weapon_for_current(1)
+		KEY_3:
+			_set_weapon_for_current(2)
 
 func _process(delta: float) -> void:
 	if _phase == Phase.GAMEOVER:
@@ -125,6 +215,14 @@ func _tick_aim(delta: float) -> void:
 		_end_turn_or_game()
 		return
 
+	_turn_time_left = maxf(0.0, _turn_time_left - delta)
+	if _turn_time_left == 0.0 and not _projectile_active:
+		_message = "Timer expired!"
+		_fire(tank)
+		return
+
+	_try_move_tank(tank, delta)
+
 	var angle_delta := ANGLE_SPEED_DEG_PER_SEC * delta
 	if Input.is_key_pressed(KEY_LEFT):
 		tank.aim_angle_deg = clampf(tank.aim_angle_deg - angle_delta, ANGLE_MIN_DEG, ANGLE_MAX_DEG)
@@ -136,6 +234,56 @@ func _tick_aim(delta: float) -> void:
 		tank.power = clampf(tank.power - power_delta, POWER_MIN, POWER_MAX)
 	if Input.is_key_pressed(KEY_UP):
 		tank.power = clampf(tank.power + power_delta, POWER_MIN, POWER_MAX)
+
+func _try_move_tank(tank: Tank, delta: float) -> void:
+	if _turn_fuel_left <= 0.0:
+		return
+	if tank.vel.length_squared() > 0.0001:
+		return
+
+	var ground_y := _terrain_surface_y(tank.pos.x) - TANK_RADIUS
+	if absf(tank.pos.y - ground_y) > 0.75:
+		return
+
+	var move_dir := 0
+	if Input.is_key_pressed(KEY_A):
+		move_dir -= 1
+	if Input.is_key_pressed(KEY_D):
+		move_dir += 1
+	if move_dir == 0:
+		return
+
+	var desired_x := tank.pos.x + float(move_dir) * MOVE_SPEED_PX_PER_SEC * delta
+	desired_x = clampf(desired_x, TANK_RADIUS, float(VIEWPORT_WIDTH) - TANK_RADIUS)
+	desired_x = _avoid_tank_overlap(tank, desired_x)
+	desired_x = clampf(desired_x, TANK_RADIUS, float(VIEWPORT_WIDTH) - TANK_RADIUS)
+
+	var dist := absf(desired_x - tank.pos.x)
+	var fuel_cost := dist * FUEL_COST_PER_PX
+	if fuel_cost > _turn_fuel_left:
+		var allowed_dist := _turn_fuel_left / FUEL_COST_PER_PX
+		desired_x = tank.pos.x + float(move_dir) * allowed_dist
+		desired_x = clampf(desired_x, TANK_RADIUS, float(VIEWPORT_WIDTH) - TANK_RADIUS)
+		desired_x = _avoid_tank_overlap(tank, desired_x)
+		desired_x = clampf(desired_x, TANK_RADIUS, float(VIEWPORT_WIDTH) - TANK_RADIUS)
+
+		dist = absf(desired_x - tank.pos.x)
+		fuel_cost = dist * FUEL_COST_PER_PX
+
+	tank.pos.x = desired_x
+	_turn_fuel_left = maxf(0.0, _turn_fuel_left - fuel_cost)
+
+func _avoid_tank_overlap(moving_tank: Tank, desired_x: float) -> float:
+	var min_sep := TANK_RADIUS * 2.0 + 10.0
+	for tank in _tanks:
+		if tank == moving_tank:
+			continue
+		if tank.hp <= 0.0:
+			continue
+		var dx := desired_x - tank.pos.x
+		if absf(dx) < min_sep:
+			desired_x = tank.pos.x + (min_sep if dx >= 0.0 else -min_sep)
+	return desired_x
 
 func _tick_tanks(delta: float) -> void:
 	for tank in _tanks:
@@ -154,6 +302,7 @@ func _tick_tanks(delta: float) -> void:
 
 func _tick_projectile(delta: float) -> void:
 	_phase = Phase.FIRING
+	_projectile_vel.x += _wind_accel * delta
 	_projectile_vel.y += GRAVITY * delta
 	_projectile_pos += _projectile_vel * delta
 
@@ -168,7 +317,7 @@ func _tick_projectile(delta: float) -> void:
 	for tank in _tanks:
 		if tank.hp <= 0.0:
 			continue
-		if tank.pos.distance_to(_projectile_pos) <= (TANK_RADIUS + PROJECTILE_RADIUS):
+		if tank.pos.distance_to(_projectile_pos) <= (TANK_RADIUS + _projectile_radius):
 			_explode_at(_projectile_pos)
 			return
 
@@ -177,12 +326,19 @@ func _tick_projectile(delta: float) -> void:
 		_explode_at(Vector2(_projectile_pos.x, _terrain_surface_y(_projectile_pos.x)))
 
 func _fire(tank: Tank) -> void:
+	if _weapons.is_empty():
+		return
+	var weapon_idx := clampi(tank.weapon_idx, 0, _weapons.size() - 1)
+	var weapon := _weapons[weapon_idx]
 	var angle_rad := deg_to_rad(tank.aim_angle_deg)
 	var dir := Vector2(cos(angle_rad) * tank.facing_sign(), -sin(angle_rad)).normalized()
 
+	_projectile_weapon_idx = weapon_idx
+	_projectile_radius = weapon.projectile_radius
+	_projectile_color = weapon.projectile_color
 	_projectile_active = true
-	_projectile_pos = tank.pos + dir * (TANK_RADIUS + PROJECTILE_RADIUS + 2.0)
-	_projectile_vel = dir * tank.power
+	_projectile_pos = tank.pos + dir * (TANK_RADIUS + _projectile_radius + 2.0)
+	_projectile_vel = dir * tank.power * weapon.speed_multiplier
 	_message = ""
 
 func _explode_at(center: Vector2) -> void:
@@ -191,12 +347,17 @@ func _explode_at(center: Vector2) -> void:
 	_phase = Phase.EXPLODING
 	_cooldown = EXPLOSION_COOLDOWN_SEC
 
-	_carve_crater(center, CRATER_RADIUS)
-	_apply_explosion_damage(center, BLAST_RADIUS)
-	_message = "Boom!"
+	var weapon := _weapons[_projectile_weapon_idx] if not _weapons.is_empty() else null
+	if weapon != null:
+		_carve_crater(center, weapon.crater_radius)
+		_apply_explosion_damage(center, weapon.blast_radius, weapon.max_damage)
+		_message = "%s impact!" % weapon.name
+	else:
+		_carve_crater(center, DEFAULT_CRATER_RADIUS)
+		_apply_explosion_damage(center, DEFAULT_BLAST_RADIUS, 70.0)
+		_message = "Boom!"
 
-func _apply_explosion_damage(center: Vector2, radius: float) -> void:
-	var max_damage := 70.0
+func _apply_explosion_damage(center: Vector2, radius: float, max_damage: float) -> void:
 	for tank in _tanks:
 		if tank.hp <= 0.0:
 			continue
@@ -225,9 +386,19 @@ func _end_turn_or_game() -> void:
 	var next_idx := (_current_tank_idx + 1) % _tanks.size()
 	while _tanks[next_idx].hp <= 0.0:
 		next_idx = (next_idx + 1) % _tanks.size()
-	_current_tank_idx = next_idx
+	_start_turn(next_idx)
 	_phase = Phase.AIM
 	_message = ""
+
+func _set_weapon_for_current(weapon_idx: int) -> void:
+	if _cooldown > 0.0 or _projectile_active or _phase != Phase.AIM:
+		return
+	if _weapons.is_empty():
+		return
+	var tank := _tanks[_current_tank_idx]
+	if tank.hp <= 0.0:
+		return
+	tank.weapon_idx = clampi(weapon_idx, 0, _weapons.size() - 1)
 
 func _init_tanks() -> void:
 	_tanks.clear()
@@ -313,6 +484,11 @@ func _update_ui() -> void:
 	var p1hp := int(round(_tanks[0].hp)) if _tanks.size() > 0 else 0
 	var p2hp := int(round(_tanks[1].hp)) if _tanks.size() > 1 else 0
 
+	var weapon_name := "?"
+	if current != null and not _weapons.is_empty():
+		var idx := clampi(current.weapon_idx, 0, _weapons.size() - 1)
+		weapon_name = _weapons[idx].name
+
 	var phase_text := "Aim"
 	match _phase:
 		Phase.AIM:
@@ -335,13 +511,22 @@ func _update_ui() -> void:
 	var lines := PackedStringArray()
 	lines.append("Phase: %s" % phase_text)
 	lines.append("Turn: Player %d" % current_player)
+	lines.append("Weapon: %s" % weapon_name)
 	lines.append("Angle: %d deg   Power: %d" % [int(round(angle)), int(round(power))])
+	lines.append("Wind: %s" % _format_wind())
+	lines.append("Fuel: %d   Timer: %d" % [int(round(_turn_fuel_left)), int(ceil(_turn_time_left))])
 	lines.append("HP: P1 %d   P2 %d" % [p1hp, p2hp])
 	if _message != "":
 		lines.append(_message)
 
 	_status_label.text = "\n".join(lines)
-	_help_label.text = "Left/Right: angle   Up/Down: power   Space: fire   R: reset"
+	_help_label.text = "A/D: move   Left/Right: angle   Up/Down: power   1-3: weapon   Space: fire   R: reset"
+
+func _format_wind() -> String:
+	if absf(_wind_accel) < 0.001:
+		return "calm"
+	var arrow := "->" if _wind_accel > 0.0 else "<-"
+	return "%s %d" % [arrow, int(round(absf(_wind_accel)))]
 
 func _draw() -> void:
 	# Background
@@ -368,4 +553,4 @@ func _draw() -> void:
 
 	# Projectile
 	if _projectile_active:
-		draw_circle(_projectile_pos, PROJECTILE_RADIUS, Color(1.0, 0.9, 0.4))
+		draw_circle(_projectile_pos, _projectile_radius, _projectile_color)

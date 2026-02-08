@@ -11,10 +11,10 @@
 - [x] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
 
 ### Godot remake track (post-spike)
-- [ ] Define remake v1 scope – Document must-have mechanics (movement/fuel/wind/weapons) and what we’ll defer.
-- [ ] Godot core gameplay v1 – Add tank movement + basic turn flow (fuel/timer) + wind and at least one weapon type.
+- [x] Define remake v1 scope – Document must-have mechanics (movement/fuel/wind/weapons) and what we’ll defer.
+- [x] Godot core gameplay v1 – Add tank movement + basic turn flow (fuel/timer) + wind and at least one weapon type.
 - [ ] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
-- [ ] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
+- [x] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
 
 ## Medium priority
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
