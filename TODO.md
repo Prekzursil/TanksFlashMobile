@@ -1,12 +1,12 @@
 # Project Backlog
 
 ## High priority
-- [ ] Decide porting strategy – Choose between a Ruffle-wrapper-first approach vs a full reimplementation, with acceptance criteria for each.
-- [ ] Verify redistribution rights – Confirm whether we can ship the original SWF/assets; if not, document a “bring-your-own-SWF” workflow.
-- [ ] Web wrapper MVP – Build a minimal web app that embeds Ruffle and loads `assets/original/tanks.swf` (show a clear error if missing).
-- [ ] Responsive scaling & fullscreen – Add scaling modes (fit/fill/integer scale) plus a fullscreen toggle that works on desktop and mobile.
-- [ ] Input mapping layer – Centralize input so keyboard, touch overlay, and (later) gamepad can drive the SWF consistently.
-- [ ] Mobile touch controls v1 – Implement an on-screen controls overlay suitable for phones/tablets (D‑pad/buttons + layout presets).
+- [x] Decide porting strategy – Choose between a Ruffle-wrapper-first approach vs a full reimplementation, with acceptance criteria for each.
+- [x] Verify redistribution rights – Confirm whether we can ship the original SWF/assets; if not, document a “bring-your-own-SWF” workflow.
+- [x] Web wrapper MVP – Build a minimal web app that embeds Ruffle and loads `assets/original/tanks.swf` (show a clear error if missing).
+- [x] Responsive scaling & fullscreen – Add scaling modes (fit/fill/integer scale) plus a fullscreen toggle that works on desktop and mobile.
+- [x] Input mapping layer – Centralize input so keyboard, touch overlay, and (later) gamepad can drive the SWF consistently.
+- [x] Mobile touch controls v1 – Implement an on-screen controls overlay suitable for phones/tablets (D‑pad/buttons + layout presets).
 - [ ] Smoke test harness – Add a Playwright script that launches the web build, waits for render, captures a screenshot, and fails on console errors.
 - [ ] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
 
@@ -23,6 +23,10 @@
 - [ ] Windows packaging path – Decide between Tauri/Electron/PWA and implement a Windows build pipeline for the chosen option.
 - [ ] App icon + splash – Add initial icon/splash assets and hook them up for Android/iOS/Windows builds.
 - [ ] Debug logging mode – Add an optional debug overlay or log export so testers can share useful diagnostics.
+
+### Discovered follow-ups
+- [ ] Pin Ruffle update cadence – Decide how often to bump `@ruffle-rs/ruffle` nightly and document the process.
+- [ ] Fix Playwright tool warning – Silence the Node ESM warning in the bundled `web_game_playwright_client.js` setup (optional cleanup).
 
 ## Low priority
 - [ ] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
