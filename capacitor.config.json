@@ -1,5 +1,5 @@
 {
-  "appId": "com.prekzursil.tanksflashmobile",
-  "appName": "Tanks Flash Mobile",
+  "appId": "com.prekzursil.tanks",
+  "appName": "Tanks",
   "webDir": "apps/web/dist"
 }

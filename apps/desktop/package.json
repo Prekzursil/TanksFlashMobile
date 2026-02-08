@@ -21,8 +21,8 @@
     "electron-builder": "26.7.0"
   },
   "build": {
-    "appId": "com.prekzursil.tanksflashmobile",
-    "productName": "Tanks Flash Mobile",
+    "appId": "com.prekzursil.tanks",
+    "productName": "Tanks",
     "asar": true,
     "files": [
       "main.cjs",

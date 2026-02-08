@@ -34,7 +34,7 @@ function createMainWindow() {
 
 app.whenReady().then(() => {
   // Improves notifications/taskbar grouping on Windows.
-  app.setAppUserModelId("com.prekzursil.tanksflashmobile");
+  app.setAppUserModelId("com.prekzursil.tanks");
 
   createMainWindow();
 
@@ -46,4 +46,3 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
-

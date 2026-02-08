@@ -1,4 +1,4 @@
-package com.prekzursil.tanksflashmobile;
+package com.prekzursil.tanks;
 
 import com.getcapacitor.BridgeActivity;
 
