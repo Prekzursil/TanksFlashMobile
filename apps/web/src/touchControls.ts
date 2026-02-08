@@ -22,6 +22,7 @@ export type TouchControlsOptions = {
 type TouchButton = {
   id: string;
   label: string;
+  ariaLabel: string;
   code: KeyCode;
   className?: string;
 };
@@ -32,12 +33,12 @@ type TouchButtonInstance = {
 };
 
 const BUTTONS: TouchButton[] = [
-  { id: "up", label: "▲", code: "ArrowUp" },
-  { id: "left", label: "◀", code: "ArrowLeft" },
-  { id: "down", label: "▼", code: "ArrowDown" },
-  { id: "right", label: "▶", code: "ArrowRight" },
-  { id: "a", label: "A", code: "Space", className: "action actionA" },
-  { id: "b", label: "B", code: "Enter", className: "action actionB" },
+  { id: "up", label: "▲", ariaLabel: "Up", code: "ArrowUp" },
+  { id: "left", label: "◀", ariaLabel: "Left", code: "ArrowLeft" },
+  { id: "down", label: "▼", ariaLabel: "Down", code: "ArrowDown" },
+  { id: "right", label: "▶", ariaLabel: "Right", code: "ArrowRight" },
+  { id: "a", label: "A", ariaLabel: "Action A", code: "Space", className: "action actionA" },
+  { id: "b", label: "B", ariaLabel: "Action B", code: "Enter", className: "action actionB" },
 ];
 
 function defaultLayout(): TouchLayout {
@@ -63,7 +64,8 @@ function createButton(
   el.type = "button";
   el.className = `touchBtn ${btn.className ?? ""}`.trim();
   el.textContent = btn.label;
-  el.setAttribute("aria-label", btn.id);
+  el.setAttribute("aria-label", btn.ariaLabel);
+  el.setAttribute("aria-pressed", "false");
 
   const activePointerIds = new Set<number>();
   const sourceId = `touch:${btn.id}`;
@@ -72,6 +74,7 @@ function createButton(
     activePointerIds.add(pointerId);
     input.pressFrom(sourceId, btn.code);
     el.dataset.pressed = "1";
+    el.setAttribute("aria-pressed", "true");
   }
 
   function release(pointerId: number) {
@@ -79,6 +82,7 @@ function createButton(
     if (activePointerIds.size === 0) {
       input.releaseFrom(sourceId, btn.code);
       delete el.dataset.pressed;
+      el.setAttribute("aria-pressed", "false");
     }
   }
 
@@ -93,6 +97,7 @@ function createButton(
     activePointerIds.clear();
     input.releaseFrom(sourceId, btn.code);
     delete el.dataset.pressed;
+    el.setAttribute("aria-pressed", "false");
   }
 
   el.addEventListener("pointerdown", (ev) => {
@@ -121,6 +126,7 @@ function createButton(
     // Safety: if capture is lost mid-press, release the key.
     input.releaseFrom(sourceId, btn.code);
     delete el.dataset.pressed;
+    el.setAttribute("aria-pressed", "false");
     activePointerIds.clear();
   });
 

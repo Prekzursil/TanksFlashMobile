@@ -169,6 +169,7 @@ const state: {
   loadState: LoadState;
   swf: SwfSource;
   scaleMode: ScaleMode;
+  uiScale: number;
   isFullscreen: boolean;
   volume: number;
   gamepadEnabled: boolean;
@@ -187,6 +188,7 @@ const state: {
   loadState: "idle",
   swf: { type: "none" },
   scaleMode: (localStorage.getItem(STORAGE_KEYS.scaleMode) as ScaleMode) ?? "fit",
+  uiScale: loadInt(STORAGE_KEYS.uiScale, 100, 80, 140),
   isFullscreen: Boolean(document.fullscreenElement),
   volume: loadInt(STORAGE_KEYS.volume, 100, 0, 100),
   gamepadEnabled: loadBool(STORAGE_KEYS.gamepadEnabled, true),
@@ -212,6 +214,13 @@ state.touchSize = loadInt(
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Missing #app root element");
+
+function applyUiScale() {
+  const scale = clampInt(state.uiScale, 80, 140) / 100;
+  document.documentElement.style.setProperty("--ui-scale", String(scale));
+}
+
+applyUiScale();
 
 app.innerHTML = `
   <div class="layout">
@@ -256,6 +265,12 @@ app.innerHTML = `
               <option value="integer">Integer</option>
             </select>
           </label>
+          <label class="field rangeField">
+            <span class="label">UI scale</span>
+            <input id="uiScale" type="range" min="80" max="140" step="5" />
+            <span id="uiScaleValue" class="value"></span>
+          </label>
+          <div class="hint">Scales wrapper UI only (not the game canvas).</div>
           <div class="hint">Tip: press <kbd>f</kbd> to toggle fullscreen.</div>
         </section>
 
@@ -560,6 +575,8 @@ const settingsCloseBtn = required<HTMLButtonElement>("#settingsCloseBtn");
 const helpDialog = required<HTMLDialogElement>("#helpDialog");
 const helpCloseBtn = required<HTMLButtonElement>("#helpCloseBtn");
 const scaleSelect = required<HTMLSelectElement>("#scaleMode");
+const uiScaleEl = required<HTMLInputElement>("#uiScale");
+const uiScaleValueEl = required<HTMLSpanElement>("#uiScaleValue");
 const fullscreenBtn = required<HTMLButtonElement>("#fullscreenBtn");
 const touchEnabledEl = required<HTMLInputElement>("#touchEnabled");
 const touchPresetEl = required<HTMLSelectElement>("#touchPreset");
@@ -1036,6 +1053,8 @@ function renderGamepadStatus() {
 
 function syncSettingsUi() {
   scaleSelect.value = state.scaleMode;
+  uiScaleEl.value = String(state.uiScale);
+  uiScaleValueEl.textContent = `${state.uiScale}%`;
 
   muteEl.checked = state.volume === 0;
   volumeEl.value = String(state.volume);
@@ -1082,6 +1101,13 @@ scaleSelect.addEventListener("change", () => {
   state.scaleMode = scaleSelect.value as ScaleMode;
   localStorage.setItem(STORAGE_KEYS.scaleMode, state.scaleMode);
   resizeStage();
+});
+
+uiScaleEl.addEventListener("input", () => {
+  state.uiScale = clampInt(Number(uiScaleEl.value), 80, 140);
+  localStorage.setItem(STORAGE_KEYS.uiScale, String(state.uiScale));
+  applyUiScale();
+  syncSettingsUi();
 });
 
 fullscreenBtn.addEventListener("click", () => {
@@ -1362,6 +1388,7 @@ async function collectDiagnostics() {
       loadState: state.loadState,
       swf: state.swf,
       scaleMode: state.scaleMode,
+      uiScale: state.uiScale,
       isFullscreen: state.isFullscreen,
       volume: state.volume,
       gamepad: {
@@ -1551,6 +1578,7 @@ window.render_game_to_text = () =>
     loadState: state.loadState,
     swf: state.swf,
     scaleMode: state.scaleMode,
+    uiScale: state.uiScale,
     isFullscreen: state.isFullscreen,
     volume: state.volume,
     gamepad: {

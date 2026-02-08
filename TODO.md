@@ -37,7 +37,7 @@
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
-- [ ] Accessibility pass – Larger touch targets, configurable UI scale, and basic contrast checks for menus/overlays.
+- [x] Accessibility pass – Larger touch targets, configurable UI scale, and basic contrast checks for menus/overlays.
 - [x] In-app help – Add a “Controls & Tips” screen explaining input, turn flow, and common gameplay mechanics.
 - [ ] Build/release automation – Add scripts for versioning and producing release artifacts (APK/IPA/EXE) consistently.
 - [ ] Localization-ready UI – Route UI strings through a simple i18n layer (English first).

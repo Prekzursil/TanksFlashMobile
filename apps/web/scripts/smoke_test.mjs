@@ -231,12 +231,44 @@ async function main() {
     await page.click("#touchEnabled");
     await page.waitForTimeout(200);
 
+    // Exercise UI scale setting once.
+    await page.evaluate(() => {
+      const el = document.querySelector("#uiScale");
+      if (!(el instanceof HTMLInputElement)) throw new Error("Missing #uiScale range input");
+      el.value = "120";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.waitForTimeout(100);
+
+    const uiScale = await page.evaluate(() => {
+      const raw = getComputedStyle(document.documentElement).getPropertyValue("--ui-scale").trim();
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : null;
+    });
+    if (uiScale == null || Math.abs(uiScale - 1.2) > 0.05) {
+      throw new Error(`UI scale did not apply (expected ~1.2, got ${String(uiScale)})`);
+    }
+
     log("Capturing screenshot…");
     await withTimeout(
       page.screenshot({ path: path.join(args.outDir, "smoke.png"), fullPage: true }),
       args.timeoutMs,
       "page.screenshot",
     );
+
+    // Open help dialog and capture it too (ensures it renders and doesn't throw).
+    await page.click("#settingsCloseBtn");
+    await page.waitForTimeout(100);
+    await page.click("#helpBtn");
+    await page.waitForSelector("#helpDialog[open]", { timeout: 5000 });
+    await page.waitForTimeout(150);
+    await withTimeout(
+      page.screenshot({ path: path.join(args.outDir, "help.png"), fullPage: true }),
+      args.timeoutMs,
+      "page.screenshot help",
+    );
+    await page.click("#helpCloseBtn");
+    await page.waitForTimeout(100);
 
     // Validate wrapper state if available.
     if (checks.stateText) {

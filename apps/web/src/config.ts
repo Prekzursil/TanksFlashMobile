@@ -9,6 +9,7 @@ export const DEFAULT_STAGE_SIZE = {
 
 export const STORAGE_KEYS = {
   scaleMode: "tanks.scaleMode",
+  uiScale: "tanks.uiScale",
   touchEnabled: "tanks.touchEnabled",
   touchPreset: "tanks.touchPreset",
   touchLayouts: "tanks.touchLayouts",
