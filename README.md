@@ -27,6 +27,8 @@ npm run dev
 Then open the printed local URL.
 
 Notes:
+- If your SWF lives somewhere else, you can import it into `assets/original/` (gitignored) via:
+  - `npm run swf:import -- --from /path/to/tanks.swf`
 - If you don’t have `assets/original/tanks.swf`, you can still use the **Load SWF…** button in the UI.
 - Fullscreen: button or press `f`
 - Touch overlay: toggle **Touch** in the toolbar (auto-defaults on coarse pointers)
@@ -55,6 +57,8 @@ Start with a web wrapper that runs the SWF via **Ruffle** (WebAssembly), then pa
 
 - Mobile: Capacitor (or similar)
 - Desktop: Tauri/Electron or PWA
+
+See `docs/MOBILE_WRAPPER.md` for Android/iOS build steps.
 
 If Ruffle compatibility isn’t good enough for the full game, we can pivot to a full reimplementation using a cross‑platform engine (e.g., Godot).
 

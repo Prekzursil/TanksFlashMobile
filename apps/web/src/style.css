@@ -102,10 +102,28 @@ select {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.btnDanger {
+  border-color: rgba(248, 81, 73, 0.35);
+}
+
+.btnDanger:hover {
+  border-color: rgba(248, 81, 73, 0.6);
+  background: rgba(248, 81, 73, 0.08);
+}
+
 .hint {
   margin-top: 8px;
   font-size: 12px;
   opacity: 0.75;
+}
+
+.hint code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(22, 27, 34, 0.65);
 }
 
 kbd {
@@ -199,6 +217,12 @@ kbd {
   margin-top: 10px;
   display: flex;
   justify-content: flex-end;
+}
+
+.rowWrap {
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
 }
 
 .hidden {

@@ -11,8 +11,14 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added MIT licensing (`LICENSE`) plus a lightweight third-party attribution policy (`THIRD_PARTY_NOTICES.md`).
 - Added ESLint + Prettier to `apps/web` and wired lint/format checks into CI.
 - Added a Settings dialog for scale mode, audio (mute/volume), touch overlay configuration (enable/preset/size/opacity), and keybind customization (persisted + reset).
+- Added storage management tools in Settings (export/import wrapper `localStorage`, clear wrapper settings, and best-effort clear of all site data including IndexedDB).
+- Added a helper script to import/copy a SWF into `assets/original/` without committing it (`npm run swf:import -- --from ...`).
+- Added Capacitor scaffolding + docs for Android/iOS builds (`docs/MOBILE_WRAPPER.md`).
+- Added `capacitor.config.json` and root scripts for `cap` workflows.
+- Generated `android/` and `ios/` projects via Capacitor.
+- Smoke test passes after hardening timeouts/logging in `apps/web/scripts/smoke_test.mjs`.
 
 ## Next up
 
-- Add local save management utilities (clear/export/import local storage) for debugging and user support.
-- Start mobile/desktop wrappers once the web UX is stable.
+- Decide the Windows packaging path (Tauri/Electron/PWA) and implement the chosen pipeline.
+- Add initial icon/splash assets and wire them into Android/iOS/Windows.

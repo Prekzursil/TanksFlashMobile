@@ -7,7 +7,12 @@ import { chromium } from "playwright";
 
 const DEFAULT_URL = "http://127.0.0.1:4173";
 const DEFAULT_OUT_DIR = path.join("output", "smoke");
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
+
+function log(...parts) {
+  // Keep logs minimal but actionable in CI.
+  console.log("[smoke]", ...parts);
+}
 
 function parseArgs(argv) {
   const args = {
@@ -42,6 +47,15 @@ function parseArgs(argv) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withTimeout(promise, timeoutMs, label) {
+  return await Promise.race([
+    promise,
+    sleep(timeoutMs).then(() => {
+      throw new Error(`Timed out: ${label} (${timeoutMs}ms)`);
+    }),
+  ]);
 }
 
 async function waitForHttpOk(url, timeoutMs) {
@@ -112,50 +126,60 @@ async function main() {
   const args = parseArgs(process.argv);
   const url = args.url ?? DEFAULT_URL;
 
+  log("Starting", { url, outDir: args.outDir, timeoutMs: args.timeoutMs, noServer: args.noServer });
+
   await deleteDirIfExists(args.outDir);
   await fs.mkdir(args.outDir, { recursive: true });
 
   let server = null;
   let getServerLogs = null;
-
-  if (!args.noServer) {
-    // Quick sanity: ensure build exists (vite preview expects dist/)
-    try {
-      await fs.access(path.join("dist", "index.html"));
-    } catch {
-      throw new Error(
-        "Missing production build. Run `npm run build` before running the smoke test.",
-      );
-    }
-
-    server = startPreviewServer();
-    getServerLogs = collectOutput(server);
-
-    server.on("exit", (code) => {
-      if (code && code !== 0) {
-        // We keep going; waitForHttpOk will time out and report logs.
-      }
-    });
-
-    try {
-      await waitForHttpOk(url, args.timeoutMs);
-    } catch (err) {
-      const logs = getServerLogs ? getServerLogs() : "";
-      await fs.writeFile(path.join(args.outDir, "server.log"), logs);
-      throw err;
-    }
-  }
-
-  const consoleErrors = [];
-  const pageErrors = [];
-
-  const browser = await chromium.launch({
-    headless: !args.headed,
-    args: ["--use-gl=angle", "--use-angle=swiftshader"],
-  });
+  let browser = null;
 
   try {
+    if (!args.noServer) {
+      // Quick sanity: ensure build exists (vite preview expects dist/)
+      try {
+        await fs.access(path.join("dist", "index.html"));
+      } catch {
+        throw new Error(
+          "Missing production build. Run `npm run build` before running the smoke test.",
+        );
+      }
+
+      log("Starting preview server…");
+      server = startPreviewServer();
+      getServerLogs = collectOutput(server);
+
+      const serverExit = once(server, "exit").then(([code, signal]) => ({
+        type: "exit",
+        code,
+        signal,
+      }));
+
+      const ready = waitForHttpOk(url, args.timeoutMs).then(() => ({ type: "ready" }));
+      const result = await Promise.race([ready, serverExit]);
+
+      if (result.type === "exit") {
+        throw new Error(
+          `Preview server exited before it became ready (code ${result.code}, signal ${result.signal ?? "none"}).`,
+        );
+      }
+
+      log("Preview server ready");
+    }
+
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    log("Launching Chromium…");
+    browser = await chromium.launch({
+      headless: !args.headed,
+      args: ["--use-gl=angle", "--use-angle=swiftshader"],
+    });
+
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    page.setDefaultTimeout(args.timeoutMs);
+    page.setDefaultNavigationTimeout(args.timeoutMs);
     page.on("console", (msg) => {
       if (msg.type() !== "error") return;
       consoleErrors.push({ type: "console.error", text: msg.text() });
@@ -164,11 +188,18 @@ async function main() {
       pageErrors.push({ type: "pageerror", text: String(err) });
     });
 
-    await page.goto(url, { waitUntil: "domcontentloaded" });
+    log("Navigating…");
+    await withTimeout(
+      page.goto(url, { waitUntil: "domcontentloaded", timeout: args.timeoutMs }),
+      args.timeoutMs + 5_000,
+      `page.goto ${url}`,
+    );
     await page.waitForTimeout(1500);
 
     /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
-    const checks = await page.evaluate(() => {
+    log("Running wrapper checks…");
+    const checks = await withTimeout(
+      page.evaluate(() => {
       const status = document.querySelector("#status")?.textContent?.trim() ?? "";
       const hasViewport = Boolean(document.querySelector("#viewport"));
       const hasStage = Boolean(document.querySelector("#stage"));
@@ -176,7 +207,10 @@ async function main() {
       const hasRenderHook = typeof window.render_game_to_text === "function";
       const stateText = hasRenderHook ? window.render_game_to_text() : null;
       return { status, hasViewport, hasStage, hasRuffle, hasRenderHook, stateText };
-    });
+      }),
+      args.timeoutMs,
+      "page.evaluate wrapper checks",
+    );
     /* eslint-enable no-undef */
 
     await fs.writeFile(path.join(args.outDir, "state.json"), JSON.stringify(checks, null, 2));
@@ -197,7 +231,12 @@ async function main() {
     await page.click("#touchEnabled");
     await page.waitForTimeout(200);
 
-    await page.screenshot({ path: path.join(args.outDir, "smoke.png"), fullPage: true });
+    log("Capturing screenshot…");
+    await withTimeout(
+      page.screenshot({ path: path.join(args.outDir, "smoke.png"), fullPage: true }),
+      args.timeoutMs,
+      "page.screenshot",
+    );
 
     // Validate wrapper state if available.
     if (checks.stateText) {
@@ -221,9 +260,15 @@ async function main() {
       await fs.writeFile(path.join(args.outDir, "errors.json"), JSON.stringify(allErrors, null, 2));
       throw new Error(`Console/page errors detected (${allErrors.length}).`);
     }
+
+    log("Smoke test OK");
   } finally {
-    await browser.close();
+    if (browser) {
+      log("Closing Chromium…");
+      await withTimeout(browser.close(), args.timeoutMs, "browser.close");
+    }
     if (server) {
+      log("Stopping preview server…");
       await stopProcess(server);
       const logs = getServerLogs ? getServerLogs() : "";
       await fs.writeFile(path.join(args.outDir, "server.log"), logs);

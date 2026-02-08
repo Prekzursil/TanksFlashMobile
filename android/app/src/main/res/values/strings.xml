@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tanks Flash Mobile</string>
+    <string name="title_activity_main">Tanks Flash Mobile</string>
+    <string name="package_name">com.prekzursil.tanksflashmobile</string>
+    <string name="custom_url_scheme">com.prekzursil.tanksflashmobile</string>
+</resources>

@@ -9,8 +9,6 @@ build/
 .vite/
 
 # Mobile/desktop wrappers
-ios/
-android/
 windows/
 macos/
 .gradle/
@@ -22,6 +20,9 @@ yarn-error.log*
 pnpm-debug.log*
 .env
 .env.*
+
+# Generated outputs
+output/
 
 # OS/editor cruft
 .DS_Store

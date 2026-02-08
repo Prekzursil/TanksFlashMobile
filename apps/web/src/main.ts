@@ -52,6 +52,19 @@ function clampInt(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+function jsonDownload(payload: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function loadInt(key: string, fallback: number, min: number, max: number) {
   const raw = localStorage.getItem(key);
   if (raw == null) return fallback;
@@ -239,6 +252,44 @@ app.innerHTML = `
             </button>
           </div>
         </section>
+
+        <section class="panel">
+          <div class="panelTitle">Storage</div>
+
+          <label class="field">
+            <span class="label">Export scope</span>
+            <select id="storageExportScope">
+              <option value="tanks">Only tanks.* keys</option>
+              <option value="all">All localStorage keys</option>
+            </select>
+          </label>
+
+          <div class="row rowWrap">
+            <button id="exportStorageBtn" type="button" class="btn btnSecondary">Export</button>
+            <button id="importStorageBtn" type="button" class="btn btnSecondary">Import</button>
+            <input
+              id="importStorageInput"
+              type="file"
+              accept="application/json,.json"
+              class="hidden"
+            />
+          </div>
+
+          <div class="row rowWrap">
+            <button id="clearWrapperBtn" type="button" class="btn btnDanger">
+              Clear wrapper settings
+            </button>
+            <button id="clearAllBtn" type="button" class="btn btnDanger">
+              Clear all site data (incl. saves)
+            </button>
+          </div>
+
+          <div class="hint">
+            Export/import manages <code>localStorage</code> (wrapper settings). Clearing “all site data” also
+            attempts to delete <code>IndexedDB</code> databases (where supported), which may remove game saves
+            stored by Ruffle.
+          </div>
+        </section>
       </div>
     </dialog>
   </div>
@@ -276,6 +327,12 @@ const keyRightEl = required<HTMLSelectElement>("#keyRight");
 const keyAEl = required<HTMLSelectElement>("#keyA");
 const keyBEl = required<HTMLSelectElement>("#keyB");
 const resetKeybindsBtn = required<HTMLButtonElement>("#resetKeybindsBtn");
+const storageExportScopeEl = required<HTMLSelectElement>("#storageExportScope");
+const exportStorageBtn = required<HTMLButtonElement>("#exportStorageBtn");
+const importStorageBtn = required<HTMLButtonElement>("#importStorageBtn");
+const importStorageInput = required<HTMLInputElement>("#importStorageInput");
+const clearWrapperBtn = required<HTMLButtonElement>("#clearWrapperBtn");
+const clearAllBtn = required<HTMLButtonElement>("#clearAllBtn");
 const loadFileBtn = required<HTMLButtonElement>("#loadFileBtn");
 const fileInput = required<HTMLInputElement>("#fileInput");
 
@@ -302,6 +359,81 @@ function isTextInputLike(el: EventTarget | null): boolean {
   const target = el as HTMLElement | null;
   const tag = target?.tagName?.toLowerCase();
   return tag === "input" || tag === "textarea" || tag === "select";
+}
+
+function listLocalStorageKeys(): string[] {
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k) keys.push(k);
+  }
+  keys.sort();
+  return keys;
+}
+
+function tanksKeysOnly(entries: Record<string, string>) {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(entries)) {
+    if (k.startsWith("tanks.")) out[k] = v;
+  }
+  return out;
+}
+
+function readLocalStorage(scope: "tanks" | "all"): Record<string, string> {
+  const keys = listLocalStorageKeys();
+  const out: Record<string, string> = {};
+  for (const k of keys) {
+    if (scope === "tanks" && !k.startsWith("tanks.")) continue;
+    const v = localStorage.getItem(k);
+    if (v != null) out[k] = v;
+  }
+  return out;
+}
+
+function removeLocalStorageKeys(scope: "tanks" | "all") {
+  if (scope === "all") {
+    localStorage.clear();
+    return;
+  }
+  for (const k of listLocalStorageKeys()) {
+    if (k.startsWith("tanks.")) localStorage.removeItem(k);
+  }
+}
+
+async function deleteIndexedDb(name: string): Promise<"ok" | "blocked" | "error"> {
+  return await new Promise((resolve) => {
+    const req = indexedDB.deleteDatabase(name);
+    req.onsuccess = () => resolve("ok");
+    req.onerror = () => resolve("error");
+    req.onblocked = () => resolve("blocked");
+  });
+}
+
+async function clearSiteData() {
+  sessionStorage.clear();
+  localStorage.clear();
+
+  const deleted: string[] = [];
+  const blocked: string[] = [];
+  const errors: string[] = [];
+
+  const idbAny = indexedDB as unknown as { databases?: () => Promise<Array<{ name?: string }>> };
+  if (typeof idbAny.databases === "function") {
+    const dbs = await idbAny.databases();
+    const names = dbs
+      .map((d) => d.name)
+      .filter((n): n is string => Boolean(n))
+      .sort();
+
+    for (const name of names) {
+      const result = await deleteIndexedDb(name);
+      if (result === "ok") deleted.push(name);
+      else if (result === "blocked") blocked.push(name);
+      else errors.push(name);
+    }
+  }
+
+  return { deleted, blocked, errors };
 }
 
 function setStatus(message: string) {
@@ -604,6 +736,84 @@ resetKeybindsBtn.addEventListener("click", () => {
   persistKeybinds();
   inputMapper.releaseAll();
   syncSettingsUi();
+});
+
+exportStorageBtn.addEventListener("click", () => {
+  const scope = storageExportScopeEl.value === "all" ? "all" : "tanks";
+  const payload = {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    origin: window.location.origin,
+    scope,
+    note: "Export includes localStorage only (not IndexedDB).",
+    localStorage: readLocalStorage(scope),
+  };
+  jsonDownload(payload, `tanks-storage-${scope}-${new Date().toISOString().slice(0, 19)}.json`);
+});
+
+importStorageBtn.addEventListener("click", () => {
+  importStorageInput.value = "";
+  importStorageInput.click();
+});
+
+importStorageInput.addEventListener("change", async () => {
+  const file = importStorageInput.files?.[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text) as unknown;
+    const rawMap =
+      typeof parsed === "object" && parsed !== null && "localStorage" in parsed
+        ? (parsed as { localStorage?: unknown }).localStorage
+        : parsed;
+
+    if (typeof rawMap !== "object" || rawMap === null || Array.isArray(rawMap)) {
+      throw new Error("Invalid import format. Expected { localStorage: { key: value } }.");
+    }
+
+    const entries: Record<string, string> = {};
+    for (const [k, v] of Object.entries(rawMap as Record<string, unknown>)) {
+      if (typeof v === "string") entries[k] = v;
+    }
+
+    // Safety default: import wrapper keys only.
+    removeLocalStorageKeys("tanks");
+    const tanksOnly = tanksKeysOnly(entries);
+    for (const [k, v] of Object.entries(tanksOnly)) localStorage.setItem(k, v);
+
+    setStatus(`Imported ${Object.keys(tanksOnly).length} wrapper keys. Reloading…`);
+    window.location.reload();
+  } catch (err) {
+    setError(`Import failed: ${String(err)}`);
+  }
+});
+
+clearWrapperBtn.addEventListener("click", () => {
+  const ok = window.confirm("Clear wrapper settings (tanks.* keys) and reload?");
+  if (!ok) return;
+  removeLocalStorageKeys("tanks");
+  setStatus("Cleared wrapper settings. Reloading…");
+  window.location.reload();
+});
+
+clearAllBtn.addEventListener("click", async () => {
+  const ok = window.confirm(
+    "Clear ALL site data (localStorage + IndexedDB where supported) and reload?\n\nThis may remove game saves.",
+  );
+  if (!ok) return;
+  setStatus("Clearing site data…");
+  try {
+    const result = await clearSiteData();
+    const noteParts = [
+      result.deleted.length ? `Deleted DBs: ${result.deleted.length}` : null,
+      result.blocked.length ? `Blocked DBs: ${result.blocked.length}` : null,
+      result.errors.length ? `Failed DBs: ${result.errors.length}` : null,
+    ].filter(Boolean);
+    setStatus(noteParts.length ? `${noteParts.join(" — ")}. Reloading…` : "Reloading…");
+    window.location.reload();
+  } catch (err) {
+    setError(`Clear failed: ${String(err)}`);
+  }
 });
 
 document.addEventListener("fullscreenchange", () => {

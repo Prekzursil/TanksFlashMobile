@@ -23,6 +23,16 @@ Until we have explicit permission / license terms allowing redistribution, the s
 
 This repo ignores `assets/original/` so you won’t commit it by accident.
 
+### Helper script
+
+If your SWF is somewhere else, you can copy (or download) it into `assets/original/` using:
+
+```bash
+npm run swf:import -- --from /path/to/tanks.swf
+```
+
+This script is a convenience only; you’re responsible for ensuring you have the right to use any SWF you provide.
+
 ## Shipping options (future)
 
 We’ll pick one of these once rights are clarified:

@@ -8,7 +8,18 @@
     "lint:web": "npm --prefix apps/web run lint",
     "format:web": "npm --prefix apps/web run format",
     "format:check:web": "npm --prefix apps/web run format:check",
+    "cap:sync": "npm --prefix apps/web run build && npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "swf:import": "node ./scripts/import_swf.mjs",
     "sync:swf:web": "npm --prefix apps/web run sync:swf"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/ios": "^6.1.0"
   }
 }
-
