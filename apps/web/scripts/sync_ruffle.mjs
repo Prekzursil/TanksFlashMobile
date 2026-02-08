@@ -9,18 +9,13 @@ const sourceDir = path.join(webRoot, "node_modules", "@ruffle-rs", "ruffle");
 const destDir = path.join(webRoot, "public", "ruffle");
 
 async function copyFileIfChanged(sourcePath, destPath) {
-  const [sourceStat, destStat] = await Promise.allSettled([
-    fs.stat(sourcePath),
-    fs.stat(destPath),
-  ]);
+  const [sourceStat, destStat] = await Promise.allSettled([fs.stat(sourcePath), fs.stat(destPath)]);
 
   if (sourceStat.status !== "fulfilled") {
     throw new Error(`Missing source file: ${sourcePath}`);
   }
 
-  const sameSize =
-    destStat.status === "fulfilled" &&
-    sourceStat.value.size === destStat.value.size;
+  const sameSize = destStat.status === "fulfilled" && sourceStat.value.size === destStat.value.size;
 
   if (sameSize) return false;
 

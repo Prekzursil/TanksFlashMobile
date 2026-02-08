@@ -1,10 +1,4 @@
-export type KeyCode =
-  | "ArrowUp"
-  | "ArrowDown"
-  | "ArrowLeft"
-  | "ArrowRight"
-  | "Space"
-  | "Enter";
+export type KeyCode = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Space" | "Enter";
 
 type KeyboardDispatchTarget = Window | Document | HTMLElement;
 
@@ -17,7 +11,11 @@ function codeToKey(code: KeyCode): string {
   }
 }
 
-function dispatchKeyboardEvent(target: KeyboardDispatchTarget, type: "keydown" | "keyup", code: KeyCode) {
+function dispatchKeyboardEvent(
+  target: KeyboardDispatchTarget,
+  type: "keydown" | "keyup",
+  code: KeyCode,
+) {
   const key = codeToKey(code);
 
   // Note: keyCode/which are deprecated, but some runtimes still look at them.

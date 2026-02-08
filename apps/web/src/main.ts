@@ -188,10 +188,9 @@ async function tryAutoLoadDefaultSwf() {
     }
   } catch {
     setError(
-      [
-        `Could not check SWF at ${DEFAULT_SWF_URL}`,
-        "Use “Load SWF…” to select a file.",
-      ].join(" — "),
+      [`Could not check SWF at ${DEFAULT_SWF_URL}`, "Use “Load SWF…” to select a file."].join(
+        " — ",
+      ),
     );
     return;
   }

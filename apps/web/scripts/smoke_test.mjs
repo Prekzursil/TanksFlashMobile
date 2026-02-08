@@ -167,6 +167,7 @@ async function main() {
     await page.goto(url, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(1500);
 
+    /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
     const checks = await page.evaluate(() => {
       const status = document.querySelector("#status")?.textContent?.trim() ?? "";
       const hasViewport = Boolean(document.querySelector("#viewport"));
@@ -176,11 +177,9 @@ async function main() {
       const stateText = hasRenderHook ? window.render_game_to_text() : null;
       return { status, hasViewport, hasStage, hasRuffle, hasRenderHook, stateText };
     });
+    /* eslint-enable no-undef */
 
-    await fs.writeFile(
-      path.join(args.outDir, "state.json"),
-      JSON.stringify(checks, null, 2),
-    );
+    await fs.writeFile(path.join(args.outDir, "state.json"), JSON.stringify(checks, null, 2));
 
     if (!checks.hasViewport || !checks.hasStage) {
       throw new Error("Missing core UI elements (#viewport/#stage).");
@@ -217,10 +216,7 @@ async function main() {
 
     const allErrors = [...consoleErrors, ...pageErrors];
     if (allErrors.length) {
-      await fs.writeFile(
-        path.join(args.outDir, "errors.json"),
-        JSON.stringify(allErrors, null, 2),
-      );
+      await fs.writeFile(path.join(args.outDir, "errors.json"), JSON.stringify(allErrors, null, 2));
       throw new Error(`Console/page errors detected (${allErrors.length}).`);
     }
   } finally {

@@ -121,4 +121,3 @@ export function createTouchControls(input: InputMapper): TouchControls {
     },
   };
 }
-

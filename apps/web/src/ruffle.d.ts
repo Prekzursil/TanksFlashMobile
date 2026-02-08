@@ -19,4 +19,3 @@ declare global {
     render_game_to_text?: () => string;
   }
 }
-

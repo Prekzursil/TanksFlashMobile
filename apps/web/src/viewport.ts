@@ -48,4 +48,3 @@ export function computeStageLayout(params: {
   const scale = width / bw;
   return { width, height, scale };
 }
-

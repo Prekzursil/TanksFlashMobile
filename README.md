@@ -8,7 +8,36 @@ Fan project to bring back the classic Flash game **TANKS** (a Scorched Earth–s
 
 ## Status
 
-This repo is in early setup/planning. The actionable backlog lives in `TODO.md`.
+This repo is in early setup, but the web wrapper is already scaffolded under `apps/web`.
+
+The actionable backlog lives in `TODO.md`.
+
+## Quick start (web)
+
+```bash
+cd apps/web
+npm install
+
+# Optional: copy a local SWF into the dev server path
+npm run sync:swf
+
+npm run dev
+```
+
+Then open the printed local URL.
+
+Notes:
+- If you don’t have `assets/original/tanks.swf`, you can still use the **Load SWF…** button in the UI.
+- Fullscreen: button or press `f`
+- Touch overlay: toggle **Touch** in the toolbar (auto-defaults on coarse pointers)
+
+### Smoke test
+
+```bash
+cd apps/web
+npm run build
+npm run test:smoke
+```
 
 ## About assets / legality
 
@@ -28,3 +57,7 @@ Start with a web wrapper that runs the SWF via **Ruffle** (WebAssembly), then pa
 - Desktop: Tauri/Electron or PWA
 
 If Ruffle compatibility isn’t good enough for the full game, we can pivot to a full reimplementation using a cross‑platform engine (e.g., Godot).
+
+## License
+
+MIT for this repo’s original code (see `LICENSE`). Third-party attributions live in `THIRD_PARTY_NOTICES.md`.

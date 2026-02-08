@@ -34,6 +34,12 @@ jobs:
       - name: Install Playwright browser (Chromium)
         run: npx playwright install --with-deps chromium
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
       - name: Build
         run: npm run build
 
@@ -46,4 +52,3 @@ jobs:
         with:
           name: web-smoke
           path: apps/web/output/smoke
-

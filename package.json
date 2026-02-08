@@ -1,0 +1,14 @@
+{
+  "name": "tanks-flash-mobile",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "test:web": "npm --prefix apps/web test",
+    "lint:web": "npm --prefix apps/web run lint",
+    "format:web": "npm --prefix apps/web run format",
+    "format:check:web": "npm --prefix apps/web run format:check",
+    "sync:swf:web": "npm --prefix apps/web run sync:swf"
+  }
+}
+

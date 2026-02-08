@@ -12,13 +12,22 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "npm run test:smoke",
-    "test:smoke": "node ./scripts/smoke_test.mjs"
+    "test:smoke": "node ./scripts/smoke_test.mjs",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@ruffle-rs/ruffle": "0.2.0-nightly.2026.2.7"
   },
   "devDependencies": {
+    "@eslint/js": "9.39.2",
+    "eslint": "9.39.2",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.3.0",
     "playwright": "1.58.2",
+    "prettier": "3.8.1",
+    "typescript-eslint": "8.54.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   }

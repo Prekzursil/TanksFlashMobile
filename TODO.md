@@ -11,9 +11,9 @@
 - [x] CI for lint/tests – Add GitHub Actions to run lint/tests and the Playwright smoke test on every PR.
 
 ## Medium priority
-- [ ] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
-- [ ] Web tooling scaffold – Set up Vite (or similar), TypeScript, and a single-command dev loop (`npm run dev`).
-- [ ] Lint/format baseline – Add ESLint + Prettier (or equivalent) with consistent rules and CI enforcement.
+- [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
+- [x] Web tooling scaffold – Set up Vite (or similar), TypeScript, and a single-command dev loop (`npm run dev`).
+- [x] Lint/format baseline – Add ESLint + Prettier (or equivalent) with consistent rules and CI enforcement.
 - [ ] Settings UI – Add an in-game settings panel for scaling mode, fullscreen, sound, and touch-overlay size/opacity.
 - [ ] Keybind customization – Allow remapping keys via the settings UI, persisted locally (with a “reset to defaults” option).
 - [ ] Local save management – Provide an easy way to clear/export/import local storage for debugging and user support.
