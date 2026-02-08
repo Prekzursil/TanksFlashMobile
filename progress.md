@@ -36,3 +36,7 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Finalized app identifiers for publishing: `appName` = `Tanks`, `appId` = `com.prekzursil.tanks` (Capacitor + Android + iOS + Electron aligned).
 - Added Windows installer metadata defaults for Electron Builder (NSIS options + explicit execution level) and wired optional code signing in CI (requires a real `.pfx` + secrets).
 - Enabled a portable Windows `.zip` artifact target alongside the NSIS installer (useful for unsigned distribution).
+- Added a multi-source input mapper so touch + keyboard remap + gamepad can coexist without releasing each other’s presses.
+- Added gamepad support (standard mapping) with a Settings toggle and richer diagnostics (`pressed` keys + gamepad status).
+- Added an in-app “Controls & Tips” Help dialog and updated README notes to match the current UI.
+- Added a helper script for base64-encoding a `.pfx` into a GitHub Secret without printing it (`scripts/pfx_to_base64.mjs`).

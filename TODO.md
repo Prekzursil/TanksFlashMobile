@@ -32,13 +32,15 @@
 - [x] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.
 - [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
 - [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
+- [x] Helper for Windows signing secrets – Add a script to base64-encode a `.pfx` for GitHub Secrets without printing it.
 - [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI.
 
 ## Low priority
-- [ ] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
+- [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
 - [ ] Accessibility pass – Larger touch targets, configurable UI scale, and basic contrast checks for menus/overlays.
-- [ ] In-app help – Add a “Controls & Tips” screen explaining input, turn flow, and common gameplay mechanics.
+- [x] In-app help – Add a “Controls & Tips” screen explaining input, turn flow, and common gameplay mechanics.
 - [ ] Build/release automation – Add scripts for versioning and producing release artifacts (APK/IPA/EXE) consistently.
 - [ ] Localization-ready UI – Route UI strings through a simple i18n layer (English first).
 - [ ] Reimplementation spike – Prototype a clean-room remake (e.g., Godot) to estimate scope if Ruffle compatibility is insufficient.
 - [ ] Landing page – Add a small website/README section with screenshots, downloads, and installation instructions.
+- [ ] Gamepad mapping customization – Allow remapping gamepad buttons and stick deadzones for edge-case controllers.

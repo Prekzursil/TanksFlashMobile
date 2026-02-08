@@ -80,6 +80,20 @@ Add these repository secrets:
 The Windows CI job will decode the `.pfx` into the runner temp directory and set `WIN_CSC_LINK`/`WIN_CSC_KEY_PASSWORD` for
 Electron Builder.
 
+To generate the base64 value without printing it to your terminal, you can use the helper script:
+
+```bash
+# From repo root:
+node scripts/pfx_to_base64.mjs --in /path/to/codesign.pfx --out output/windows-cert.pfx.base64
+
+# Set GitHub secrets (requires `gh auth login`)
+gh secret set WINDOWS_CERT_PFX_BASE64 --body-file output/windows-cert.pfx.base64
+gh secret set WINDOWS_CERT_PASSWORD --body "your_password_here"
+
+# Delete the temp base64 file (it is sensitive)
+rm -f output/windows-cert.pfx.base64
+```
+
 ## Notes
 
 - The Electron app loads the built web app from packaged files. For this to work, web build assets are configured to use relative paths (`apps/web/vite.config.ts`).
