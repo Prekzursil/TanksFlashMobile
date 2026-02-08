@@ -31,7 +31,7 @@ npm run dev
 
 ## Package (Windows)
 
-This produces a Windows installer via Electron Builder (NSIS target).
+This produces a Windows installer via Electron Builder (NSIS target) **and** a portable `.zip` build.
 
 ```bash
 cd apps/desktop

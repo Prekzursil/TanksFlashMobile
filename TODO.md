@@ -31,6 +31,7 @@
 - [x] Avoid keybind conflicts with SWF UI – Consider a “disable remap when SWF has focus” mode if conflicts are observed.
 - [x] Finalize Capacitor identifiers – Confirm app id/name before publishing to stores.
 - [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
+- [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
 - [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI.
 
 ## Low priority
