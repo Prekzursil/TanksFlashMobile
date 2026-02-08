@@ -39,6 +39,23 @@ CLI alternative (varies by platform/package):
 godot --path apps/remake-godot --run
 ```
 
+## Desktop Exports (CI)
+
+Export presets are committed at `apps/remake-godot/export_presets.cfg`.
+
+CI produces desktop export artifacts on Pull Requests:
+
+- `godot-windows` (contains `Tanks.exe`)
+- `godot-linux` (contains `Tanks.x86_64`)
+- `godot-macos` (contains `Tanks.zip`)
+
+Local export example:
+
+```bash
+mkdir -p output
+godot --headless --path "$(pwd)/apps/remake-godot" --export-release "Windows Desktop" "$(pwd)/output/Tanks.exe"
+```
+
 ## Controls
 
 - `A/D`: move (limited fuel)
@@ -63,12 +80,14 @@ godot --path apps/remake-godot --run
 
 ## Known Limitations / Next Steps
 
-- No wind, weapon variety, tank movement, fuel, or turn timer.
-- No audio, menus, settings, input remapping, or mobile UI.
-- No export presets or CI builds for the Godot project yet.
+- Still very “prototype”: placeholder visuals, no audio, and minimal UI.
+- Input is hard-coded (not yet migrated to Godot InputMap for remapping/gamepad/touch).
+- No gameplay “nice-to-haves” yet (trajectory preview, camera tracking, terrain themes, etc.).
+- Desktop export presets + CI artifacts exist, but there’s no signing/notarization/publishing pipeline.
 
 If we decide to pursue the full remake track, the next practical steps are:
 
-1. Add movement (with slope handling) + turn flow (fuel / timer).
-2. Add wind + a small set of weapons.
-3. Add an export pipeline (`export_presets.cfg`) and CI artifacts for desktop first.
+1. Move from key polling to InputMap actions + settings UI (keyboard/gamepad/touch remap).
+2. Improve movement/physics feel (slopes, friction, better turn flow) and add trajectory preview.
+3. Expand weapons and add wind/terrain variety.
+4. Add releases for the Godot exports (tag builds, checksums, naming).

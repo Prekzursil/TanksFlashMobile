@@ -441,7 +441,7 @@ func _terrain_surface_y(x: float) -> float:
 	var clamped_x := clampf(x, 0.0, float(VIEWPORT_WIDTH))
 	var fx := clamped_x / float(TERRAIN_STEP)
 	var i0 := clampi(int(floor(fx)), 0, _terrain_y.size() - 1)
-	var i1 := min(i0 + 1, _terrain_y.size() - 1)
+	var i1: int = mini(i0 + 1, _terrain_y.size() - 1)
 	var t := fx - float(i0)
 	return lerpf(_terrain_y[i0], _terrain_y[i1], t)
 
@@ -449,8 +449,8 @@ func _carve_crater(center: Vector2, radius: float) -> void:
 	var radius2 := radius * radius
 	var i_center := int(round(center.x / float(TERRAIN_STEP)))
 	var i_radius := int(ceil(radius / float(TERRAIN_STEP)))
-	var start_i := max(0, i_center - i_radius)
-	var end_i := min(_terrain_y.size() - 1, i_center + i_radius)
+	var start_i: int = maxi(0, i_center - i_radius)
+	var end_i: int = mini(_terrain_y.size() - 1, i_center + i_radius)
 
 	for i in range(start_i, end_i + 1):
 		var x := float(i) * TERRAIN_STEP
@@ -461,7 +461,7 @@ func _carve_crater(center: Vector2, radius: float) -> void:
 		var dy := sqrt(radius2 - dx2)
 		var circle_bottom := center.y + dy
 		if circle_bottom > _terrain_y[i]:
-			_terrain_y[i] = min(circle_bottom, float(VIEWPORT_HEIGHT))
+			_terrain_y[i] = minf(circle_bottom, float(VIEWPORT_HEIGHT))
 
 	_rebuild_terrain_geometry()
 

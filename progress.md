@@ -51,3 +51,4 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added a Gamepad settings panel for button mapping + stick deadzone, persisted via `localStorage`.
 - Added a minimal Godot clean-room reimplementation spike (`apps/remake-godot`) with procedural terrain, destructible craters, turn-based firing, and a win condition; spike docs live in `docs/REIMPLEMENTATION_GODOT.md`.
 - Expanded the Godot spike with fuel-limited movement, per-turn wind, a turn timer, and multiple weapons; documented the remake v1 scope and input plan.
+- Added Godot desktop export presets and a CI job to produce Windows/Linux/macOS export artifacts.

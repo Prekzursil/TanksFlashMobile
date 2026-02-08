@@ -13,7 +13,7 @@
 ### Godot remake track (post-spike)
 - [x] Define remake v1 scope – Document must-have mechanics (movement/fuel/wind/weapons) and what we’ll defer.
 - [x] Godot core gameplay v1 – Add tank movement + basic turn flow (fuel/timer) + wind and at least one weapon type.
-- [ ] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
+- [x] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
 - [x] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
 
 ## Medium priority

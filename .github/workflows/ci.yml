@@ -246,3 +246,59 @@ jobs:
             ios-simulator-out/Tanks-ios-simulator-app.zip
             ios/App/xcodebuild.log
           if-no-files-found: warn
+
+  godot_desktop:
+    name: Godot (desktop exports)
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.2.2
+    env:
+      GODOT_VERSION: 4.2.2
+      PROJECT_PATH: apps/remake-godot
+      OUT_DIR: output/godot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare export templates
+        run: |
+          set -euo pipefail
+          SRC="/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          DST="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$(dirname "$DST")"
+          if [ -d "$SRC" ] && [ ! -d "$DST" ]; then
+            cp -a "$SRC" "$DST"
+          fi
+
+      - name: Export (Windows/Linux/macOS)
+        run: |
+          set -euo pipefail
+          WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"
+          mkdir -p "${WORKSPACE}/${OUT_DIR}/windows" "${WORKSPACE}/${OUT_DIR}/linux" "${WORKSPACE}/${OUT_DIR}/macos"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "Windows Desktop" "${WORKSPACE}/${OUT_DIR}/windows/Tanks.exe"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "Linux/X11" "${WORKSPACE}/${OUT_DIR}/linux/Tanks.x86_64"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "macOS" "${WORKSPACE}/${OUT_DIR}/macos/Tanks.zip"
+
+      - name: Upload Godot (Windows)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-windows
+          path: output/godot/windows
+          if-no-files-found: warn
+
+      - name: Upload Godot (Linux)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-linux
+          path: output/godot/linux
+          if-no-files-found: warn
+
+      - name: Upload Godot (macOS)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-macos
+          path: output/godot/macos
+          if-no-files-found: warn
