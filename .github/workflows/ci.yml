@@ -65,6 +65,60 @@ jobs:
           path: apps/web/output/smoke
           if-no-files-found: warn
 
+  remake_web:
+    name: Remake (web spike) build + smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/remake-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/remake-web/package-lock.json
+
+      - name: Verify versions match VERSION
+        run: node ../../scripts/sync_versions.mjs --check
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Smoke test
+        run: npm run test:smoke
+
+      - name: Upload remake web build (dist)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remake-web-dist
+          path: apps/remake-web/dist
+          if-no-files-found: warn
+
+      - name: Upload remake smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remake-web-smoke
+          path: apps/remake-web/output/smoke
+          if-no-files-found: warn
+
   desktop_windows:
     name: Desktop (Windows package)
     runs-on: windows-latest

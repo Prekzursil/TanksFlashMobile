@@ -109,6 +109,13 @@ See `docs/DESKTOP_WRAPPER.md` for the Windows desktop wrapper (Electron).
 
 If Ruffle compatibility isn’t good enough for the full game, we can pivot to a full reimplementation using a cross‑platform engine (e.g., Godot).
 
+## Remake spikes (clean-room)
+
+In parallel with the wrapper track, the repo contains two clean-room remake prototypes:
+
+- Godot spike: `apps/remake-godot/` (docs: `docs/REIMPLEMENTATION_GODOT.md`)
+- Web spike (Canvas/TS): `apps/remake-web/` (docs: `docs/REIMPLEMENTATION_WEB.md`)
+
 ## License
 
 MIT for this repo’s original code (see `LICENSE`). Third-party attributions live in `THIRD_PARTY_NOTICES.md`.

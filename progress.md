@@ -52,3 +52,4 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added a minimal Godot clean-room reimplementation spike (`apps/remake-godot`) with procedural terrain, destructible craters, turn-based firing, and a win condition; spike docs live in `docs/REIMPLEMENTATION_GODOT.md`.
 - Expanded the Godot spike with fuel-limited movement, per-turn wind, a turn timer, and multiple weapons; documented the remake v1 scope and input plan.
 - Added Godot desktop export presets and a CI job to produce Windows/Linux/macOS export artifacts.
+- Added a Canvas/TypeScript clean-room web remake spike (`apps/remake-web`) with deterministic Playwright hooks (`render_game_to_text`, `advanceTime`) and CI smoke/build artifacts.

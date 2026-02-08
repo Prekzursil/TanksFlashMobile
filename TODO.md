@@ -16,6 +16,11 @@
 - [x] Godot export pipeline (desktop) – Add `export_presets.cfg` and CI artifacts for Windows/macOS/Linux.
 - [x] Godot input mapping – Plan keyboard/gamepad/touch controls and how they map to gameplay actions.
 
+### Web remake track (post-spike)
+- [x] Web remake spike – Prototype a clean-room Canvas/TypeScript remake with deterministic test hooks.
+- [x] Web remake CI smoke – Add Playwright smoke test and CI job for the remake web spike.
+- [ ] Web remake releases – On version tags, attach the remake web `dist/` zip to GitHub Releases.
+
 ## Medium priority
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.
 - [x] Web tooling scaffold – Set up Vite (or similar), TypeScript, and a single-command dev loop (`npm run dev`).

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tanks Remake (Web Spike)</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand__title">Tanks</div>
+          <div class="brand__subtitle">Web remake spike (Canvas)</div>
+        </div>
+        <div class="topbar__actions">
+          <button id="start-btn" class="btn btn--primary" type="button">Start</button>
+          <button id="reset-btn" class="btn" type="button" disabled>Reset</button>
+          <button id="fullscreen-btn" class="btn" type="button" title="Toggle fullscreen (f)">
+            Fullscreen
+          </button>
+        </div>
+      </header>
+
+      <main class="stage">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+      </main>
+
+      <footer class="footer">
+        <div id="hud" class="hud">Loading…</div>
+        <details class="help">
+          <summary>Controls</summary>
+          <div class="help__grid">
+            <div><span class="kbd">A</span>/<span class="kbd">D</span> move (fuel)</div>
+            <div><span class="kbd">←</span>/<span class="kbd">→</span> angle</div>
+            <div><span class="kbd">↑</span>/<span class="kbd">↓</span> power</div>
+            <div><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> weapon</div>
+            <div><span class="kbd">Space</span> fire</div>
+            <div><span class="kbd">R</span> reset</div>
+          </div>
+        </details>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

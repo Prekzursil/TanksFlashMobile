@@ -112,6 +112,16 @@ function main() {
     },
     {
       kind: "json",
+      path: path.join(root, "apps", "remake-web", "package.json"),
+      update: updateJsonVersion,
+    },
+    {
+      kind: "lock",
+      path: path.join(root, "apps", "remake-web", "package-lock.json"),
+      update: updatePackageLockVersion,
+    },
+    {
+      kind: "json",
       path: path.join(root, "apps", "desktop", "package.json"),
       update: updateJsonVersion,
     },
@@ -164,4 +174,3 @@ function main() {
 }
 
 main();
-
