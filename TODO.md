@@ -67,6 +67,8 @@
 - [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI (optional; shipping unsigned for now).
 - [x] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
 - [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
+- [x] Web remake trajectory preview – Draw a deterministic ballistic preview path in aim phase so players can pre-aim before firing.
+- [x] Web remake camera cues – Add subtle shot follow + impact shake/zoom cues to improve shot readability and feedback.
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.

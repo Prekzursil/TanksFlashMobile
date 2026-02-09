@@ -38,7 +38,14 @@ Web remake now tracks an explicit phase state aligned to Godot terminology:
 
 This phase state is exposed through `window.render_game_to_text()` for deterministic validation.
 
+## Web-Only Polish Implemented
+
+These are intentional quality improvements in the web remake and are not strict rules parity requirements:
+
+- Aim trajectory preview (predicted ballistic path + impact marker in aim phase).
+- Camera cues (shot-follow offset, brief fire cue zoom, and impact shake/zoom decay).
+
 ## Remaining Non-Parity Work
 
 - Game mode/content parity beyond v1 rules (maps/weapons/meta progression).
-- Feel/polish differences (animation timing, art composition, camera behavior).
+- Additional feel tuning differences (animation timing and art composition balance).

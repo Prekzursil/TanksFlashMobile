@@ -42,6 +42,8 @@ Then open the printed URL.
 - HUD panel with turn, weapon, angle, power, wind, fuel, timer, and HP.
 - Menu flow with start, pause, and settings dialogs.
 - Touch controls for movement, aim, power, weapon select, and fire.
+- Aim-phase trajectory preview for ballistic pre-aim.
+- Camera cues during combat (projectile follow drift + impact shake/zoom).
 - Settings persistence in `localStorage`:
   - `touchEnabled` (auto-default for coarse pointers)
   - `touchLayout` (`right` or `left` handed)

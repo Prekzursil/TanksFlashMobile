@@ -116,3 +116,18 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `npm --prefix apps/remake-web run build` ✅
   - `npm --prefix apps/remake-web run lint` ✅
   - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Added web remake gameplay polish batch (option 2) in `apps/remake-web/src/main.ts`:
+  - deterministic aim-phase trajectory preview using current angle/power/weapon/wind
+  - camera follow drift toward active tank/projectile
+  - fire/impact camera cues (brief zoom + impact shake decay)
+  - camera state exposed in `render_game_to_text` for test visibility
+- Updated docs/backlog for this batch:
+  - `docs/REIMPLEMENTATION_WEB.md` (trajectory + camera cues noted)
+  - `docs/WEB_REMAKE_PARITY.md` (web-only polish section)
+  - `TODO.md` (new completed follow-up entries for trajectory preview and camera cues)
+- Validation for polish batch:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - develop-web-game Playwright client run + screenshot/state inspection ✅ (`output/web-game/shot-*.png`, `state-*.json`)

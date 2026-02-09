@@ -120,6 +120,23 @@ type Projectile = {
   weaponIdx: number;
 };
 
+type TrajectoryPoint = {
+  x: number;
+  y: number;
+  impact: boolean;
+};
+
+type CameraState = {
+  offsetX: number;
+  offsetY: number;
+  zoom: number;
+  shakePhase: number;
+  shakeTimeLeft: number;
+  shakeDuration: number;
+  shakeStrength: number;
+  cueTimeLeft: number;
+};
+
 const WIDTH = 1280;
 const HEIGHT = 720;
 const TERRAIN_STEP = 4;
@@ -140,6 +157,14 @@ const POWER_MAX = 900;
 const POWER_SPEED_PER_SEC = 360;
 
 const EXPLOSION_COOLDOWN_SEC = 0.65;
+const TRAJECTORY_STEP_DT = 1 / 30;
+const TRAJECTORY_MAX_STEPS = 110;
+const CAMERA_MAX_OFFSET_X = 22;
+const CAMERA_MAX_OFFSET_Y = 14;
+const CAMERA_TRACK_LERP = 7.5;
+const CAMERA_BASE_SHOT_ZOOM = 0.02;
+const CAMERA_CUE_MAX_ZOOM = 0.024;
+const CAMERA_CUE_DECAY_SEC = 0.35;
 
 const weapons: Weapon[] = [
   {
@@ -192,6 +217,7 @@ const state: {
   tanks: Tank[];
   currentTank: 0 | 1;
   projectile: Projectile;
+  camera: CameraState;
 } = {
   mode: "menu",
   phase: "aim",
@@ -204,6 +230,16 @@ const state: {
   tanks: [],
   currentTank: 0,
   projectile: { active: false, x: 0, y: 0, vx: 0, vy: 0, weaponIdx: 0 },
+  camera: {
+    offsetX: 0,
+    offsetY: 0,
+    zoom: 0,
+    shakePhase: 0,
+    shakeTimeLeft: 0,
+    shakeDuration: 0,
+    shakeStrength: 0,
+    cueTimeLeft: 0,
+  },
 };
 
 const UI_SETTINGS_KEY = "tanks.remakeWeb.settings.v1";
@@ -366,6 +402,14 @@ function startMatch() {
   state.projectile = { active: false, x: 0, y: 0, vx: 0, vy: 0, weaponIdx: 0 };
   state.cooldown = 0;
   state.currentTank = 0;
+  state.camera.offsetX = 0;
+  state.camera.offsetY = 0;
+  state.camera.zoom = 0;
+  state.camera.shakePhase = 0;
+  state.camera.shakeTimeLeft = 0;
+  state.camera.shakeDuration = 0;
+  state.camera.shakeStrength = 0;
+  state.camera.cueTimeLeft = 0;
   startTurn(0);
 }
 
@@ -380,6 +424,72 @@ function startTurn(tankIdx: 0 | 1) {
 
 function facingSign(t: Tank) {
   return t.id === 0 ? 1 : -1;
+}
+
+function getAimUnit(t: Tank) {
+  const angleRad = (t.aimDeg * Math.PI) / 180;
+  const dirX = Math.cos(angleRad) * facingSign(t);
+  const dirY = -Math.sin(angleRad);
+  const len = Math.hypot(dirX, dirY) || 1;
+  return { x: dirX / len, y: dirY / len };
+}
+
+function getMuzzleState(t: Tank, weapon: Weapon) {
+  const aim = getAimUnit(t);
+  const muzzleX = t.x + aim.x * (TANK_R + weapon.projectileRadius + 2);
+  const muzzleY = t.y + aim.y * (TANK_R + weapon.projectileRadius + 2);
+  const speed = t.power * weapon.speedMultiplier;
+  return {
+    muzzleX,
+    muzzleY,
+    velX: aim.x * speed,
+    velY: aim.y * speed,
+  };
+}
+
+function buildTrajectoryPreview(t: Tank): TrajectoryPoint[] {
+  if (state.mode !== "playing" || state.phase !== "aim") return [];
+  const weapon = weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]!;
+  const muzzle = getMuzzleState(t, weapon);
+
+  let x = muzzle.muzzleX;
+  let y = muzzle.muzzleY;
+  let vx = muzzle.velX;
+  let vy = muzzle.velY;
+  const points: TrajectoryPoint[] = [];
+
+  for (let i = 0; i < TRAJECTORY_MAX_STEPS; i++) {
+    vx += state.windAccel * TRAJECTORY_STEP_DT;
+    vy += GRAVITY * TRAJECTORY_STEP_DT;
+    x += vx * TRAJECTORY_STEP_DT;
+    y += vy * TRAJECTORY_STEP_DT;
+
+    if (x < -40 || x > WIDTH + 40 || y > HEIGHT + 40) {
+      points.push({ x: clamp(x, 0, WIDTH), y: clamp(y, 0, HEIGHT), impact: true });
+      break;
+    }
+
+    let impact = false;
+    const groundY = surfaceYAt(x);
+    if (y >= groundY) {
+      y = groundY;
+      impact = true;
+    } else {
+      for (const other of state.tanks) {
+        if (other.hp <= 0) continue;
+        const dist = Math.hypot(other.x - x, other.y - y);
+        if (dist <= TANK_R + weapon.projectileRadius) {
+          impact = true;
+          break;
+        }
+      }
+    }
+
+    points.push({ x, y, impact });
+    if (impact) break;
+  }
+
+  return points;
 }
 
 type HoldAction = "move_left" | "move_right" | "aim_left" | "aim_right" | "power_up" | "power_down";
@@ -464,23 +574,67 @@ function aimAndPowerTick(t: Tank, dt: number) {
   if (keyDown("ArrowUp") || actionDown("power_up")) t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
 }
 
+function triggerCameraShake(durationSec: number, strengthPx: number) {
+  state.camera.shakeDuration = Math.max(state.camera.shakeDuration, durationSec);
+  state.camera.shakeTimeLeft = Math.max(state.camera.shakeTimeLeft, durationSec);
+  state.camera.shakeStrength = Math.max(state.camera.shakeStrength, strengthPx);
+}
+
+function triggerCameraCue(durationSec = CAMERA_CUE_DECAY_SEC) {
+  state.camera.cueTimeLeft = Math.max(state.camera.cueTimeLeft, durationSec);
+}
+
+function tickCamera(dt: number) {
+  let targetX = WIDTH * 0.5;
+  let targetY = HEIGHT * 0.5;
+
+  if (state.mode === "playing") {
+    if (state.projectile.active) {
+      targetX = clamp(state.projectile.x, 0, WIDTH);
+      targetY = clamp(state.projectile.y, 0, HEIGHT);
+    } else {
+      const t = state.tanks[state.currentTank];
+      if (t && t.hp > 0) {
+        targetX = t.x;
+        targetY = t.y - 70;
+      }
+    }
+  }
+
+  const targetOffsetX = clamp((targetX - WIDTH * 0.5) * 0.16, -CAMERA_MAX_OFFSET_X, CAMERA_MAX_OFFSET_X);
+  const targetOffsetY = clamp((targetY - HEIGHT * 0.5) * 0.12, -CAMERA_MAX_OFFSET_Y, CAMERA_MAX_OFFSET_Y);
+  const lerpFactor = clamp(CAMERA_TRACK_LERP * dt, 0, 1);
+  state.camera.offsetX = lerp(state.camera.offsetX, targetOffsetX, lerpFactor);
+  state.camera.offsetY = lerp(state.camera.offsetY, targetOffsetY, lerpFactor);
+
+  if (state.camera.shakeTimeLeft > 0) {
+    state.camera.shakeTimeLeft = Math.max(0, state.camera.shakeTimeLeft - dt);
+    state.camera.shakePhase += dt * 34;
+  } else {
+    state.camera.shakeDuration = 0;
+    state.camera.shakeStrength = 0;
+  }
+
+  state.camera.cueTimeLeft = Math.max(0, state.camera.cueTimeLeft - dt);
+  const cueFrac = state.camera.cueTimeLeft > 0 ? state.camera.cueTimeLeft / CAMERA_CUE_DECAY_SEC : 0;
+  const targetZoom = (state.projectile.active ? CAMERA_BASE_SHOT_ZOOM : 0) + cueFrac * CAMERA_CUE_MAX_ZOOM;
+  state.camera.zoom = lerp(state.camera.zoom, targetZoom, clamp(8 * dt, 0, 1));
+}
+
 function fire(t: Tank) {
   const w = weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]!;
-  const angleRad = (t.aimDeg * Math.PI) / 180;
-  const dirX = Math.cos(angleRad) * facingSign(t);
-  const dirY = -Math.sin(angleRad);
-  const len = Math.hypot(dirX, dirY) || 1;
-  const ux = dirX / len;
-  const uy = dirY / len;
+  const muzzle = getMuzzleState(t, w);
 
   state.projectile.active = true;
   state.projectile.weaponIdx = t.weaponIdx;
-  state.projectile.x = t.x + ux * (TANK_R + w.projectileRadius + 2);
-  state.projectile.y = t.y + uy * (TANK_R + w.projectileRadius + 2);
-  state.projectile.vx = ux * t.power * w.speedMultiplier;
-  state.projectile.vy = uy * t.power * w.speedMultiplier;
+  state.projectile.x = muzzle.muzzleX;
+  state.projectile.y = muzzle.muzzleY;
+  state.projectile.vx = muzzle.velX;
+  state.projectile.vy = muzzle.velY;
   state.phase = "firing";
   state.message = "";
+  triggerCameraCue(0.22);
+  triggerCameraShake(0.12, 3.2);
   playSfx(audioCache.fire);
 }
 
@@ -527,6 +681,8 @@ function explodeAt(x: number, y: number) {
   state.projectile.active = false;
   state.phase = "impact";
   state.cooldown = EXPLOSION_COOLDOWN_SEC;
+  triggerCameraCue(0.32);
+  triggerCameraShake(0.28, 11.5);
   playSfx(audioCache.impact);
 
   const weapon = weapons[clamp(state.projectile.weaponIdx, 0, weapons.length - 1)]!;
@@ -624,6 +780,21 @@ function tick(dt: number) {
 function draw() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
+  const shakeFrac =
+    state.camera.shakeDuration > 0
+      ? clamp(state.camera.shakeTimeLeft / state.camera.shakeDuration, 0, 1)
+      : 0;
+  const shakeAmp = state.camera.shakeStrength * shakeFrac;
+  const shakeX = Math.sin(state.camera.shakePhase * 1.7) * shakeAmp;
+  const shakeY = Math.cos(state.camera.shakePhase * 2.3) * shakeAmp * 0.8;
+  const zoom = 1 + state.camera.zoom;
+
+  ctx.save();
+  ctx.translate(WIDTH * 0.5, HEIGHT * 0.5);
+  ctx.scale(zoom, zoom);
+  // Positive camera offset means "look right/down"; the world shifts in the opposite direction.
+  ctx.translate(-WIDTH * 0.5 - state.camera.offsetX + shakeX, -HEIGHT * 0.5 - state.camera.offsetY + shakeY);
+
   // Background
   const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
   bg.addColorStop(0, "#0b1220");
@@ -661,6 +832,10 @@ function draw() {
   }
   ctx.stroke();
 
+  const activeTank =
+    state.mode === "playing" && !state.projectile.active ? state.tanks[state.currentTank] ?? null : null;
+  const trajectoryPreview = activeTank && activeTank.hp > 0 ? buildTrajectoryPreview(activeTank) : [];
+
   // Tanks
   for (const t of state.tanks) {
     if (t.hp <= 0) continue;
@@ -692,18 +867,47 @@ function draw() {
     }
 
     if (state.mode === "playing" && t.id === state.currentTank && !state.projectile.active) {
-      const angleRad = (t.aimDeg * Math.PI) / 180;
-      const dirX = Math.cos(angleRad) * facingSign(t);
-      const dirY = -Math.sin(angleRad);
-      const len = Math.hypot(dirX, dirY) || 1;
-      const ux = dirX / len;
-      const uy = dirY / len;
+      const weapon = weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]!;
+      const aim = getAimUnit(t);
+      const muzzle = getMuzzleState(t, weapon);
       ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(t.x, t.y);
-      ctx.lineTo(t.x + ux * 48, t.y + uy * 48);
+      ctx.lineTo(t.x + aim.x * 48, t.y + aim.y * 48);
       ctx.stroke();
+
+      if (trajectoryPreview.length > 0) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 235, 170, 0.6)";
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([7, 7]);
+        ctx.beginPath();
+        ctx.moveTo(muzzle.muzzleX, muzzle.muzzleY);
+        for (const point of trajectoryPreview) ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        for (let i = 0; i < trajectoryPreview.length; i++) {
+          const point = trajectoryPreview[i]!;
+          const fade = 1 - i / Math.max(1, trajectoryPreview.length);
+          const alpha = 0.2 + fade * 0.55;
+          ctx.fillStyle = `rgba(255, 244, 190, ${alpha.toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, point.impact ? 3.6 : 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const last = trajectoryPreview[trajectoryPreview.length - 1]!;
+        if (last.impact) {
+          ctx.strokeStyle = "rgba(255, 168, 122, 0.85)";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(last.x, last.y, 8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     }
   }
 
@@ -715,6 +919,8 @@ function draw() {
     ctx.arc(state.projectile.x, state.projectile.y, weapon.projectileRadius, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  ctx.restore();
 
   if (state.mode === "menu") {
     ctx.fillStyle = "rgba(0,0,0,0.55)";
@@ -873,6 +1079,13 @@ function goToMainMenu() {
   state.message = "";
   state.cooldown = 0;
   state.projectile.active = false;
+  state.camera.offsetX = 0;
+  state.camera.offsetY = 0;
+  state.camera.zoom = 0;
+  state.camera.shakeTimeLeft = 0;
+  state.camera.shakeDuration = 0;
+  state.camera.shakeStrength = 0;
+  state.camera.cueTimeLeft = 0;
 
   startBtn.disabled = false;
   resetBtn.disabled = true;
@@ -1075,6 +1288,13 @@ function renderGameToText() {
       touchEnabled: ui.touchEnabled,
       touchLayout: ui.touchLayout,
     },
+    camera: {
+      offsetX: state.camera.offsetX,
+      offsetY: state.camera.offsetY,
+      zoom: state.camera.zoom,
+      shakeTimeLeft: state.camera.shakeTimeLeft,
+      cueTimeLeft: state.camera.cueTimeLeft,
+    },
     message: state.message,
   };
   return JSON.stringify(payload);
@@ -1087,7 +1307,10 @@ function renderGameToText() {
 (window as any).advanceTime = (ms: number) => {
   const steps = Math.max(1, Math.round(ms / (1000 / 60)));
   const dt = 1 / 60;
-  for (let i = 0; i < steps; i++) tick(dt);
+  for (let i = 0; i < steps; i++) {
+    tick(dt);
+    tickCamera(dt);
+  }
   updateHud();
   syncUi();
   draw();
@@ -1098,6 +1321,7 @@ function frame(now: number) {
   (frame as unknown as { prev?: number }).prev = now;
   const dt = clamp((now - prev) / 1000, 0, 0.05);
   tick(dt);
+  tickCamera(dt);
   updateHud();
   syncUi();
   draw();
