@@ -3,6 +3,8 @@
 ## High priority
 - [x] Decide porting strategy – Choose between a Ruffle-wrapper-first approach vs a full reimplementation, with acceptance criteria for each.
 - [x] Verify redistribution rights – Confirm whether we can ship the original SWF/assets; if not, document a “bring-your-own-SWF” workflow.
+- [x] Ship original SWF in builds/releases – Bundle `assets/original/tanks.swf` so Releases and apps run out-of-the-box (no file picker required).
+- [x] Document asset permission – Add/clarify licensing/permission notes for the bundled original assets.
 - [x] Web wrapper MVP – Build a minimal web app that embeds Ruffle and loads `assets/original/tanks.swf` (show a clear error if missing).
 - [x] Responsive scaling & fullscreen – Add scaling modes (fit/fill/integer scale) plus a fullscreen toggle that works on desktop and mobile.
 - [x] Input mapping layer – Centralize input so keyboard, touch overlay, and (later) gamepad can drive the SWF consistently.

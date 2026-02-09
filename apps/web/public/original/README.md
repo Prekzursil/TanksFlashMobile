@@ -1,17 +1,17 @@
-# Local SWF (not committed)
+# Bundled SWF
 
-For local development, place the original SWF at:
+This project serves the SWF from:
 
-- `assets/original/tanks.swf` (repo root, gitignored)
+- `apps/web/public/original/tanks.swf`
 
-Then run, from `apps/web/`:
+That file is generated from the source-of-truth:
+
+- `assets/original/tanks.swf`
+
+To (re)generate it manually, run from `apps/web/`:
 
 ```bash
 npm run sync:swf
 ```
-
-This will copy it to:
-
-- `apps/web/public/original/tanks.swf` (also should not be committed)
 
 The web app will try to load `/original/tanks.swf` automatically. If it’s missing, it will show a clear error and offer a file picker fallback.

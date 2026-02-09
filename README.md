@@ -34,13 +34,14 @@ If there are no Releases yet, use **GitHub Actions artifacts** instead:
 - `web-dist`, `remake-web-dist`, `godot-windows`, `godot-linux`, `godot-macos`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
 
 Install/run quick notes:
-- Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL and use **Load SWF…**.
+- Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL.
 - Windows: run the setup `.exe`, or unzip the portable build and run `Tanks.exe`.
 - Android: install the `.apk` on-device (you may need to allow “Install unknown apps”).
 - iOS (Simulator): unzip, then install to a running Simulator (e.g. `xcrun simctl install booted App.app`).
 
 SWF note:
-- Releases/artifacts **do not** include the original game SWF. Use the in-app **Load SWF…** button or place it at `assets/original/tanks.swf` for local dev.
+- Releases include the original SWF (`/original/tanks.swf`) so the wrapper runs out-of-the-box.
+- You can still use **Load SWF…** to test a different file.
 
 Maintainers note (version tags):
 - Bump `VERSION`, run `npm run sync:versions`, commit, then tag `v<same-version>` and push the tag.
@@ -51,9 +52,6 @@ Maintainers note (version tags):
 ```bash
 cd apps/web
 npm install
-
-# Optional: copy a local SWF into the dev server path
-npm run sync:swf
 
 npm run dev
 ```
@@ -91,13 +89,8 @@ node scripts/run_web_game_client.mjs --url http://127.0.0.1:5173 --actions-file 
 
 ## About assets / legality
 
-This repo intentionally **does not** commit the original Flash binary or archive artifacts.
-
-If you have a legal copy for personal use, place it at:
-
-- `assets/original/tanks.swf`
-
-That path is gitignored so it won’t be committed by accident.
+This repo includes the original SWF under an explicit permission grant.
+See `docs/ASSET_POLICY.md` for details and constraints.
 
 ## Likely technical approach
 

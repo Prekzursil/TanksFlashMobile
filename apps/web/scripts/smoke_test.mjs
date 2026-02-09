@@ -194,7 +194,24 @@ async function main() {
       args.timeoutMs + 5_000,
       `page.goto ${url}`,
     );
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(750);
+
+    // With the SWF bundled, the wrapper should autoload it on startup. This catches cases where
+    // CI/release builds accidentally ship without the SWF.
+    log("Waiting for SWF autoload…");
+    await withTimeout(
+      page.waitForFunction(() => {
+        if (typeof window.render_game_to_text !== "function") return false;
+        try {
+          const parsed = JSON.parse(window.render_game_to_text());
+          return parsed?.loadState === "ready" || parsed?.loadState === "error";
+        } catch {
+          return false;
+        }
+      }),
+      Math.min(args.timeoutMs, 20_000),
+      "page.waitForFunction SWF autoload",
+    );
 
     /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
     log("Running wrapper checks…");
@@ -223,6 +240,22 @@ async function main() {
     }
     if (!checks.hasRuffle) {
       throw new Error("Ruffle runtime not detected (window.RufflePlayer missing).");
+    }
+    if (checks.stateText) {
+      let parsed;
+      try {
+        parsed = JSON.parse(checks.stateText);
+      } catch (err) {
+        throw new Error(`Invalid wrapper state JSON: ${String(err)}`);
+      }
+
+      if (parsed?.loadState !== "ready") {
+        const details =
+          typeof parsed?.lastError === "string" && parsed.lastError.trim()
+            ? ` (${parsed.lastError})`
+            : "";
+        throw new Error(`SWF did not autoload: ${String(parsed?.loadState)}${details}`);
+      }
     }
 
     // Enable touch overlay once to ensure the input layer doesn't throw.
@@ -313,23 +346,6 @@ async function main() {
     );
     await page.click("#helpCloseBtn");
     await page.waitForTimeout(100);
-
-    // Validate wrapper state if available.
-    if (checks.stateText) {
-      try {
-        const parsed = JSON.parse(checks.stateText);
-        if (
-          parsed?.loadState === "error" &&
-          typeof parsed?.lastError === "string" &&
-          !parsed.lastError.includes("Missing SWF") &&
-          !parsed.lastError.includes("Could not check SWF")
-        ) {
-          throw new Error(`Unexpected wrapper error: ${parsed.lastError}`);
-        }
-      } catch (err) {
-        throw new Error(`Invalid wrapper state JSON: ${String(err)}`);
-      }
-    }
 
     const allErrors = [...consoleErrors, ...pageErrors];
     if (allErrors.length) {

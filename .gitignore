@@ -1,5 +1,7 @@
-# Local-only original Flash archive/assets (do not redistribute unless you have rights)
-assets/original/
+# Original Flash binary/assets
+# Default: ignore everything in `assets/original/`, but allow tracking the SWF when redistribution is permitted.
+assets/original/*
+!assets/original/tanks.swf
 
 # Node / web tooling
 node_modules/

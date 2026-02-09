@@ -2,26 +2,33 @@
 
 ## TL;DR
 
-- This project **does not** commit or redistribute the original `tanks.swf` by default.
-- For local development/testing, you can place the SWF in `assets/original/` (gitignored).
-- The web wrapper also supports a **bring‑your‑own‑SWF** flow.
+- This repo includes the original SWF at `assets/original/tanks.swf`.
+- GitHub Releases ship the SWF inside the web `dist/` bundle so the wrapper runs out-of-the-box.
+- The UI still supports a **bring‑your‑own‑SWF** flow for testing alternate files.
 
 ## Why
 
 Even if a game was historically “free to play”, that usually **does not** grant the right to redistribute the binary or its assets.
 
-Until we have explicit permission / license terms allowing redistribution, the safe default is:
+For this repo, we are proceeding with redistribution because the maintainer asserts we have explicit permission to use and
+redistribute the original SWF/assets (see `docs/ASSET_PERMISSION_LETTER.md`).
 
-- **No original SWF in git**
-- **No SWF shipped in releases**
+If you fork or reuse this project, you are responsible for ensuring you have rights to distribute any included original
+assets.
 
-## Local development (BYO SWF)
+## Local development (alternate SWF)
 
-1. Obtain the SWF legally for personal use.
-2. Place it at:
-   - `assets/original/tanks.swf`
+You can test a different SWF without touching the repo by using the in-app **Load SWF…** picker.
 
-This repo ignores `assets/original/` so you won’t commit it by accident.
+If you specifically want the app to autoload your alternate SWF on startup, replace:
+
+- `assets/original/tanks.swf`
+
+(this will show up as a git diff), then from `apps/web/`, run:
+
+```bash
+npm run sync:swf
+```
 
 ### Helper script
 
@@ -33,9 +40,9 @@ npm run swf:import -- --from /path/to/tanks.swf
 
 This script is a convenience only; you’re responsible for ensuring you have the right to use any SWF you provide.
 
-## Shipping options (future)
+## Shipping options
 
-We’ll pick one of these once rights are clarified:
+This repo currently ships the original SWF in Releases. Alternatives are still viable:
 
 1. **Explicit permission / license obtained**
    - We can ship the SWF and/or original assets per the granted terms.
@@ -43,8 +50,3 @@ We’ll pick one of these once rights are clarified:
    - The app ships without the SWF; users import it on first run.
 3. **Clean-room remake**
    - Ship fully original code + properly licensed/new assets (no SWF).
-
-## What we still need to verify
-
-- Who currently owns the rights to the original game and assets.
-- Whether redistribution is allowed, and under what constraints (attribution, non-commercial, etc.).

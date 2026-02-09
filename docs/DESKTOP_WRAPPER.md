@@ -97,5 +97,5 @@ rm -f output/windows-cert.pfx.base64
 ## Notes
 
 - The Electron app loads the built web app from packaged files. For this to work, web build assets are configured to use relative paths (`apps/web/vite.config.ts`).
-- We still do **not** redistribute the original SWF. Users should use the in-app **Load SWF…** picker.
+- GitHub Releases bundle the SWF, so the desktop wrapper runs out-of-the-box. The UI still supports **Load SWF…** for testing alternate files.
 - The Windows icon is `apps/desktop/build/icon.ico` (generated from `assets/branding/icon.png`).
