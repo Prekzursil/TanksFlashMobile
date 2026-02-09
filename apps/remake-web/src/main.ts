@@ -5,24 +5,88 @@ declare const __APP_VERSION__: string;
 const canvasEl = document.querySelector<HTMLCanvasElement>("#game-canvas");
 const startBtnEl = document.querySelector<HTMLButtonElement>("#start-btn");
 const resetBtnEl = document.querySelector<HTMLButtonElement>("#reset-btn");
+const pauseBtnEl = document.querySelector<HTMLButtonElement>("#pause-btn");
+const settingsBtnEl = document.querySelector<HTMLButtonElement>("#settings-btn");
 const fullscreenBtnEl = document.querySelector<HTMLButtonElement>("#fullscreen-btn");
 const hudEl = document.querySelector<HTMLDivElement>("#hud");
+const hudPanelEl = document.querySelector<HTMLElement>("#hud-panel");
+const hudStatsEl = document.querySelector<HTMLElement>("#hud-stats");
+const hudMessageEl = document.querySelector<HTMLElement>("#hud-message");
 
-if (!canvasEl || !startBtnEl || !resetBtnEl || !fullscreenBtnEl || !hudEl) {
+const touchControlsEl = document.querySelector<HTMLElement>("#touch-controls");
+
+const modalLayerEl = document.querySelector<HTMLElement>("#modal-layer");
+const pauseModalEl = document.querySelector<HTMLElement>("#pause-modal");
+const pauseResumeBtnEl = document.querySelector<HTMLButtonElement>("#pause-resume-btn");
+const pauseRestartBtnEl = document.querySelector<HTMLButtonElement>("#pause-restart-btn");
+const pauseSettingsBtnEl = document.querySelector<HTMLButtonElement>("#pause-settings-btn");
+const pauseMainMenuBtnEl = document.querySelector<HTMLButtonElement>("#pause-main-menu-btn");
+
+const settingsModalEl = document.querySelector<HTMLElement>("#settings-modal");
+const settingsTouchEnabledEl = document.querySelector<HTMLInputElement>("#settings-touch-enabled");
+const settingsTouchLayoutEl = document.querySelector<HTMLSelectElement>("#settings-touch-layout");
+const settingsCloseBtnEl = document.querySelector<HTMLButtonElement>("#settings-close-btn");
+
+if (
+  !canvasEl ||
+  !startBtnEl ||
+  !resetBtnEl ||
+  !pauseBtnEl ||
+  !settingsBtnEl ||
+  !fullscreenBtnEl ||
+  !hudEl ||
+  !hudPanelEl ||
+  !hudStatsEl ||
+  !hudMessageEl ||
+  !touchControlsEl ||
+  !modalLayerEl ||
+  !pauseModalEl ||
+  !pauseResumeBtnEl ||
+  !pauseRestartBtnEl ||
+  !pauseSettingsBtnEl ||
+  !pauseMainMenuBtnEl ||
+  !settingsModalEl ||
+  !settingsTouchEnabledEl ||
+  !settingsTouchLayoutEl ||
+  !settingsCloseBtnEl
+) {
   throw new Error("Missing required DOM elements");
 }
 
 const canvas = canvasEl;
 const startBtn = startBtnEl;
 const resetBtn = resetBtnEl;
+const pauseBtn = pauseBtnEl;
+const settingsBtn = settingsBtnEl;
 const fullscreenBtn = fullscreenBtnEl;
 const hud = hudEl;
+const hudPanel = hudPanelEl;
+const hudStats = hudStatsEl;
+const hudMessage = hudMessageEl;
+
+const touchControls = touchControlsEl;
+
+const modalLayer = modalLayerEl;
+const pauseModal = pauseModalEl;
+const pauseResumeBtn = pauseResumeBtnEl;
+const pauseRestartBtn = pauseRestartBtnEl;
+const pauseSettingsBtn = pauseSettingsBtnEl;
+const pauseMainMenuBtn = pauseMainMenuBtnEl;
+
+const settingsModal = settingsModalEl;
+const settingsTouchEnabled = settingsTouchEnabledEl;
+const settingsTouchLayout = settingsTouchLayoutEl;
+const settingsCloseBtn = settingsCloseBtnEl;
 
 const ctxMaybe = canvas.getContext("2d");
 if (!ctxMaybe) throw new Error("2D canvas context not available");
 const ctx = ctxMaybe;
 
-type Mode = "menu" | "playing" | "gameover";
+type Mode = "menu" | "playing" | "paused" | "gameover";
+
+type TouchLayout = "right" | "left";
+
+type UiModal = null | "pause" | "settings";
 
 type Weapon = {
   name: string;
@@ -106,6 +170,15 @@ const weapons: Weapon[] = [
   },
 ];
 
+const ORIGINAL_ASSETS = {
+  imageBg: "/original/images/char_318.png",
+  imageP1: "/original/images/char_230.png",
+  imageP2: "/original/images/char_237.png",
+  sfxUiClick: "/original/sounds/sound_121.mp3",
+  sfxFire: "/original/sounds/sound_35.mp3",
+  sfxImpact: "/original/sounds/sound_12.mp3",
+} as const;
+
 const state: {
   mode: Mode;
   message: string;
@@ -129,6 +202,91 @@ const state: {
   currentTank: 0,
   projectile: { active: false, x: 0, y: 0, vx: 0, vy: 0, weaponIdx: 0 },
 };
+
+const UI_SETTINGS_KEY = "tanks.remakeWeb.settings.v1";
+
+function defaultTouchEnabled() {
+  // Good heuristic for phones/tablets; also fine for 2-in-1 devices.
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
+}
+
+function loadUiSettings(): { touchEnabled: boolean; touchLayout: TouchLayout } {
+  try {
+    const raw = localStorage.getItem(UI_SETTINGS_KEY);
+    if (!raw) return { touchEnabled: defaultTouchEnabled(), touchLayout: "right" };
+    const parsed = JSON.parse(raw) as Partial<{ touchEnabled: boolean; touchLayout: TouchLayout }>;
+    return {
+      touchEnabled: typeof parsed.touchEnabled === "boolean" ? parsed.touchEnabled : defaultTouchEnabled(),
+      touchLayout: parsed.touchLayout === "left" ? "left" : "right",
+    };
+  } catch {
+    return { touchEnabled: defaultTouchEnabled(), touchLayout: "right" };
+  }
+}
+
+function saveUiSettings(settings: { touchEnabled: boolean; touchLayout: TouchLayout }) {
+  try {
+    localStorage.setItem(UI_SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // ignore
+  }
+}
+
+const ui: {
+  modal: UiModal;
+  modalReturnMode: Mode;
+  touchEnabled: boolean;
+  touchLayout: TouchLayout;
+} = {
+  modal: null,
+  modalReturnMode: "menu",
+  ...loadUiSettings(),
+};
+
+const imageCache: {
+  bg?: HTMLImageElement;
+  p1?: HTMLImageElement;
+  p2?: HTMLImageElement;
+} = {};
+const imageReady = {
+  bg: false,
+  p1: false,
+  p2: false,
+};
+
+function createLoadedImage(src: string, onReady: () => void): HTMLImageElement {
+  const img = new Image();
+  img.decoding = "async";
+  img.onload = () => onReady();
+  img.onerror = () => onReady();
+  img.src = src;
+  return img;
+}
+
+imageCache.bg = createLoadedImage(ORIGINAL_ASSETS.imageBg, () => {
+  imageReady.bg = true;
+});
+imageCache.p1 = createLoadedImage(ORIGINAL_ASSETS.imageP1, () => {
+  imageReady.p1 = true;
+});
+imageCache.p2 = createLoadedImage(ORIGINAL_ASSETS.imageP2, () => {
+  imageReady.p2 = true;
+});
+
+const audioCache = {
+  uiClick: new Audio(ORIGINAL_ASSETS.sfxUiClick),
+  fire: new Audio(ORIGINAL_ASSETS.sfxFire),
+  impact: new Audio(ORIGINAL_ASSETS.sfxImpact),
+};
+
+audioCache.uiClick.volume = 0.28;
+audioCache.fire.volume = 0.35;
+audioCache.impact.volume = 0.4;
+
+function playSfx(audio: HTMLAudioElement) {
+  audio.currentTime = 0;
+  void audio.play().catch(() => {});
+}
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
@@ -219,6 +377,14 @@ function facingSign(t: Tank) {
   return t.id === 0 ? 1 : -1;
 }
 
+type HoldAction = "move_left" | "move_right" | "aim_left" | "aim_right" | "power_up" | "power_down";
+
+const touchHeld = new Set<HoldAction>();
+
+function actionDown(action: HoldAction) {
+  return touchHeld.has(action);
+}
+
 function keyDown(code: string) {
   return pressed.has(code);
 }
@@ -231,8 +397,8 @@ function tryMoveTank(t: Tank, dt: number) {
   if (Math.abs(t.y - groundY) > 0.75) return;
 
   let dir = 0;
-  if (keyDown("KeyA")) dir -= 1;
-  if (keyDown("KeyD")) dir += 1;
+  if (keyDown("KeyA") || actionDown("move_left")) dir -= 1;
+  if (keyDown("KeyD") || actionDown("move_right")) dir += 1;
   if (dir === 0) return;
 
   let desiredX = clamp(t.x + dir * MOVE_SPEED * dt, TANK_R, WIDTH - TANK_R);
@@ -285,12 +451,12 @@ function tickTanks(dt: number) {
 
 function aimAndPowerTick(t: Tank, dt: number) {
   const angleDelta = ANGLE_SPEED_DEG_PER_SEC * dt;
-  if (keyDown("ArrowLeft")) t.aimDeg = clamp(t.aimDeg - angleDelta, ANGLE_MIN, ANGLE_MAX);
-  if (keyDown("ArrowRight")) t.aimDeg = clamp(t.aimDeg + angleDelta, ANGLE_MIN, ANGLE_MAX);
+  if (keyDown("ArrowLeft") || actionDown("aim_left")) t.aimDeg = clamp(t.aimDeg - angleDelta, ANGLE_MIN, ANGLE_MAX);
+  if (keyDown("ArrowRight") || actionDown("aim_right")) t.aimDeg = clamp(t.aimDeg + angleDelta, ANGLE_MIN, ANGLE_MAX);
 
   const powerDelta = POWER_SPEED_PER_SEC * dt;
-  if (keyDown("ArrowDown")) t.power = clamp(t.power - powerDelta, POWER_MIN, POWER_MAX);
-  if (keyDown("ArrowUp")) t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
+  if (keyDown("ArrowDown") || actionDown("power_down")) t.power = clamp(t.power - powerDelta, POWER_MIN, POWER_MAX);
+  if (keyDown("ArrowUp") || actionDown("power_up")) t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
 }
 
 function fire(t: Tank) {
@@ -309,6 +475,17 @@ function fire(t: Tank) {
   state.projectile.vx = ux * t.power * w.speedMultiplier;
   state.projectile.vy = uy * t.power * w.speedMultiplier;
   state.message = "";
+  playSfx(audioCache.fire);
+}
+
+function requestFire() {
+  if (state.mode !== "playing") return;
+  if (ui.modal !== null) return;
+  if (state.projectile.active) return;
+  if (state.cooldown > 0) return;
+  const t = state.tanks[state.currentTank];
+  if (!t || t.hp <= 0) return;
+  fire(t);
 }
 
 function carveCrater(cx: number, cy: number, radius: number) {
@@ -342,6 +519,7 @@ function applyExplosionDamage(cx: number, cy: number, radius: number, maxDamage:
 function explodeAt(x: number, y: number) {
   state.projectile.active = false;
   state.cooldown = EXPLOSION_COOLDOWN_SEC;
+  playSfx(audioCache.impact);
 
   const weapon = weapons[clamp(state.projectile.weaponIdx, 0, weapons.length - 1)]!;
   carveCrater(x, y, weapon.craterRadius);
@@ -355,6 +533,9 @@ function endTurnOrGame() {
   if (alive.length <= 1) {
     state.mode = "gameover";
     state.message = alive.length === 1 ? `Player ${alive[0]!.id + 1} wins!` : "Draw!";
+    ui.modal = null;
+    pauseBtn.disabled = true;
+    syncUi();
     return;
   }
 
@@ -438,6 +619,13 @@ function draw() {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+  if (imageReady.bg && imageCache.bg && imageCache.bg.naturalWidth > 0) {
+    ctx.save();
+    ctx.globalAlpha = 0.24;
+    ctx.drawImage(imageCache.bg, 0, 0, WIDTH, HEIGHT);
+    ctx.restore();
+  }
+
   // Terrain fill
   ctx.fillStyle = "#162026";
   ctx.beginPath();
@@ -464,15 +652,32 @@ function draw() {
   // Tanks
   for (const t of state.tanks) {
     if (t.hp <= 0) continue;
-    ctx.fillStyle = t.color;
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
-    ctx.fill();
+    const sprite = t.id === 0 ? imageCache.p1 : imageCache.p2;
+    const spriteReady = t.id === 0 ? imageReady.p1 : imageReady.p2;
+    if (spriteReady && sprite && sprite.naturalWidth > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(sprite, t.x - TANK_R, t.y - TANK_R, TANK_R * 2, TANK_R * 2);
+      ctx.restore();
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = t.color;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, TANK_R - 6, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, TANK_R - 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     if (state.mode === "playing" && t.id === state.currentTank && !state.projectile.active) {
       const angleRad = (t.aimDeg * Math.PI) / 180;
@@ -504,10 +709,10 @@ function draw() {
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.fillText("Tanks (Web Remake Spike)", 110, 190);
+    ctx.fillText("Tanks (Web Remake v1)", 110, 190);
     ctx.fillStyle = "rgba(255,255,255,0.72)";
     ctx.font = "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.fillText("Press Start to begin. Prototype visuals, clean-room mechanics.", 110, 230);
+    ctx.fillText("Press Start to begin. Reimplemented rules with imported original assets.", 110, 230);
   }
 
   if (state.mode === "gameover") {
@@ -552,6 +757,115 @@ function updateHud() {
   }
   if (state.message) lines.push(state.message);
   hud.textContent = lines.join(" | ");
+
+  // In-game HUD panel (more readable than the footer debug line).
+  hudPanel.hidden = state.mode === "menu";
+  if (state.mode === "menu") {
+    hudStats.textContent = "";
+    hudMessage.textContent = "";
+    return;
+  }
+
+  const statLines: string[] = [];
+  if (t && w) {
+    statLines.push(`Turn: Player ${state.currentTank + 1}    Weapon: ${w.name}`);
+    statLines.push(`Angle: ${Math.round(t.aimDeg)}°    Power: ${Math.round(t.power)}`);
+    statLines.push(`Wind: ${fmtWind()}    Fuel: ${Math.round(state.fuelLeft)}    Timer: ${Math.ceil(state.timeLeft)}`);
+    statLines.push(`HP: P1 ${Math.round(state.tanks[0]!.hp)}    P2 ${Math.round(state.tanks[1]!.hp)}`);
+  } else {
+    statLines.push(`Mode: ${state.mode}`);
+  }
+  hudStats.textContent = statLines.join("\n");
+  hudMessage.textContent = state.message || "";
+}
+
+let settingsReturnToPause = false;
+
+function syncUi() {
+  const hasModal = ui.modal !== null;
+  modalLayer.hidden = !hasModal;
+  pauseModal.hidden = ui.modal !== "pause";
+  settingsModal.hidden = ui.modal !== "settings";
+
+  // Topbar buttons
+  pauseBtn.disabled = state.mode === "menu" || state.mode === "gameover" || ui.modal === "settings";
+  pauseBtn.textContent = state.mode === "paused" ? "Resume" : "Pause";
+  settingsBtn.disabled = ui.modal === "settings";
+
+  // Settings form state
+  settingsTouchEnabled.checked = ui.touchEnabled;
+  settingsTouchLayout.value = ui.touchLayout;
+
+  // Touch overlay
+  touchControls.hidden = !ui.touchEnabled || state.mode !== "playing" || hasModal;
+  touchControls.dataset.layout = ui.touchLayout;
+  if (state.mode !== "playing" || hasModal) touchHeld.clear();
+}
+
+function openPauseMenu() {
+  if (state.mode !== "playing") return;
+  state.mode = "paused";
+  ui.modal = "pause";
+  syncUi();
+  updateHud();
+  draw();
+}
+
+function resumeFromPause() {
+  if (state.mode !== "paused") return;
+  ui.modal = null;
+  state.mode = "playing";
+  syncUi();
+  updateHud();
+  draw();
+}
+
+function togglePause() {
+  if (ui.modal === "settings") return;
+  if (state.mode === "playing") openPauseMenu();
+  else if (state.mode === "paused") resumeFromPause();
+}
+
+function openSettings(returnToPause: boolean) {
+  settingsReturnToPause = returnToPause;
+  ui.modalReturnMode = state.mode;
+  ui.modal = "settings";
+  if (state.mode === "playing") state.mode = "paused";
+  syncUi();
+  updateHud();
+  draw();
+}
+
+function closeSettings() {
+  ui.modal = null;
+  state.mode = ui.modalReturnMode;
+
+  if (settingsReturnToPause && state.mode === "paused") {
+    ui.modal = "pause";
+  }
+  settingsReturnToPause = false;
+
+  syncUi();
+  updateHud();
+  draw();
+}
+
+function goToMainMenu() {
+  ui.modal = null;
+  settingsReturnToPause = false;
+
+  state.mode = "menu";
+  state.message = "";
+  state.cooldown = 0;
+  state.projectile.active = false;
+
+  startBtn.disabled = false;
+  resetBtn.disabled = true;
+  pauseBtn.disabled = true;
+
+  syncUi();
+  updateHud();
+  draw();
 }
 
 const pressed = new Set<string>();
@@ -562,14 +876,20 @@ window.addEventListener("keydown", (e) => {
     toggleFullscreen().catch(() => {});
   }
 
+  if (e.code === "Escape") {
+    // Close modals first; otherwise toggle pause.
+    if (ui.modal === "settings") closeSettings();
+    else togglePause();
+  }
+
   if (e.code === "KeyR") {
     onReset();
   }
 
-  if (state.mode === "playing" && !state.projectile.active && state.cooldown <= 0) {
+  if (state.mode === "playing" && ui.modal === null && !state.projectile.active && state.cooldown <= 0) {
     const t = state.tanks[state.currentTank];
     if (!t || t.hp <= 0) return;
-    if (e.code === "Space") fire(t);
+    if (e.code === "Space") requestFire();
     if (e.code === "Digit1") t.weaponIdx = 0;
     if (e.code === "Digit2") t.weaponIdx = 1;
     if (e.code === "Digit3") t.weaponIdx = 2;
@@ -581,14 +901,20 @@ function onStart() {
   startMatch();
   startBtn.disabled = true;
   resetBtn.disabled = false;
+  pauseBtn.disabled = false;
+  ui.modal = null;
   updateHud();
+  syncUi();
   draw();
 }
 
 function onReset() {
   if (state.mode === "menu") return;
   startMatch();
+  ui.modal = null;
+  pauseBtn.disabled = false;
   updateHud();
+  syncUi();
   draw();
 }
 
@@ -598,9 +924,104 @@ async function toggleFullscreen() {
   else await document.exitFullscreen();
 }
 
-startBtn.addEventListener("click", onStart);
-resetBtn.addEventListener("click", onReset);
+startBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  onStart();
+});
+resetBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  onReset();
+});
+pauseBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  togglePause();
+});
+settingsBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  openSettings(false);
+});
 fullscreenBtn.addEventListener("click", () => toggleFullscreen().catch(() => {}));
+
+pauseResumeBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  resumeFromPause();
+});
+pauseRestartBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  onReset();
+});
+pauseSettingsBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  openSettings(true);
+});
+pauseMainMenuBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  goToMainMenu();
+});
+
+settingsTouchEnabled.addEventListener("change", () => {
+  playSfx(audioCache.uiClick);
+  ui.touchEnabled = settingsTouchEnabled.checked;
+  saveUiSettings({ touchEnabled: ui.touchEnabled, touchLayout: ui.touchLayout });
+  syncUi();
+});
+settingsTouchLayout.addEventListener("change", () => {
+  playSfx(audioCache.uiClick);
+  ui.touchLayout = settingsTouchLayout.value === "left" ? "left" : "right";
+  saveUiSettings({ touchEnabled: ui.touchEnabled, touchLayout: ui.touchLayout });
+  syncUi();
+});
+settingsCloseBtn.addEventListener("click", () => {
+  playSfx(audioCache.uiClick);
+  closeSettings();
+});
+
+function bindHoldButton(button: HTMLElement, action: HoldAction) {
+  const press = (event: Event) => {
+    event.preventDefault();
+    touchHeld.add(action);
+  };
+  const release = (event: Event) => {
+    event.preventDefault();
+    touchHeld.delete(action);
+  };
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", release);
+}
+
+function bindTouchControls() {
+  const holdButtons = touchControls.querySelectorAll<HTMLElement>("[data-hold]");
+  holdButtons.forEach((el) => {
+    const actionRaw = el.dataset.hold as HoldAction | undefined;
+    if (!actionRaw) return;
+    bindHoldButton(el, actionRaw);
+  });
+
+  const weaponButtons = touchControls.querySelectorAll<HTMLElement>("[data-weapon]");
+  weaponButtons.forEach((el) => {
+    el.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      if (state.mode !== "playing" || state.projectile.active || state.cooldown > 0 || ui.modal !== null) return;
+      const t = state.tanks[state.currentTank];
+      if (!t || t.hp <= 0) return;
+      const raw = Number(el.dataset.weapon ?? "0");
+      t.weaponIdx = clamp(Math.trunc(raw), 0, weapons.length - 1);
+      playSfx(audioCache.uiClick);
+      updateHud();
+      draw();
+    });
+  });
+
+  const fireBtn = document.querySelector<HTMLElement>("#touch-fire");
+  if (fireBtn) {
+    fireBtn.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      requestFire();
+    });
+  }
+}
 
 function renderGameToText() {
   const t = state.tanks[state.currentTank];
@@ -633,6 +1054,11 @@ function renderGameToText() {
           weapon: weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]?.name ?? "?",
         }
       : null,
+    ui: {
+      modal: ui.modal,
+      touchEnabled: ui.touchEnabled,
+      touchLayout: ui.touchLayout,
+    },
     message: state.message,
   };
   return JSON.stringify(payload);
@@ -647,11 +1073,27 @@ function renderGameToText() {
   const dt = 1 / 60;
   for (let i = 0; i < steps; i++) tick(dt);
   updateHud();
+  syncUi();
   draw();
 };
 
-// Initial paint
+function frame(now: number) {
+  const prev = (frame as unknown as { prev?: number }).prev ?? now;
+  (frame as unknown as { prev?: number }).prev = now;
+  const dt = clamp((now - prev) / 1000, 0, 0.05);
+  tick(dt);
+  updateHud();
+  syncUi();
+  draw();
+  requestAnimationFrame(frame);
+}
+
+bindTouchControls();
+
+// Initial state
 regenTerrain();
 initTanks();
 updateHud();
+syncUi();
 draw();
+requestAnimationFrame(frame);

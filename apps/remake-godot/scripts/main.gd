@@ -100,6 +100,14 @@ const SETTINGS_FILE := "user://tanks_remake_settings.cfg"
 const TOUCH_LAYOUT_RIGHT_HANDED := 0
 const TOUCH_LAYOUT_LEFT_HANDED := 1
 
+const ORIGINAL_BG_IMAGE_PATH := "res://assets/original/images/char_318.png"
+const ORIGINAL_P1_IMAGE_PATH := "res://assets/original/images/char_230.png"
+const ORIGINAL_P2_IMAGE_PATH := "res://assets/original/images/char_237.png"
+
+const ORIGINAL_SFX_UI_CLICK_PATH := "res://assets/original/sounds/sound_121.mp3"
+const ORIGINAL_SFX_FIRE_PATH := "res://assets/original/sounds/sound_35.mp3"
+const ORIGINAL_SFX_IMPACT_PATH := "res://assets/original/sounds/sound_12.mp3"
+
 var _phase := Phase.AIM
 var _message := ""
 var _cooldown := 0.0
@@ -107,6 +115,10 @@ var _cooldown := 0.0
 var _ui_screen := UiScreen.MAIN_MENU
 var _screen_before_settings := UiScreen.MAIN_MENU
 var _game_active := false
+
+var _bg_texture: Texture2D = null
+var _p1_texture: Texture2D = null
+var _p2_texture: Texture2D = null
 
 var _touch_overlay_enabled := false
 var _touch_layout := TOUCH_LAYOUT_RIGHT_HANDED
@@ -153,25 +165,35 @@ var _projectile_color := Color(1.0, 0.9, 0.4)
 @onready var _touch_weapon3_button: Button = $"UI/TouchControls/AimCluster/AimBox/WeaponRow/Weapon3Button"
 
 @onready var _main_menu: Control = $"UI/MainMenu"
+@onready var _main_menu_bg: TextureRect = $"UI/MainMenu/BgImage"
+@onready var _main_menu_p1_portrait: TextureRect = $"UI/MainMenu/Center/Panel/VBox/PortraitRow/P1Portrait"
+@onready var _main_menu_p2_portrait: TextureRect = $"UI/MainMenu/Center/Panel/VBox/PortraitRow/P2Portrait"
 @onready var _main_menu_start_button: Button = $"UI/MainMenu/Center/Panel/VBox/StartButton"
 @onready var _main_menu_settings_button: Button = $"UI/MainMenu/Center/Panel/VBox/SettingsButton"
 @onready var _main_menu_quit_button: Button = $"UI/MainMenu/Center/Panel/VBox/QuitButton"
 
 @onready var _pause_menu: Control = $"UI/PauseMenu"
+@onready var _pause_menu_bg: TextureRect = $"UI/PauseMenu/BgImage"
 @onready var _pause_resume_button: Button = $"UI/PauseMenu/Center/Panel/VBox/ResumeButton"
 @onready var _pause_restart_button: Button = $"UI/PauseMenu/Center/Panel/VBox/RestartButton"
 @onready var _pause_settings_button: Button = $"UI/PauseMenu/Center/Panel/VBox/SettingsButton"
 @onready var _pause_main_menu_button: Button = $"UI/PauseMenu/Center/Panel/VBox/MainMenuButton"
 
 @onready var _settings_menu: Control = $"UI/SettingsMenu"
+@onready var _settings_menu_bg: TextureRect = $"UI/SettingsMenu/BgImage"
 @onready var _settings_touch_enabled: CheckBox = $"UI/SettingsMenu/Center/Panel/VBox/TouchEnabled"
 @onready var _settings_touch_layout_option: OptionButton = $"UI/SettingsMenu/Center/Panel/VBox/TouchLayoutRow/TouchLayoutOption"
 @onready var _settings_back_button: Button = $"UI/SettingsMenu/Center/Panel/VBox/BackButton"
+
+@onready var _ui_click_sfx: AudioStreamPlayer = $"Audio/UiClick"
+@onready var _fire_sfx: AudioStreamPlayer = $"Audio/Fire"
+@onready var _impact_sfx: AudioStreamPlayer = $"Audio/Impact"
 
 func _ready() -> void:
 	randomize()
 	_ensure_input_map()
 	_load_settings()
+	_load_original_assets()
 	_init_weapons()
 	_wire_ui()
 	_apply_settings_to_ui()
@@ -222,21 +244,109 @@ func _save_settings() -> void:
 	cfg.set_value("ui", "touch_layout", _touch_layout)
 	cfg.save(SETTINGS_FILE)
 
+func _load_original_assets() -> void:
+	_bg_texture = _try_load_texture(ORIGINAL_BG_IMAGE_PATH)
+	_p1_texture = _try_load_texture(ORIGINAL_P1_IMAGE_PATH)
+	_p2_texture = _try_load_texture(ORIGINAL_P2_IMAGE_PATH)
+
+	if _bg_texture != null:
+		_apply_menu_background(_main_menu_bg, _bg_texture, 0.55)
+		_apply_menu_background(_pause_menu_bg, _bg_texture, 0.45)
+		_apply_menu_background(_settings_menu_bg, _bg_texture, 0.45)
+
+	if _p1_texture != null:
+		_apply_portrait(_main_menu_p1_portrait, _p1_texture)
+	if _p2_texture != null:
+		_apply_portrait(_main_menu_p2_portrait, _p2_texture)
+
+	_ui_click_sfx.stream = _try_load_audio_stream(ORIGINAL_SFX_UI_CLICK_PATH)
+	_fire_sfx.stream = _try_load_audio_stream(ORIGINAL_SFX_FIRE_PATH)
+	_impact_sfx.stream = _try_load_audio_stream(ORIGINAL_SFX_IMPACT_PATH)
+
+	_ui_click_sfx.volume_db = -10.0
+	_fire_sfx.volume_db = -8.0
+	_impact_sfx.volume_db = -6.0
+
+func _try_load_texture(res_path: String) -> Texture2D:
+	var res = load(res_path)
+	return res as Texture2D if res is Texture2D else null
+
+func _try_load_audio_stream(res_path: String) -> AudioStream:
+	var res = load(res_path)
+	return res as AudioStream if res is AudioStream else null
+
+func _apply_menu_background(rect: TextureRect, tex: Texture2D, alpha: float) -> void:
+	if rect == null or tex == null:
+		return
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	rect.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.0, 1.0))
+
+func _apply_portrait(rect: TextureRect, tex: Texture2D) -> void:
+	if rect == null or tex == null:
+		return
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	rect.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+func _play_sfx(player: AudioStreamPlayer) -> void:
+	if player == null:
+		return
+	if player.stream == null:
+		return
+	player.stop()
+	player.play()
+
 func _wire_ui() -> void:
-	_hud_pause_button.pressed.connect(func(): _toggle_pause())
-	_hud_settings_button.pressed.connect(func(): _open_settings(UiScreen.PLAYING))
-	_hud_restart_button.pressed.connect(func(): _restart_match())
+	_hud_pause_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_toggle_pause()
+	)
+	_hud_settings_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_open_settings(UiScreen.PLAYING)
+	)
+	_hud_restart_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_restart_match()
+	)
 
-	_main_menu_start_button.pressed.connect(func(): _start_game())
-	_main_menu_settings_button.pressed.connect(func(): _open_settings(UiScreen.MAIN_MENU))
-	_main_menu_quit_button.pressed.connect(func(): get_tree().quit())
+	_main_menu_start_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_start_game()
+	)
+	_main_menu_settings_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_open_settings(UiScreen.MAIN_MENU)
+	)
+	_main_menu_quit_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		get_tree().quit()
+	)
 
-	_pause_resume_button.pressed.connect(func(): _resume_game())
-	_pause_restart_button.pressed.connect(func(): _restart_match())
-	_pause_settings_button.pressed.connect(func(): _open_settings(UiScreen.PAUSED))
-	_pause_main_menu_button.pressed.connect(func(): _go_to_main_menu())
+	_pause_resume_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_resume_game()
+	)
+	_pause_restart_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_restart_match()
+	)
+	_pause_settings_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_open_settings(UiScreen.PAUSED)
+	)
+	_pause_main_menu_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_go_to_main_menu()
+	)
 
-	_settings_back_button.pressed.connect(func(): _close_settings())
+	_settings_back_button.pressed.connect(func():
+		_play_sfx(_ui_click_sfx)
+		_close_settings()
+	)
 	_settings_touch_enabled.toggled.connect(func(on: bool): _set_touch_overlay_enabled(on))
 	_settings_touch_layout_option.item_selected.connect(func(idx: int): _set_touch_layout(idx))
 
@@ -300,11 +410,13 @@ func _apply_touch_layout() -> void:
 		_touch_aim_cluster.offset_bottom = -margin
 
 func _set_touch_overlay_enabled(on: bool) -> void:
+	_play_sfx(_ui_click_sfx)
 	_touch_overlay_enabled = on
 	_save_settings()
 	_show_screen(_ui_screen)
 
 func _set_touch_layout(layout_idx: int) -> void:
+	_play_sfx(_ui_click_sfx)
 	_touch_layout = clampi(layout_idx, TOUCH_LAYOUT_RIGHT_HANDED, TOUCH_LAYOUT_LEFT_HANDED)
 	_save_settings()
 	_apply_settings_to_ui()
@@ -620,12 +732,14 @@ func _fire(tank: Tank) -> void:
 	_projectile_pos = tank.pos + dir * (TANK_RADIUS + _projectile_radius + 2.0)
 	_projectile_vel = dir * tank.power * weapon.speed_multiplier
 	_message = ""
+	_play_sfx(_fire_sfx)
 
 func _explode_at(center: Vector2) -> void:
 	_projectile_active = false
 	_projectile_vel = Vector2.ZERO
 	_phase = Phase.EXPLODING
 	_cooldown = EXPLOSION_COOLDOWN_SEC
+	_play_sfx(_impact_sfx)
 
 	var weapon := _weapons[_projectile_weapon_idx] if not _weapons.is_empty() else null
 	if weapon != null:
@@ -820,6 +934,8 @@ func _format_wind() -> String:
 func _draw() -> void:
 	# Background
 	draw_rect(Rect2(Vector2.ZERO, Vector2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)), Color(0.05, 0.06, 0.08), true)
+	if _bg_texture != null:
+		draw_texture_rect(_bg_texture, Rect2(Vector2.ZERO, Vector2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)), false, Color(1.0, 1.0, 1.0, 0.24))
 
 	# Terrain
 	if _terrain_fill.size() >= 3:

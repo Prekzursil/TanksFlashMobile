@@ -24,6 +24,7 @@
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
     "assets:generate": "python3 scripts/generate_branding_assets.py",
+    "assets:extract:original": "node scripts/extract_original_assets.mjs --write-web --write-godot --force",
     "swf:import": "node ./scripts/import_swf.mjs",
     "sync:swf:web": "npm --prefix apps/web run sync:swf"
   },
@@ -31,6 +32,8 @@
     "@capacitor/android": "^6.1.0",
     "@capacitor/cli": "^6.1.0",
     "@capacitor/core": "^6.1.0",
-    "@capacitor/ios": "^6.1.0"
+    "@capacitor/ios": "^6.1.0",
+    "lodash": "^4.17.23",
+    "swf-extract": "^1.1.0"
   }
 }

@@ -90,13 +90,192 @@ body {
   padding: 18px;
 }
 
-canvas {
+.frame {
+  position: relative;
   width: min(100%, 1280px);
+}
+
+canvas {
+  width: 100%;
   height: auto;
   border-radius: 18px;
   border: 1px solid var(--stroke);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   background: #0c1016;
+}
+
+.hudpanel {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: min(820px, calc(100% - 32px));
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.hudpanel__stats {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 12px;
+  color: var(--text0);
+  line-height: 1.4;
+}
+
+.hudpanel__message {
+  margin-top: 8px;
+  color: var(--text1);
+  font-size: 13px;
+}
+
+.touch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.touch__cluster {
+  position: absolute;
+  bottom: 18px;
+  display: grid;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.touch__cluster--move {
+  left: 18px;
+  grid-auto-flow: column;
+  align-items: end;
+}
+
+.touch__cluster--aim {
+  right: 18px;
+  width: 340px;
+}
+
+.touch[data-layout="left"] .touch__cluster--move {
+  left: auto;
+  right: 18px;
+}
+
+.touch[data-layout="left"] .touch__cluster--aim {
+  right: auto;
+  left: 18px;
+}
+
+.touch__row {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.touch__btn {
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text0);
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-weight: 800;
+  font-size: 16px;
+  min-width: 64px;
+  min-height: 54px;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.touch__btn:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.touch__btn--wide {
+  min-width: 140px;
+}
+
+.touch__btn--fire {
+  width: 100%;
+  min-height: 92px;
+  border-color: rgba(255, 179, 92, 0.35);
+  background: linear-gradient(180deg, rgba(255, 179, 92, 0.24), rgba(255, 109, 109, 0.2));
+  letter-spacing: 0.08em;
+}
+
+.modalLayer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.modal {
+  width: min(680px, 100%);
+}
+
+.modal__card {
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: 16px 16px;
+}
+
+.modal__title {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.modal__content {
+  display: grid;
+  gap: 12px;
+  color: var(--text1);
+}
+
+.modal__actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.field--row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.field input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.field select {
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text0);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+}
+
+.hint {
+  color: var(--text1);
+  font-size: 13px;
 }
 
 .footer {
@@ -137,4 +316,27 @@ canvas {
   border-radius: 999px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
+}
+
+@media (max-width: 960px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .topbar__actions {
+    flex-wrap: wrap;
+  }
+
+  .touch__cluster--aim {
+    width: 280px;
+  }
+
+  .touch__btn--wide {
+    min-width: 120px;
+  }
+
+  .touch__btn--fire {
+    min-height: 78px;
+  }
 }

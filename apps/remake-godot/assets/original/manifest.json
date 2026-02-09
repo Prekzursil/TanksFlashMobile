@@ -1,0 +1,70 @@
+{
+  "swf": "assets/original/tanks.swf",
+  "images": [
+    {
+      "characterId": 230,
+      "type": "png",
+      "sourceType": "jpeg",
+      "file": "images/char_230.png",
+      "bytes": 28173
+    },
+    {
+      "characterId": 237,
+      "type": "png",
+      "sourceType": "jpeg",
+      "file": "images/char_237.png",
+      "bytes": 31751
+    },
+    {
+      "characterId": 318,
+      "type": "png",
+      "sourceType": "jpeg",
+      "file": "images/char_318.png",
+      "bytes": 52495
+    }
+  ],
+  "sounds": [
+    {
+      "soundId": 12,
+      "type": "mp3",
+      "file": "sounds/sound_12.mp3",
+      "bytes": 7696
+    },
+    {
+      "soundId": 35,
+      "type": "mp3",
+      "file": "sounds/sound_35.mp3",
+      "bytes": 4472
+    },
+    {
+      "soundId": 39,
+      "type": "mp3",
+      "file": "sounds/sound_39.mp3",
+      "bytes": 2808
+    },
+    {
+      "soundId": 46,
+      "type": "mp3",
+      "file": "sounds/sound_46.mp3",
+      "bytes": 1456
+    },
+    {
+      "soundId": 121,
+      "type": "mp3",
+      "file": "sounds/sound_121.mp3",
+      "bytes": 520
+    },
+    {
+      "soundId": 246,
+      "type": "mp3",
+      "file": "sounds/sound_246.mp3",
+      "bytes": 5096
+    },
+    {
+      "soundId": 346,
+      "type": "mp3",
+      "file": "sounds/sound_346.mp3",
+      "bytes": 2600
+    }
+  ]
+}

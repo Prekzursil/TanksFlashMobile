@@ -53,3 +53,42 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Expanded the Godot spike with fuel-limited movement, per-turn wind, a turn timer, and multiple weapons; documented the remake v1 scope and input plan.
 - Added Godot desktop export presets and a CI job to produce Windows/Linux/macOS export artifacts.
 - Added a Canvas/TypeScript clean-room web remake spike (`apps/remake-web`) with deterministic Playwright hooks (`render_game_to_text`, `advanceTime`) and CI smoke/build artifacts.
+
+## 2026-02-09
+
+- Continued work on branch `feat/godot-spike-batch-01` (same PR flow).
+- Implemented original asset extraction pipeline with SWF parsing + dual-target output:
+  - script: `scripts/extract_original_assets.mjs`
+  - command: `npm run assets:extract:original`
+  - outputs:
+    - `apps/remake-godot/assets/original/`
+    - `apps/remake-web/public/original/`
+- Added/updated root dev dependencies for extraction:
+  - `swf-extract`
+  - `lodash` (runtime dep needed by `swf-extract`)
+- Fixed extraction compatibility issue: normalized extracted image output to PNG (Godot headless import rejected raw extracted JPEG data stream).
+- Integrated original assets into Godot remake:
+  - menu backgrounds + portraits from extracted textures
+  - fire/impact/UI click SFX from extracted audio
+  - paths switched to `.png` textures in `apps/remake-godot/scripts/main.gd`
+- Added audio players and background texture nodes in Godot scene:
+  - `apps/remake-godot/scenes/Main.tscn`
+- Implemented web remake TODOs for HUD/menus/touch/original assets integration:
+  - topbar pause/settings controls
+  - modal pause/settings screens
+  - in-game HUD panel (stats + message)
+  - touch overlay with hold actions + fire/weapon buttons
+  - persisted touch settings (enabled/layout)
+  - imported original images/audio in rendering + SFX
+  - restored continuous game frame loop (`requestAnimationFrame`) for normal runtime
+- Validation runs:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - develop-web-game Playwright client run with action payloads ✅ (`output/web-game/`)
+  - Docker Godot export check ✅ (`barichello/godot-ci:4.2.2`, Linux/X11 export)
+
+## Next up
+
+- Web remake gameplay parity task is still open (`TODO.md`): align remaining behavior differences vs Godot (rules edge cases, balancing, model consistency).
+- Store readiness tasks remain open (submission checklist, privacy/support URL, metadata audit).

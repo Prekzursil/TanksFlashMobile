@@ -192,6 +192,16 @@ offset_right = 0.0
 offset_bottom = 0.0
 mouse_filter = 0
 
+[node name="BgImage" type="TextureRect" parent="UI/MainMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
 [node name="Backdrop" type="ColorRect" parent="UI/MainMenu"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -228,6 +238,20 @@ text = "Tanks Remake"
 autowrap_mode = 3
 text = "Godot prototype: turn-based artillery with wind + destructible terrain."
 
+[node name="PortraitRow" type="HBoxContainer" parent="UI/MainMenu/Center/Panel/VBox"]
+alignment = 1
+
+[node name="P1Portrait" type="TextureRect" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(180, 260)
+mouse_filter = 2
+
+[node name="Spacer" type="Control" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(16, 0)
+
+[node name="P2Portrait" type="TextureRect" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(180, 260)
+mouse_filter = 2
+
 [node name="StartButton" type="Button" parent="UI/MainMenu/Center/Panel/VBox"]
 text = "Start"
 
@@ -252,6 +276,16 @@ offset_top = 0.0
 offset_right = 0.0
 offset_bottom = 0.0
 mouse_filter = 0
+
+[node name="BgImage" type="TextureRect" parent="UI/PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
 
 [node name="Backdrop" type="ColorRect" parent="UI/PauseMenu"]
 anchors_preset = 15
@@ -309,6 +343,16 @@ offset_right = 0.0
 offset_bottom = 0.0
 mouse_filter = 0
 
+[node name="BgImage" type="TextureRect" parent="UI/SettingsMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
 [node name="Backdrop" type="ColorRect" parent="UI/SettingsMenu"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -358,3 +402,11 @@ text = "Back"
 [node name="NoteLabel" type="Label" parent="UI/SettingsMenu/Center/Panel/VBox"]
 autowrap_mode = 3
 text = "Tip: Esc pauses. Restart resets the match. Touch overlay is useful on phones/tablets."
+
+[node name="Audio" type="Node" parent="."]
+
+[node name="UiClick" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="Fire" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="Impact" type="AudioStreamPlayer" parent="Audio"]

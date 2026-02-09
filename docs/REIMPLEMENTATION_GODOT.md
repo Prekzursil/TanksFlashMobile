@@ -1,8 +1,8 @@
 # Godot Reimplementation Spike
 
 This repo started as a **Ruffle wrapper** around the original Flash game. This document describes a *separate* effort:
-a **clean-room** reimplementation spike in **Godot 4** to estimate scope and validate that the core gameplay loop is
-feasible if Ruffle compatibility becomes a blocker.
+a reimplementation spike in **Godot 4** to estimate scope and validate that the core gameplay loop is feasible if
+Ruffle compatibility becomes a blocker.
 
 The spike lives in `apps/remake-godot/`.
 
@@ -16,12 +16,12 @@ Related docs:
 - Validate core artillery mechanics (aim → fire → ballistic arc → impact → damage).
 - Validate destructible terrain (craters) without relying on Flash internals.
 - Establish a minimal Godot project structure we can iterate on.
-- Keep everything **clean-room**: no SWF, no extracted assets, no decompiled code.
+- Keep gameplay logic reimplemented in Godot and separate from Flash runtime code.
 
 ## Non-goals (What This Spike Is Not)
 
 - A full remake or feature-complete clone.
-- Matching art/audio, weapons, UI polish, or game modes.
+- Complete art/audio parity, weapon roster parity, or full UI polish.
 - Production-ready architecture.
 
 ## Requirements
@@ -78,10 +78,14 @@ godot --headless --path "$(pwd)/apps/remake-godot" --export-release "Windows Des
 - Explosion damage with falloff radius.
 - Terrain deformation via crater carving.
 - Win condition (last tank alive).
+- Imported original asset set for menu/tank presentation and SFX:
+  - textures: `assets/original/images/char_230.png`, `char_237.png`, `char_318.png`
+  - sounds: `assets/original/sounds/sound_121.mp3` (UI), `sound_35.mp3` (fire), `sound_12.mp3` (impact)
+- Scripted extractor to regenerate imported assets from SWF: `scripts/extract_original_assets.mjs`
 
 ## Known Limitations / Next Steps
 
-- Still very “prototype”: placeholder visuals, no audio, and only basic UI polish.
+- Still prototype quality in gameplay depth and polish, but now uses imported original textures/audio for presentation.
 - Uses Godot InputMap actions + a simple touch overlay, but there’s no remapping or gamepad support yet.
 - No gameplay “nice-to-haves” yet (trajectory preview, camera tracking, terrain themes, etc.).
 - Desktop exports are attached to tag-based GitHub Releases, but they’re currently unsigned/notarized.

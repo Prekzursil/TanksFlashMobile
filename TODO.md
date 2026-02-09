@@ -23,7 +23,7 @@
 - [x] Godot HUD + menus – Add start/pause/settings screens plus an in-game HUD for turn state (wind/fuel/health/weapon).
 - [x] Godot touch controls – Implement mobile-friendly aiming/movement/shoot UI (no hardware keyboard required).
 - [x] Godot mobile exports – Add Android/iOS export presets and a minimal build doc for device/TestFlight builds.
-- [ ] Godot original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
+- [x] Godot original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
 
 ### Web remake track (post-spike)
 - [x] Web remake spike – Prototype a clean-room Canvas/TypeScript remake with deterministic test hooks.
@@ -31,10 +31,10 @@
 - [x] Web remake releases – On version tags, attach the remake web `dist/` zip to GitHub Releases.
 
 ### Web remake track (v1)
-- [ ] Web remake HUD + menus – Add a basic HUD (angle/power/weapon) and menu screens (start/pause/settings).
-- [ ] Web remake touch controls – Add touch aiming + fire controls that work on phones/tablets.
+- [x] Web remake HUD + menus – Add a basic HUD (angle/power/weapon) and menu screens (start/pause/settings).
+- [x] Web remake touch controls – Add touch aiming + fire controls that work on phones/tablets.
 - [ ] Web remake gameplay parity – Track and close gaps vs the Godot ruleset (weapons, turn flow, damage model).
-- [ ] Web remake original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
+- [x] Web remake original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
 
 ### Store readiness
 - [ ] Store submission checklist – Document Play Store + App Store requirements (accounts, signing, screenshots, privacy).
