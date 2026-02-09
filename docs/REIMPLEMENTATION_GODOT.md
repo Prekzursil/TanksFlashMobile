@@ -80,14 +80,14 @@ godot --headless --path "$(pwd)/apps/remake-godot" --export-release "Windows Des
 
 ## Known Limitations / Next Steps
 
-- Still very “prototype”: placeholder visuals, no audio, and minimal UI.
-- Input is hard-coded (not yet migrated to Godot InputMap for remapping/gamepad/touch).
+- Still very “prototype”: placeholder visuals, no audio, and only basic UI polish.
+- Uses Godot InputMap actions + a simple touch overlay, but there’s no remapping or gamepad support yet.
 - No gameplay “nice-to-haves” yet (trajectory preview, camera tracking, terrain themes, etc.).
 - Desktop exports are attached to tag-based GitHub Releases, but they’re currently unsigned/notarized.
 
 If we decide to pursue the full remake track, the next practical steps are:
 
-1. Move from key polling to InputMap actions + settings UI (keyboard/gamepad/touch remap).
+1. Add remapping and gamepad support (InputMap actions already exist).
 2. Improve movement/physics feel (slopes, friction, better turn flow) and add trajectory preview.
 3. Expand weapons and add wind/terrain variety.
 4. Add platform polish for releases (macOS notarization, Windows signing, crash reporting, etc.).

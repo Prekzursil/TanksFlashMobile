@@ -81,9 +81,35 @@ class Tank:
 
 enum Phase { AIM, FIRING, EXPLODING, GAMEOVER }
 
+enum UiScreen { MAIN_MENU, PLAYING, PAUSED, SETTINGS }
+
+const ACTION_MOVE_LEFT := "move_left"
+const ACTION_MOVE_RIGHT := "move_right"
+const ACTION_AIM_LEFT := "aim_left"
+const ACTION_AIM_RIGHT := "aim_right"
+const ACTION_POWER_UP := "power_up"
+const ACTION_POWER_DOWN := "power_down"
+const ACTION_FIRE := "fire"
+const ACTION_WEAPON_1 := "weapon_1"
+const ACTION_WEAPON_2 := "weapon_2"
+const ACTION_WEAPON_3 := "weapon_3"
+const ACTION_RESET_MATCH := "reset_match"
+const ACTION_PAUSE := "pause"
+
+const SETTINGS_FILE := "user://tanks_remake_settings.cfg"
+const TOUCH_LAYOUT_RIGHT_HANDED := 0
+const TOUCH_LAYOUT_LEFT_HANDED := 1
+
 var _phase := Phase.AIM
 var _message := ""
 var _cooldown := 0.0
+
+var _ui_screen := UiScreen.MAIN_MENU
+var _screen_before_settings := UiScreen.MAIN_MENU
+var _game_active := false
+
+var _touch_overlay_enabled := false
+var _touch_layout := TOUCH_LAYOUT_RIGHT_HANDED
 
 var _weapons: Array[Weapon] = []
 var _wind_accel := 0.0
@@ -104,13 +130,263 @@ var _projectile_weapon_idx := 0
 var _projectile_radius := DEFAULT_PROJECTILE_RADIUS
 var _projectile_color := Color(1.0, 0.9, 0.4)
 
-@onready var _status_label: Label = $"UI/Hud/Panel/VBox/StatusLabel"
-@onready var _help_label: Label = $"UI/Hud/Panel/VBox/HelpLabel"
+@onready var _hud: Control = $"UI/Hud"
+@onready var _hud_stats_label: Label = $"UI/Hud/TopPanel/VBox/StatsLabel"
+@onready var _hud_message_label: Label = $"UI/Hud/TopPanel/VBox/MessageLabel"
+@onready var _hud_help_label: Label = $"UI/Hud/TopPanel/VBox/HelpLabel"
+@onready var _hud_pause_button: Button = $"UI/Hud/TopPanel/VBox/Toolbar/PauseButton"
+@onready var _hud_settings_button: Button = $"UI/Hud/TopPanel/VBox/Toolbar/SettingsButton"
+@onready var _hud_restart_button: Button = $"UI/Hud/TopPanel/VBox/Toolbar/RestartButton"
+
+@onready var _touch_controls: Control = $"UI/TouchControls"
+@onready var _touch_move_cluster: Control = $"UI/TouchControls/MoveCluster"
+@onready var _touch_aim_cluster: Control = $"UI/TouchControls/AimCluster"
+@onready var _touch_move_left_button: Button = $"UI/TouchControls/MoveCluster/MoveBox/MoveLeftButton"
+@onready var _touch_move_right_button: Button = $"UI/TouchControls/MoveCluster/MoveBox/MoveRightButton"
+@onready var _touch_aim_left_button: Button = $"UI/TouchControls/AimCluster/AimBox/AimRow/AimLeftButton"
+@onready var _touch_aim_right_button: Button = $"UI/TouchControls/AimCluster/AimBox/AimRow/AimRightButton"
+@onready var _touch_power_down_button: Button = $"UI/TouchControls/AimCluster/AimBox/PowerRow/PowerDownButton"
+@onready var _touch_power_up_button: Button = $"UI/TouchControls/AimCluster/AimBox/PowerRow/PowerUpButton"
+@onready var _touch_fire_button: Button = $"UI/TouchControls/AimCluster/AimBox/FireButton"
+@onready var _touch_weapon1_button: Button = $"UI/TouchControls/AimCluster/AimBox/WeaponRow/Weapon1Button"
+@onready var _touch_weapon2_button: Button = $"UI/TouchControls/AimCluster/AimBox/WeaponRow/Weapon2Button"
+@onready var _touch_weapon3_button: Button = $"UI/TouchControls/AimCluster/AimBox/WeaponRow/Weapon3Button"
+
+@onready var _main_menu: Control = $"UI/MainMenu"
+@onready var _main_menu_start_button: Button = $"UI/MainMenu/Center/Panel/VBox/StartButton"
+@onready var _main_menu_settings_button: Button = $"UI/MainMenu/Center/Panel/VBox/SettingsButton"
+@onready var _main_menu_quit_button: Button = $"UI/MainMenu/Center/Panel/VBox/QuitButton"
+
+@onready var _pause_menu: Control = $"UI/PauseMenu"
+@onready var _pause_resume_button: Button = $"UI/PauseMenu/Center/Panel/VBox/ResumeButton"
+@onready var _pause_restart_button: Button = $"UI/PauseMenu/Center/Panel/VBox/RestartButton"
+@onready var _pause_settings_button: Button = $"UI/PauseMenu/Center/Panel/VBox/SettingsButton"
+@onready var _pause_main_menu_button: Button = $"UI/PauseMenu/Center/Panel/VBox/MainMenuButton"
+
+@onready var _settings_menu: Control = $"UI/SettingsMenu"
+@onready var _settings_touch_enabled: CheckBox = $"UI/SettingsMenu/Center/Panel/VBox/TouchEnabled"
+@onready var _settings_touch_layout_option: OptionButton = $"UI/SettingsMenu/Center/Panel/VBox/TouchLayoutRow/TouchLayoutOption"
+@onready var _settings_back_button: Button = $"UI/SettingsMenu/Center/Panel/VBox/BackButton"
 
 func _ready() -> void:
 	randomize()
+	_ensure_input_map()
+	_load_settings()
 	_init_weapons()
+	_wire_ui()
+	_apply_settings_to_ui()
+	_show_screen(UiScreen.MAIN_MENU)
+	_update_ui()
+	queue_redraw()
+
+func _ensure_input_map() -> void:
+	_ensure_action_key(ACTION_MOVE_LEFT, KEY_A)
+	_ensure_action_key(ACTION_MOVE_RIGHT, KEY_D)
+	_ensure_action_key(ACTION_AIM_LEFT, KEY_LEFT)
+	_ensure_action_key(ACTION_AIM_RIGHT, KEY_RIGHT)
+	_ensure_action_key(ACTION_POWER_UP, KEY_UP)
+	_ensure_action_key(ACTION_POWER_DOWN, KEY_DOWN)
+	_ensure_action_key(ACTION_FIRE, KEY_SPACE)
+	_ensure_action_key(ACTION_WEAPON_1, KEY_1)
+	_ensure_action_key(ACTION_WEAPON_2, KEY_2)
+	_ensure_action_key(ACTION_WEAPON_3, KEY_3)
+	_ensure_action_key(ACTION_RESET_MATCH, KEY_R)
+	_ensure_action_key(ACTION_PAUSE, KEY_ESCAPE)
+	_ensure_action_key(ACTION_PAUSE, KEY_P)
+
+func _ensure_action_key(action: String, keycode: int) -> void:
+	if not InputMap.has_action(action):
+		InputMap.add_action(action)
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey and (ev as InputEventKey).keycode == keycode:
+			return
+	var e := InputEventKey.new()
+	e.keycode = keycode
+	InputMap.action_add_event(action, e)
+
+func _load_settings() -> void:
+	var cfg := ConfigFile.new()
+	var err := cfg.load(SETTINGS_FILE)
+	if err == OK:
+		_touch_overlay_enabled = bool(cfg.get_value("ui", "touch_overlay", OS.has_feature("mobile")))
+		_touch_layout = int(cfg.get_value("ui", "touch_layout", TOUCH_LAYOUT_RIGHT_HANDED))
+	else:
+		_touch_overlay_enabled = OS.has_feature("mobile")
+		_touch_layout = TOUCH_LAYOUT_RIGHT_HANDED
+
+	_touch_layout = clampi(_touch_layout, TOUCH_LAYOUT_RIGHT_HANDED, TOUCH_LAYOUT_LEFT_HANDED)
+
+func _save_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("ui", "touch_overlay", _touch_overlay_enabled)
+	cfg.set_value("ui", "touch_layout", _touch_layout)
+	cfg.save(SETTINGS_FILE)
+
+func _wire_ui() -> void:
+	_hud_pause_button.pressed.connect(func(): _toggle_pause())
+	_hud_settings_button.pressed.connect(func(): _open_settings(UiScreen.PLAYING))
+	_hud_restart_button.pressed.connect(func(): _restart_match())
+
+	_main_menu_start_button.pressed.connect(func(): _start_game())
+	_main_menu_settings_button.pressed.connect(func(): _open_settings(UiScreen.MAIN_MENU))
+	_main_menu_quit_button.pressed.connect(func(): get_tree().quit())
+
+	_pause_resume_button.pressed.connect(func(): _resume_game())
+	_pause_restart_button.pressed.connect(func(): _restart_match())
+	_pause_settings_button.pressed.connect(func(): _open_settings(UiScreen.PAUSED))
+	_pause_main_menu_button.pressed.connect(func(): _go_to_main_menu())
+
+	_settings_back_button.pressed.connect(func(): _close_settings())
+	_settings_touch_enabled.toggled.connect(func(on: bool): _set_touch_overlay_enabled(on))
+	_settings_touch_layout_option.item_selected.connect(func(idx: int): _set_touch_layout(idx))
+
+	_settings_touch_layout_option.clear()
+	_settings_touch_layout_option.add_item("Right-handed", TOUCH_LAYOUT_RIGHT_HANDED)
+	_settings_touch_layout_option.add_item("Left-handed", TOUCH_LAYOUT_LEFT_HANDED)
+
+	_bind_hold_button(_touch_move_left_button, ACTION_MOVE_LEFT)
+	_bind_hold_button(_touch_move_right_button, ACTION_MOVE_RIGHT)
+	_bind_hold_button(_touch_aim_left_button, ACTION_AIM_LEFT)
+	_bind_hold_button(_touch_aim_right_button, ACTION_AIM_RIGHT)
+	_bind_hold_button(_touch_power_down_button, ACTION_POWER_DOWN)
+	_bind_hold_button(_touch_power_up_button, ACTION_POWER_UP)
+
+	_touch_fire_button.pressed.connect(func(): _request_fire())
+	_touch_weapon1_button.pressed.connect(func(): _set_weapon_for_current(0))
+	_touch_weapon2_button.pressed.connect(func(): _set_weapon_for_current(1))
+	_touch_weapon3_button.pressed.connect(func(): _set_weapon_for_current(2))
+
+func _bind_hold_button(btn: BaseButton, action: String) -> void:
+	btn.button_down.connect(func(): Input.action_press(action))
+	btn.button_up.connect(func(): Input.action_release(action))
+	btn.focus_mode = Control.FOCUS_NONE
+
+func _apply_settings_to_ui() -> void:
+	_settings_touch_enabled.set_pressed_no_signal(_touch_overlay_enabled)
+	_settings_touch_layout_option.select(_touch_layout)
+	_apply_touch_layout()
+
+func _apply_touch_layout() -> void:
+	# Swap clusters for left-handed mode.
+	var margin := 24.0
+	var move_w := 300.0
+	var move_h := 124.0
+	var aim_w := 340.0
+	var aim_h := 332.0
+
+	if _touch_layout == TOUCH_LAYOUT_LEFT_HANDED:
+		_touch_move_cluster.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		_touch_move_cluster.offset_left = -(margin + move_w)
+		_touch_move_cluster.offset_right = -margin
+		_touch_move_cluster.offset_top = -(margin + move_h)
+		_touch_move_cluster.offset_bottom = -margin
+
+		_touch_aim_cluster.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		_touch_aim_cluster.offset_left = margin
+		_touch_aim_cluster.offset_right = margin + aim_w
+		_touch_aim_cluster.offset_top = -(margin + aim_h)
+		_touch_aim_cluster.offset_bottom = -margin
+	else:
+		_touch_move_cluster.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		_touch_move_cluster.offset_left = margin
+		_touch_move_cluster.offset_right = margin + move_w
+		_touch_move_cluster.offset_top = -(margin + move_h)
+		_touch_move_cluster.offset_bottom = -margin
+
+		_touch_aim_cluster.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		_touch_aim_cluster.offset_left = -(margin + aim_w)
+		_touch_aim_cluster.offset_right = -margin
+		_touch_aim_cluster.offset_top = -(margin + aim_h)
+		_touch_aim_cluster.offset_bottom = -margin
+
+func _set_touch_overlay_enabled(on: bool) -> void:
+	_touch_overlay_enabled = on
+	_save_settings()
+	_show_screen(_ui_screen)
+
+func _set_touch_layout(layout_idx: int) -> void:
+	_touch_layout = clampi(layout_idx, TOUCH_LAYOUT_RIGHT_HANDED, TOUCH_LAYOUT_LEFT_HANDED)
+	_save_settings()
+	_apply_settings_to_ui()
+	_show_screen(_ui_screen)
+
+func _show_screen(screen: UiScreen) -> void:
+	if _ui_screen == UiScreen.PLAYING and screen != UiScreen.PLAYING:
+		_release_input_actions()
+	_ui_screen = screen
+
+	_main_menu.visible = (screen == UiScreen.MAIN_MENU)
+	_pause_menu.visible = (screen == UiScreen.PAUSED)
+	_settings_menu.visible = (screen == UiScreen.SETTINGS)
+
+	_hud.visible = _game_active and screen != UiScreen.MAIN_MENU
+	_touch_controls.visible = _game_active and _touch_overlay_enabled and screen == UiScreen.PLAYING
+
+func _release_input_actions() -> void:
+	Input.action_release(ACTION_MOVE_LEFT)
+	Input.action_release(ACTION_MOVE_RIGHT)
+	Input.action_release(ACTION_AIM_LEFT)
+	Input.action_release(ACTION_AIM_RIGHT)
+	Input.action_release(ACTION_POWER_UP)
+	Input.action_release(ACTION_POWER_DOWN)
+
+func _start_game() -> void:
+	_game_active = true
 	_init_match()
+	_show_screen(UiScreen.PLAYING)
+
+func _restart_match() -> void:
+	_game_active = true
+	_message = ""
+	_init_match()
+	_show_screen(UiScreen.PLAYING)
+
+func _go_to_main_menu() -> void:
+	_game_active = false
+	_show_screen(UiScreen.MAIN_MENU)
+
+func _toggle_pause() -> void:
+	if not _game_active:
+		return
+	if _ui_screen == UiScreen.PLAYING:
+		_show_screen(UiScreen.PAUSED)
+	elif _ui_screen == UiScreen.PAUSED:
+		_show_screen(UiScreen.PLAYING)
+
+func _resume_game() -> void:
+	if _ui_screen == UiScreen.PAUSED:
+		_show_screen(UiScreen.PLAYING)
+
+func _open_settings(from_screen: UiScreen) -> void:
+	_screen_before_settings = from_screen
+	_show_screen(UiScreen.SETTINGS)
+
+func _close_settings() -> void:
+	_show_screen(_screen_before_settings)
+
+func _handle_global_actions() -> void:
+	if Input.is_action_just_pressed(ACTION_PAUSE):
+		if _ui_screen == UiScreen.SETTINGS:
+			_close_settings()
+		else:
+			_toggle_pause()
+
+	if Input.is_action_just_pressed(ACTION_RESET_MATCH) and _game_active:
+		_restart_match()
+
+func _request_fire() -> void:
+	if not _game_active:
+		return
+	if _ui_screen != UiScreen.PLAYING:
+		return
+	if _phase != Phase.AIM or _projectile_active or _cooldown > 0.0:
+		return
+	if _tanks.is_empty():
+		return
+	var tank := _tanks[_current_tank_idx]
+	if tank.hp <= 0.0:
+		return
+	_fire(tank)
 
 func _init_match() -> void:
 	_phase = Phase.AIM
@@ -164,27 +440,29 @@ func _start_turn(player_idx: int) -> void:
 	if absf(_wind_accel) < 25.0:
 		_wind_accel = 0.0
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey):
-		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-
-	match key_event.keycode:
-		KEY_R:
-			_init_match()
-		KEY_SPACE:
-			if _phase == Phase.AIM and not _projectile_active and _cooldown <= 0.0:
-				_fire(_tanks[_current_tank_idx])
-		KEY_1:
-			_set_weapon_for_current(0)
-		KEY_2:
-			_set_weapon_for_current(1)
-		KEY_3:
-			_set_weapon_for_current(2)
-
 func _process(delta: float) -> void:
+	_handle_global_actions()
+
+	if not _game_active:
+		_update_ui()
+		queue_redraw()
+		return
+
+	if _ui_screen != UiScreen.PLAYING:
+		_update_ui()
+		queue_redraw()
+		return
+
+	if Input.is_action_just_pressed(ACTION_WEAPON_1):
+		_set_weapon_for_current(0)
+	if Input.is_action_just_pressed(ACTION_WEAPON_2):
+		_set_weapon_for_current(1)
+	if Input.is_action_just_pressed(ACTION_WEAPON_3):
+		_set_weapon_for_current(2)
+
+	if Input.is_action_just_pressed(ACTION_FIRE):
+		_request_fire()
+
 	if _phase == Phase.GAMEOVER:
 		_update_ui()
 		queue_redraw()
@@ -224,16 +502,18 @@ func _tick_aim(delta: float) -> void:
 	_try_move_tank(tank, delta)
 
 	var angle_delta := ANGLE_SPEED_DEG_PER_SEC * delta
-	if Input.is_key_pressed(KEY_LEFT):
-		tank.aim_angle_deg = clampf(tank.aim_angle_deg - angle_delta, ANGLE_MIN_DEG, ANGLE_MAX_DEG)
-	if Input.is_key_pressed(KEY_RIGHT):
-		tank.aim_angle_deg = clampf(tank.aim_angle_deg + angle_delta, ANGLE_MIN_DEG, ANGLE_MAX_DEG)
+	var aim_axis := Input.get_action_strength(ACTION_AIM_RIGHT) - Input.get_action_strength(ACTION_AIM_LEFT)
+	if absf(aim_axis) > 0.01:
+		tank.aim_angle_deg = clampf(
+			tank.aim_angle_deg + aim_axis * angle_delta,
+			ANGLE_MIN_DEG,
+			ANGLE_MAX_DEG
+		)
 
 	var power_delta := POWER_SPEED_PER_SEC * delta
-	if Input.is_key_pressed(KEY_DOWN):
-		tank.power = clampf(tank.power - power_delta, POWER_MIN, POWER_MAX)
-	if Input.is_key_pressed(KEY_UP):
-		tank.power = clampf(tank.power + power_delta, POWER_MIN, POWER_MAX)
+	var power_axis := Input.get_action_strength(ACTION_POWER_UP) - Input.get_action_strength(ACTION_POWER_DOWN)
+	if absf(power_axis) > 0.01:
+		tank.power = clampf(tank.power + power_axis * power_delta, POWER_MIN, POWER_MAX)
 
 func _try_move_tank(tank: Tank, delta: float) -> void:
 	if _turn_fuel_left <= 0.0:
@@ -246,9 +526,9 @@ func _try_move_tank(tank: Tank, delta: float) -> void:
 		return
 
 	var move_dir := 0
-	if Input.is_key_pressed(KEY_A):
+	if Input.is_action_pressed(ACTION_MOVE_LEFT):
 		move_dir -= 1
-	if Input.is_key_pressed(KEY_D):
+	if Input.is_action_pressed(ACTION_MOVE_RIGHT):
 		move_dir += 1
 	if move_dir == 0:
 		return
@@ -477,7 +757,12 @@ func _rebuild_terrain_geometry() -> void:
 	_terrain_fill.append(Vector2(0.0, float(VIEWPORT_HEIGHT)))
 
 func _update_ui() -> void:
-	if _status_label == null or _help_label == null:
+	if _hud_stats_label == null or _hud_message_label == null or _hud_help_label == null:
+		return
+	if not _game_active:
+		_hud_stats_label.text = ""
+		_hud_message_label.text = ""
+		_hud_help_label.text = ""
 		return
 
 	var current := _tanks[_current_tank_idx] if _tanks.size() > 0 else null
@@ -510,17 +795,21 @@ func _update_ui() -> void:
 
 	var lines := PackedStringArray()
 	lines.append("Phase: %s" % phase_text)
-	lines.append("Turn: Player %d" % current_player)
-	lines.append("Weapon: %s" % weapon_name)
-	lines.append("Angle: %d deg   Power: %d" % [int(round(angle)), int(round(power))])
-	lines.append("Wind: %s" % _format_wind())
-	lines.append("Fuel: %d   Timer: %d" % [int(round(_turn_fuel_left)), int(ceil(_turn_time_left))])
-	lines.append("HP: P1 %d   P2 %d" % [p1hp, p2hp])
-	if _message != "":
-		lines.append(_message)
+	lines.append("Turn: Player %d    Weapon: %s" % [current_player, weapon_name])
+	lines.append("Angle: %d deg    Power: %d" % [int(round(angle)), int(round(power))])
+	lines.append(
+		"Wind: %s    Fuel: %d    Timer: %d"
+		% [_format_wind(), int(round(_turn_fuel_left)), int(ceil(_turn_time_left))]
+	)
+	lines.append("HP: P1 %d    P2 %d" % [p1hp, p2hp])
 
-	_status_label.text = "\n".join(lines)
-	_help_label.text = "A/D: move   Left/Right: angle   Up/Down: power   1-3: weapon   Space: fire   R: reset"
+	_hud_stats_label.text = "\n".join(lines)
+	_hud_message_label.text = _message
+	_hud_help_label.text = (
+		"Touch: use on-screen controls (Settings). Keyboard still works. Esc: pause. R: restart."
+		if _touch_overlay_enabled
+		else "Keyboard: A/D move, Arrows aim/power, Space fire, 1-3 weapons, Esc pause, R restart."
+	)
 
 func _format_wind() -> String:
 	if absf(_wind_accel) < 0.001:

@@ -1,37 +1,33 @@
-# Godot Input Mapping Plan
+# Godot Input Mapping (Current)
 
-This is the proposed input plan for the **Godot remake track**.
+This document describes the current input mapping for the **Godot remake track**.
 
-For now, the spike uses direct key polling (fastest to iterate). Once gameplay stabilizes, we should migrate to Godot’s
-InputMap (actions) so we can support remapping and unify keyboard/gamepad/touch.
+The spike now uses Godot’s InputMap actions (so keyboard + touch overlay share a single path). Remapping and gamepad
+support are still follow-ups.
 
 ## Actions (InputMap)
 
-Suggested action names:
+Current action names:
 
 - `move_left`, `move_right`
 - `aim_left`, `aim_right`
 - `power_up`, `power_down`
 - `fire`
 - `weapon_1`, `weapon_2`, `weapon_3` (or `weapon_prev`/`weapon_next`)
-- `end_turn`
 - `reset_match`
-- `toggle_fullscreen`
-- `menu_back`
+- `pause`
 
 ## Keyboard (v1)
 
-Baseline keyboard mapping (mirrors the current spike defaults):
+Current keyboard mapping:
 
 - Move: `A` / `D`
 - Aim angle: `Left` / `Right`
 - Power: `Up` / `Down`
 - Fire: `Space`
 - Weapon select: `1` / `2` / `3`
-- End turn: `Enter` (planned)
 - Reset match: `R`
-- Fullscreen: `F` (planned)
-- Back/Menu: `Esc` (planned)
+- Pause/menu: `Esc` (also `P`)
 
 ## Gamepad (v1 plan)
 
@@ -51,14 +47,13 @@ Notes:
 
 ## Touch (mobile plan)
 
-Touch should be designed around “two thumbs”:
+Touch overlay is implemented as a simple “two thumbs” layout:
 
-- Left thumb: movement pad (virtual stick or D-pad)
-- Right thumb: aim/power controls
-  - Option A: two sliders (angle + power)
-  - Option B: drag to set angle, vertical slider for power
-- Fire button: large, on the right
-- Weapon cycle/select: a small row of buttons or a single “cycle” button
-- Pause/menu: top corner button
+- Left thumb: move buttons (left/right)
+- Right thumb: aim buttons (angle +/-) + power buttons (+/-)
+- Fire: large button
+- Weapon select: `1` / `2` / `3` buttons
 
-We should avoid “tiny” controls and support a left-handed layout from day 1.
+Notes:
+- Enable/disable from the in-game **Settings** menu.
+- Left-handed layout is supported by swapping the control clusters.

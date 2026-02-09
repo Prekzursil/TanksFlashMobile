@@ -20,8 +20,8 @@
 
 ### Godot remake track (v1)
 - [x] Godot releases – On version tags, attach Godot desktop exports to GitHub Releases (Windows/Linux/macOS).
-- [ ] Godot HUD + menus – Add start/pause/settings screens plus an in-game HUD for turn state (wind/fuel/health/weapon).
-- [ ] Godot touch controls – Implement mobile-friendly aiming/movement/shoot UI (no hardware keyboard required).
+- [x] Godot HUD + menus – Add start/pause/settings screens plus an in-game HUD for turn state (wind/fuel/health/weapon).
+- [x] Godot touch controls – Implement mobile-friendly aiming/movement/shoot UI (no hardware keyboard required).
 - [ ] Godot mobile exports – Add Android/iOS export presets and a minimal build doc for device/TestFlight builds.
 - [ ] Godot original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
 
