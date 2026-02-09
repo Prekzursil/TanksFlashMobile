@@ -92,6 +92,13 @@ node scripts/run_web_game_client.mjs --url http://127.0.0.1:5173 --actions-file 
 This repo includes the original SWF under an explicit permission grant.
 See `docs/ASSET_POLICY.md` for details and constraints.
 
+## Store readiness docs
+
+- Submission checklist: `docs/STORE_SUBMISSION_CHECKLIST.md`
+- Privacy policy: `docs/PRIVACY_POLICY.md`
+- Support/contact: `docs/SUPPORT.md`
+- Cross-platform metadata audit: `docs/APP_METADATA_AUDIT.md`
+
 ## Likely technical approach
 
 Start with a web wrapper that runs the SWF via **Ruffle** (WebAssembly), then package:

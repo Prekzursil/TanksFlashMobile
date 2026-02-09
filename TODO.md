@@ -33,13 +33,13 @@
 ### Web remake track (v1)
 - [x] Web remake HUD + menus – Add a basic HUD (angle/power/weapon) and menu screens (start/pause/settings).
 - [x] Web remake touch controls – Add touch aiming + fire controls that work on phones/tablets.
-- [ ] Web remake gameplay parity – Track and close gaps vs the Godot ruleset (weapons, turn flow, damage model).
+- [x] Web remake gameplay parity – Track and close gaps vs the Godot ruleset (weapons, turn flow, damage model).
 - [x] Web remake original assets integration – Extract/import original art/audio (license-permitted) and replace placeholders (keep gameplay code reimplemented).
 
 ### Store readiness
-- [ ] Store submission checklist – Document Play Store + App Store requirements (accounts, signing, screenshots, privacy).
-- [ ] Privacy policy + support URL – Add a simple privacy policy (even if “no data collected”) and a support/contact URL.
-- [ ] App metadata audit – Verify names/ids/icons/orientation/versioning are consistent across Android/iOS/Windows builds.
+- [x] Store submission checklist – Document Play Store + App Store requirements (accounts, signing, screenshots, privacy).
+- [x] Privacy policy + support URL – Add a simple privacy policy (even if “no data collected”) and a support/contact URL.
+- [x] App metadata audit – Verify names/ids/icons/orientation/versioning are consistent across Android/iOS/Windows builds.
 
 ## Medium priority
 - [x] Choose repo license – Pick an OSS license for *our* code and add an attribution policy for third-party dependencies.

@@ -92,3 +92,27 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 
 - Web remake gameplay parity task is still open (`TODO.md`): align remaining behavior differences vs Godot (rules edge cases, balancing, model consistency).
 - Store readiness tasks remain open (submission checklist, privacy/support URL, metadata audit).
+
+## 2026-02-10
+
+- Closed web remake gameplay parity TODO by adding explicit gameplay phase state in `apps/remake-web/src/main.ts`:
+  - `aim`, `firing`, `impact`, `gameover`
+  - phase-based fire/weapon gating aligned to Godot flow
+  - phase now exposed via `render_game_to_text`
+- Added parity tracking document:
+  - `docs/WEB_REMAKE_PARITY.md`
+- Closed store readiness TODO set with docs:
+  - `docs/STORE_SUBMISSION_CHECKLIST.md`
+  - `docs/PRIVACY_POLICY.md`
+  - `docs/SUPPORT.md`
+  - `docs/APP_METADATA_AUDIT.md`
+- Linked store-readiness docs in `README.md`.
+- Updated `TODO.md` to mark:
+  - Web remake gameplay parity ✅
+  - Store submission checklist ✅
+  - Privacy policy + support URL ✅
+  - App metadata audit ✅
+- Validation re-run:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅

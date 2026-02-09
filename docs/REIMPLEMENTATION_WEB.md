@@ -8,6 +8,9 @@ This repo contains a Ruffle wrapper around the original Flash game **and** two c
 The web remake is a lightweight **Canvas 2D + TypeScript** implementation intended to be fast to iterate, easy to
 test, and useful for validating core gameplay without Flash runtime dependencies.
 
+Related docs:
+- Parity tracking: `docs/WEB_REMAKE_PARITY.md`
+
 ## Goals
 
 - Validate the artillery loop (aim → fire → arc → impact → crater → damage) in pure web tech.
@@ -86,4 +89,4 @@ This is still intentionally limited in scope:
 - no full campaign/game mode set
 - no network/multiplayer
 - no per-action key remapping UI yet
-- gameplay parity with the Godot ruleset remains an active TODO
+- parity tracking exists, but broader content parity remains future work

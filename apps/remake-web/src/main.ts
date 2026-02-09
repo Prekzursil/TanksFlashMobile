@@ -87,6 +87,7 @@ type Mode = "menu" | "playing" | "paused" | "gameover";
 type TouchLayout = "right" | "left";
 
 type UiModal = null | "pause" | "settings";
+type Phase = "aim" | "firing" | "impact" | "gameover";
 
 type Weapon = {
   name: string;
@@ -181,6 +182,7 @@ const ORIGINAL_ASSETS = {
 
 const state: {
   mode: Mode;
+  phase: Phase;
   message: string;
   windAccel: number;
   fuelLeft: number;
@@ -192,6 +194,7 @@ const state: {
   projectile: Projectile;
 } = {
   mode: "menu",
+  phase: "aim",
   message: "",
   windAccel: 0,
   fuelLeft: TURN_FUEL_MAX,
@@ -358,6 +361,7 @@ function startMatch() {
   regenTerrain();
   initTanks();
   state.mode = "playing";
+  state.phase = "aim";
   state.message = "";
   state.projectile = { active: false, x: 0, y: 0, vx: 0, vy: 0, weaponIdx: 0 };
   state.cooldown = 0;
@@ -367,6 +371,7 @@ function startMatch() {
 
 function startTurn(tankIdx: 0 | 1) {
   state.currentTank = tankIdx;
+  state.phase = "aim";
   state.fuelLeft = TURN_FUEL_MAX;
   state.timeLeft = TURN_TIME_SEC;
   state.windAccel = randRange(WIND_ACCEL_MIN, WIND_ACCEL_MAX);
@@ -474,12 +479,14 @@ function fire(t: Tank) {
   state.projectile.y = t.y + uy * (TANK_R + w.projectileRadius + 2);
   state.projectile.vx = ux * t.power * w.speedMultiplier;
   state.projectile.vy = uy * t.power * w.speedMultiplier;
+  state.phase = "firing";
   state.message = "";
   playSfx(audioCache.fire);
 }
 
 function requestFire() {
   if (state.mode !== "playing") return;
+  if (state.phase !== "aim") return;
   if (ui.modal !== null) return;
   if (state.projectile.active) return;
   if (state.cooldown > 0) return;
@@ -518,6 +525,7 @@ function applyExplosionDamage(cx: number, cy: number, radius: number, maxDamage:
 
 function explodeAt(x: number, y: number) {
   state.projectile.active = false;
+  state.phase = "impact";
   state.cooldown = EXPLOSION_COOLDOWN_SEC;
   playSfx(audioCache.impact);
 
@@ -532,6 +540,7 @@ function endTurnOrGame() {
   const alive = state.tanks.filter((t) => t.hp > 0);
   if (alive.length <= 1) {
     state.mode = "gameover";
+    state.phase = "gameover";
     state.message = alive.length === 1 ? `Player ${alive[0]!.id + 1} wins!` : "Draw!";
     ui.modal = null;
     pauseBtn.disabled = true;
@@ -546,6 +555,7 @@ function endTurnOrGame() {
 function tickProjectile(dt: number) {
   const p = state.projectile;
   if (!p.active) return;
+  state.phase = "firing";
 
   p.vx += state.windAccel * dt;
   p.vy += GRAVITY * dt;
@@ -583,6 +593,7 @@ function tick(dt: number) {
   tickTanks(dt);
 
   if (state.cooldown > 0) {
+    state.phase = "impact";
     state.cooldown = Math.max(0, state.cooldown - dt);
     if (state.cooldown === 0) endTurnOrGame();
   }
@@ -605,6 +616,7 @@ function tick(dt: number) {
     return;
   }
 
+  state.phase = "aim";
   tryMoveTank(t, dt);
   aimAndPowerTick(t, dt);
 }
@@ -739,6 +751,7 @@ function updateHud() {
   const lines: string[] = [];
   lines.push(`v${__APP_VERSION__}  mode=${state.mode}`);
   if (state.mode !== "menu") {
+    lines.push(`phase=${state.phase}`);
     lines.push(
       `turn=P${state.currentTank + 1}  hp=[${Math.round(state.tanks[0]!.hp)},${Math.round(
         state.tanks[1]!.hp,
@@ -768,6 +781,7 @@ function updateHud() {
 
   const statLines: string[] = [];
   if (t && w) {
+    statLines.push(`Phase: ${state.phase}`);
     statLines.push(`Turn: Player ${state.currentTank + 1}    Weapon: ${w.name}`);
     statLines.push(`Angle: ${Math.round(t.aimDeg)}°    Power: ${Math.round(t.power)}`);
     statLines.push(`Wind: ${fmtWind()}    Fuel: ${Math.round(state.fuelLeft)}    Timer: ${Math.ceil(state.timeLeft)}`);
@@ -855,6 +869,7 @@ function goToMainMenu() {
   settingsReturnToPause = false;
 
   state.mode = "menu";
+  state.phase = "aim";
   state.message = "";
   state.cooldown = 0;
   state.projectile.active = false;
@@ -886,7 +901,7 @@ window.addEventListener("keydown", (e) => {
     onReset();
   }
 
-  if (state.mode === "playing" && ui.modal === null && !state.projectile.active && state.cooldown <= 0) {
+  if (state.mode === "playing" && ui.modal === null && state.phase === "aim") {
     const t = state.tanks[state.currentTank];
     if (!t || t.hp <= 0) return;
     if (e.code === "Space") requestFire();
@@ -1003,7 +1018,7 @@ function bindTouchControls() {
   weaponButtons.forEach((el) => {
     el.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-      if (state.mode !== "playing" || state.projectile.active || state.cooldown > 0 || ui.modal !== null) return;
+      if (state.mode !== "playing" || state.phase !== "aim" || ui.modal !== null) return;
       const t = state.tanks[state.currentTank];
       if (!t || t.hp <= 0) return;
       const raw = Number(el.dataset.weapon ?? "0");
@@ -1028,6 +1043,7 @@ function renderGameToText() {
   const payload = {
     coordinateSystem: "origin=(0,0) top-left, +x right, +y down",
     mode: state.mode,
+    phase: state.phase,
     windAccel: state.windAccel,
     turn: {
       currentPlayer: state.currentTank + 1,
