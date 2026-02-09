@@ -9,6 +9,7 @@ The spike lives in `apps/remake-godot/`.
 Related docs:
 - Scope: `docs/REMAKE_V1_SCOPE.md`
 - Input plan: `docs/GODOT_INPUT_MAPPING.md`
+- Mobile exports: `docs/GODOT_MOBILE_EXPORTS.md`
 
 ## Goals (What This Spike Is For)
 
