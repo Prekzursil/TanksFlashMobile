@@ -50,56 +50,47 @@ Artifacts land in `apps/desktop/dist/`.
 
 ## Code signing (Windows, optional but recommended)
 
-This repo supports two Windows signing paths:
+Windows code signing requires a code-signing certificate (usually a `.pfx`) tied to your identity (individual or company).
+We cannot “download” a real trusted certificate for you — you obtain one from a Certificate Authority (CA) or use a signing
+service (e.g., Azure Trusted Signing).
 
-1. **Azure Artifact Signing (recommended)** using GitHub OIDC and `azure/artifact-signing-action`.
-2. **Legacy `.pfx` fallback** using Electron Builder env vars.
+This repo is set up so that **unsigned builds still work**, but if signing secrets are present, Electron Builder will sign
+the installer/executables automatically.
 
-Unsigned builds still work if neither path is configured.
+### Local signing
 
-### CI signing via Azure Artifact Signing (recommended)
-
-Workflows are already wired to sign when these GitHub repository secrets are present:
-
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
-- `AZURE_SUBSCRIPTION_ID`
-- `AZURE_TRUSTED_SIGNING_ENDPOINT` (example: `https://weu.codesigning.azure.net/`)
-- `AZURE_TRUSTED_SIGNING_ACCOUNT_NAME`
-- `AZURE_TRUSTED_SIGNING_CERT_PROFILE`
-
-Setup summary:
-
-1. Create an Azure Artifact Signing account + certificate profile.
-2. Create an Entra app registration/service principal.
-3. Add a GitHub OIDC federated credential on that app.
-4. Grant the service principal the `Artifact Signing Certificate Profile Signer` role.
-5. Add the secrets above to this repository.
-
-When configured, CI/release workflows sign built `.exe`/`.dll` binaries post-package and rebuild the portable zip from signed files.
-
-### Local/CI `.pfx` fallback
-
-If Azure Artifact Signing secrets are not configured, workflows can still use `.pfx` secrets:
-
-- `WINDOWS_CERT_PFX_BASE64`
-- `WINDOWS_CERT_PASSWORD`
-
-For local packaging:
+Set environment variables and then package:
 
 ```bash
 cd apps/desktop
+
+# Windows cmd.exe
 set WIN_CSC_LINK=C:\\path\\to\\codesign.pfx
 set WIN_CSC_KEY_PASSWORD=your_password_here
 npm run package:win
 ```
 
-To create `WINDOWS_CERT_PFX_BASE64` safely:
+### CI signing (GitHub Actions)
+
+Add these repository secrets:
+
+- `WINDOWS_CERT_PFX_BASE64`: base64-encoded `.pfx`
+- `WINDOWS_CERT_PASSWORD`: password for the `.pfx`
+
+The Windows CI job will decode the `.pfx` into the runner temp directory and set `WIN_CSC_LINK`/`WIN_CSC_KEY_PASSWORD` for
+Electron Builder.
+
+To generate the base64 value without printing it to your terminal, you can use the helper script:
 
 ```bash
+# From repo root:
 node scripts/pfx_to_base64.mjs --in /path/to/codesign.pfx --out output/windows-cert.pfx.base64
+
+# Set GitHub secrets (requires `gh auth login`)
 gh secret set WINDOWS_CERT_PFX_BASE64 --body-file output/windows-cert.pfx.base64
 gh secret set WINDOWS_CERT_PASSWORD --body "your_password_here"
+
+# Delete the temp base64 file (it is sensitive)
 rm -f output/windows-cert.pfx.base64
 ```
 

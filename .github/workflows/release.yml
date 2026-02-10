@@ -162,9 +162,6 @@ jobs:
     name: Build (Windows installer + portable zip)
     runs-on: windows-latest
     needs: verify
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -190,8 +187,8 @@ jobs:
         run: npm ci
         working-directory: apps/desktop
 
-      - name: Prepare Windows code signing certificate fallback (optional)
-        if: ${{ (secrets.AZURE_CLIENT_ID == '' || secrets.AZURE_TENANT_ID == '' || secrets.AZURE_SUBSCRIPTION_ID == '' || secrets.AZURE_TRUSTED_SIGNING_ENDPOINT == '' || secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME == '' || secrets.AZURE_TRUSTED_SIGNING_CERT_PROFILE == '') && secrets.WINDOWS_CERT_PFX_BASE64 != '' && secrets.WINDOWS_CERT_PASSWORD != '' }}
+      - name: Prepare Windows code signing certificate (optional)
+        if: ${{ secrets.WINDOWS_CERT_PFX_BASE64 != '' && secrets.WINDOWS_CERT_PASSWORD != '' }}
         shell: pwsh
         run: |
           $certPath = Join-Path $env:RUNNER_TEMP "tanks-codesign.pfx"
@@ -202,54 +199,6 @@ jobs:
       - name: Package Windows app
         run: npm run package:win
         working-directory: apps/desktop
-
-      - name: Azure login for Artifact Signing (optional)
-        if: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_TRUSTED_SIGNING_ENDPOINT != '' && secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME != '' && secrets.AZURE_TRUSTED_SIGNING_CERT_PROFILE != '' }}
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          enable-AzPSSession: true
-
-      - name: Sign Windows binaries with Artifact Signing (optional)
-        if: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_TRUSTED_SIGNING_ENDPOINT != '' && secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME != '' && secrets.AZURE_TRUSTED_SIGNING_CERT_PROFILE != '' }}
-        uses: azure/artifact-signing-action@v1
-        with:
-          endpoint: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ secrets.AZURE_TRUSTED_SIGNING_CERT_PROFILE }}
-          files-folder: ${{ github.workspace }}\apps\desktop\dist
-          files-folder-filter: "*.exe,*.dll"
-          files-folder-recurse: true
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          exclude-environment-credential: true
-          exclude-workload-identity-credential: true
-          exclude-managed-identity-credential: true
-          exclude-shared-token-cache-credential: true
-          exclude-visual-studio-credential: true
-          exclude-visual-studio-code-credential: true
-          exclude-azure-cli-credential: false
-          exclude-azure-powershell-credential: true
-          exclude-azure-developer-cli-credential: true
-          exclude-interactive-browser-credential: true
-
-      - name: Rebuild portable zip from signed binaries (Artifact Signing)
-        if: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_TRUSTED_SIGNING_ENDPOINT != '' && secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME != '' && secrets.AZURE_TRUSTED_SIGNING_CERT_PROFILE != '' }}
-        shell: pwsh
-        run: |
-          $distDir = "apps/desktop/dist"
-          $unpackedDir = Join-Path $distDir "win-unpacked"
-          if (-not (Test-Path $unpackedDir)) {
-            throw "Expected unpacked app folder for portable zip rebuild: $unpackedDir"
-          }
-          $signedZip = Join-Path $distDir "Tanks-signed-portable.zip"
-          if (Test-Path $signedZip) {
-            Remove-Item $signedZip -Force
-          }
-          Compress-Archive -Path "$unpackedDir/*" -DestinationPath $signedZip -Force
 
       - name: Collect release assets
         shell: pwsh
@@ -268,10 +217,7 @@ jobs:
             throw "No Windows installer (.exe) found in $distDir"
           }
 
-          $portableZip = Get-Item "$distDir/Tanks-signed-portable.zip" -ErrorAction SilentlyContinue
-          if (-not $portableZip) {
-            $portableZip = Get-ChildItem $distDir -Filter *.zip | Where-Object { $_.Name -notmatch 'blockmap' } | Select-Object -First 1
-          }
+          $portableZip = Get-ChildItem $distDir -Filter *.zip | Where-Object { $_.Name -notmatch 'blockmap' } | Select-Object -First 1
           if (-not $portableZip) {
             throw "No portable Windows zip (.zip) found in $distDir"
           }
