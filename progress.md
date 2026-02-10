@@ -156,3 +156,7 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - purchase OV/EV cert via checklist
   - set `WINDOWS_CERT_PFX_BASE64` and `WINDOWS_CERT_PASSWORD`
   - validate one signed Windows CI/release run
+- Fixed GitHub Actions startup failures that prevented PR checks from appearing:
+  - replaced unsupported `if: ${{ secrets.* }}` guards with `if: ${{ env.* }}` in `.github/workflows/ci.yml` and `.github/workflows/release.yml`
+  - moved optional signing secrets to per-job `env:` blocks for Windows and Android release-sign steps
+  - this allows workflows to instantiate normally so PR status checks can attach to commits

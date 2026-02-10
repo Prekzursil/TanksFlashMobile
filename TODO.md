@@ -65,7 +65,7 @@
 - [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
 - [x] Helper for Windows signing secrets – Add a script to base64-encode a `.pfx` for GitHub Secrets without printing it.
 - [x] Document Windows OV/EV cert checklist – Add step-by-step purchasing and CI configuration checklist for traditional `.pfx` code signing.
-- [ ] Acquire OV/EV Windows code signing certificate – Buy a cert using `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md`, set `WINDOWS_CERT_PFX_BASE64` + `WINDOWS_CERT_PASSWORD`, and verify one signed Windows CI/release run.
+- [ ] Acquire paid OV/EV Windows code signing certificate – Buy a cert using `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md` (there is no free public-trust Authenticode path), set `WINDOWS_CERT_PFX_BASE64` + `WINDOWS_CERT_PASSWORD`, and verify one signed Windows CI/release run.
 - [x] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
 - [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
 - [x] Web remake trajectory preview – Draw a deterministic ballistic preview path in aim phase so players can pre-aim before firing.
