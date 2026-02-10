@@ -69,9 +69,10 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
-          mkdir -p ../../release-out
+          OUT_DIR="${GITHUB_WORKSPACE}/release-out"
+          mkdir -p "$OUT_DIR"
           cd dist
-          zip -r "../../release-out/Tanks-${TAG}-web-dist.zip" .
+          zip -r "${OUT_DIR}/Tanks-${TAG}-web-dist.zip" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -108,9 +109,10 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
-          mkdir -p ../../release-out
+          OUT_DIR="${GITHUB_WORKSPACE}/release-out"
+          mkdir -p "$OUT_DIR"
           cd dist
-          zip -r "../../release-out/Tanks-${TAG}-remake-web-dist.zip" .
+          zip -r "${OUT_DIR}/Tanks-${TAG}-remake-web-dist.zip" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -133,6 +135,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare export templates
+        shell: bash
         run: |
           set -euo pipefail
           DST="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
@@ -157,6 +160,7 @@ jobs:
           fi
 
       - name: Export (Windows/Linux/macOS)
+        shell: bash
         run: |
           set -euo pipefail
           WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"
