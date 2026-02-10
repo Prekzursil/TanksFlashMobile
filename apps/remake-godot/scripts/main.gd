@@ -811,7 +811,7 @@ func _init_tanks() -> void:
 
 func _init_terrain() -> void:
 	var noise := FastNoiseLite.new()
-	noise.seed = 1337
+	noise.seed = randi()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.frequency = 0.003
 

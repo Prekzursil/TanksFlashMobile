@@ -1,10 +1,15 @@
-name: CI
+name: CI Platform
 
 on:
-  pull_request:
   push:
     branches:
       - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -181,7 +186,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -234,7 +239,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -318,6 +323,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare export templates
+        shell: bash
         run: |
           set -euo pipefail
           SRC="/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
@@ -328,6 +334,7 @@ jobs:
           fi
 
       - name: Export (Windows/Linux/macOS)
+        shell: bash
         run: |
           set -euo pipefail
           WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"

@@ -25,7 +25,9 @@ const pauseMainMenuBtnEl = document.querySelector<HTMLButtonElement>("#pause-mai
 const settingsModalEl = document.querySelector<HTMLElement>("#settings-modal");
 const settingsTouchEnabledEl = document.querySelector<HTMLInputElement>("#settings-touch-enabled");
 const settingsTouchLayoutEl = document.querySelector<HTMLSelectElement>("#settings-touch-layout");
-const settingsCameraIntensityEl = document.querySelector<HTMLSelectElement>("#settings-camera-intensity");
+const settingsCameraIntensityEl = document.querySelector<HTMLSelectElement>(
+  "#settings-camera-intensity",
+);
 const settingsCloseBtnEl = document.querySelector<HTMLButtonElement>("#settings-close-btn");
 
 if (
@@ -258,22 +260,36 @@ function normalizeCameraIntensity(raw: unknown): CameraIntensity {
   return "default";
 }
 
-function loadUiSettings(): { touchEnabled: boolean; touchLayout: TouchLayout; cameraIntensity: CameraIntensity } {
+function loadUiSettings(): {
+  touchEnabled: boolean;
+  touchLayout: TouchLayout;
+  cameraIntensity: CameraIntensity;
+} {
   try {
     const raw = localStorage.getItem(UI_SETTINGS_KEY);
-    if (!raw) return { touchEnabled: defaultTouchEnabled(), touchLayout: "right", cameraIntensity: "default" };
+    if (!raw)
+      return {
+        touchEnabled: defaultTouchEnabled(),
+        touchLayout: "right",
+        cameraIntensity: "default",
+      };
     const parsed = JSON.parse(raw) as Partial<{
       touchEnabled: boolean;
       touchLayout: TouchLayout;
       cameraIntensity: CameraIntensity;
     }>;
     return {
-      touchEnabled: typeof parsed.touchEnabled === "boolean" ? parsed.touchEnabled : defaultTouchEnabled(),
+      touchEnabled:
+        typeof parsed.touchEnabled === "boolean" ? parsed.touchEnabled : defaultTouchEnabled(),
       touchLayout: parsed.touchLayout === "left" ? "left" : "right",
       cameraIntensity: normalizeCameraIntensity(parsed.cameraIntensity),
     };
   } catch {
-    return { touchEnabled: defaultTouchEnabled(), touchLayout: "right", cameraIntensity: "default" };
+    return {
+      touchEnabled: defaultTouchEnabled(),
+      touchLayout: "right",
+      cameraIntensity: "default",
+    };
   }
 }
 
@@ -421,8 +437,28 @@ function initTanks() {
   const p1y = surfaceYAt(p1x) - TANK_R;
   const p2y = surfaceYAt(p2x) - TANK_R;
   state.tanks = [
-    { id: 0, x: p1x, y: p1y, vy: 0, hp: 100, aimDeg: 45, power: 520, weaponIdx: 0, color: "#44e38f" },
-    { id: 1, x: p2x, y: p2y, vy: 0, hp: 100, aimDeg: 45, power: 520, weaponIdx: 0, color: "#ff6d6d" },
+    {
+      id: 0,
+      x: p1x,
+      y: p1y,
+      vy: 0,
+      hp: 100,
+      aimDeg: 45,
+      power: 520,
+      weaponIdx: 0,
+      color: "#44e38f",
+    },
+    {
+      id: 1,
+      x: p2x,
+      y: p2y,
+      vy: 0,
+      hp: 100,
+      aimDeg: 45,
+      power: 520,
+      weaponIdx: 0,
+      color: "#ff6d6d",
+    },
   ];
 }
 
@@ -599,12 +635,16 @@ function tickTanks(dt: number) {
 
 function aimAndPowerTick(t: Tank, dt: number) {
   const angleDelta = ANGLE_SPEED_DEG_PER_SEC * dt;
-  if (keyDown("ArrowLeft") || actionDown("aim_left")) t.aimDeg = clamp(t.aimDeg - angleDelta, ANGLE_MIN, ANGLE_MAX);
-  if (keyDown("ArrowRight") || actionDown("aim_right")) t.aimDeg = clamp(t.aimDeg + angleDelta, ANGLE_MIN, ANGLE_MAX);
+  if (keyDown("ArrowLeft") || actionDown("aim_left"))
+    t.aimDeg = clamp(t.aimDeg - angleDelta, ANGLE_MIN, ANGLE_MAX);
+  if (keyDown("ArrowRight") || actionDown("aim_right"))
+    t.aimDeg = clamp(t.aimDeg + angleDelta, ANGLE_MIN, ANGLE_MAX);
 
   const powerDelta = POWER_SPEED_PER_SEC * dt;
-  if (keyDown("ArrowDown") || actionDown("power_down")) t.power = clamp(t.power - powerDelta, POWER_MIN, POWER_MAX);
-  if (keyDown("ArrowUp") || actionDown("power_up")) t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
+  if (keyDown("ArrowDown") || actionDown("power_down"))
+    t.power = clamp(t.power - powerDelta, POWER_MIN, POWER_MAX);
+  if (keyDown("ArrowUp") || actionDown("power_up"))
+    t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
 }
 
 function triggerCameraShake(durationSec: number, strengthPx: number) {
@@ -660,9 +700,11 @@ function tickCamera(dt: number) {
   }
 
   state.camera.cueTimeLeft = Math.max(0, state.camera.cueTimeLeft - dt);
-  const cueFrac = state.camera.cueTimeLeft > 0 ? state.camera.cueTimeLeft / CAMERA_CUE_DECAY_SEC : 0;
+  const cueFrac =
+    state.camera.cueTimeLeft > 0 ? state.camera.cueTimeLeft / CAMERA_CUE_DECAY_SEC : 0;
   const targetZoom =
-    ((state.projectile.active ? CAMERA_BASE_SHOT_ZOOM : 0) + cueFrac * CAMERA_CUE_MAX_ZOOM) * motion.zoomScale;
+    ((state.projectile.active ? CAMERA_BASE_SHOT_ZOOM : 0) + cueFrac * CAMERA_CUE_MAX_ZOOM) *
+    motion.zoomScale;
   state.camera.zoom = lerp(state.camera.zoom, targetZoom, clamp(8 * dt, 0, 1));
 }
 
@@ -839,7 +881,10 @@ function draw() {
   ctx.translate(WIDTH * 0.5, HEIGHT * 0.5);
   ctx.scale(zoom, zoom);
   // Positive camera offset means "look right/down"; the world shifts in the opposite direction.
-  ctx.translate(-WIDTH * 0.5 - state.camera.offsetX + shakeX, -HEIGHT * 0.5 - state.camera.offsetY + shakeY);
+  ctx.translate(
+    -WIDTH * 0.5 - state.camera.offsetX + shakeX,
+    -HEIGHT * 0.5 - state.camera.offsetY + shakeY,
+  );
 
   // Background
   const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
@@ -879,8 +924,11 @@ function draw() {
   ctx.stroke();
 
   const activeTank =
-    state.mode === "playing" && !state.projectile.active ? state.tanks[state.currentTank] ?? null : null;
-  const trajectoryPreview = activeTank && activeTank.hp > 0 ? buildTrajectoryPreview(activeTank) : [];
+    state.mode === "playing" && !state.projectile.active
+      ? (state.tanks[state.currentTank] ?? null)
+      : null;
+  const trajectoryPreview =
+    activeTank && activeTank.hp > 0 ? buildTrajectoryPreview(activeTank) : [];
 
   // Tanks
   for (const t of state.tanks) {
@@ -972,21 +1020,29 @@ function draw() {
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.font =
+      "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.fillText("Tanks (Web Remake v1)", 110, 190);
     ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.font = "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.fillText("Press Start to begin. Reimplemented rules with imported original assets.", 110, 230);
+    ctx.font =
+      "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText(
+      "Press Start to begin. Reimplemented rules with imported original assets.",
+      110,
+      230,
+    );
   }
 
   if (state.mode === "gameover") {
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.font =
+      "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.fillText(state.message || "Game over", 110, 210);
     ctx.fillStyle = "rgba(255,255,255,0.72)";
-    ctx.font = "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.font =
+      "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.fillText("Press Reset or R to play again.", 110, 246);
   }
 }
@@ -1036,8 +1092,12 @@ function updateHud() {
     statLines.push(`Phase: ${state.phase}`);
     statLines.push(`Turn: Player ${state.currentTank + 1}    Weapon: ${w.name}`);
     statLines.push(`Angle: ${Math.round(t.aimDeg)}°    Power: ${Math.round(t.power)}`);
-    statLines.push(`Wind: ${fmtWind()}    Fuel: ${Math.round(state.fuelLeft)}    Timer: ${Math.ceil(state.timeLeft)}`);
-    statLines.push(`HP: P1 ${Math.round(state.tanks[0]!.hp)}    P2 ${Math.round(state.tanks[1]!.hp)}`);
+    statLines.push(
+      `Wind: ${fmtWind()}    Fuel: ${Math.round(state.fuelLeft)}    Timer: ${Math.ceil(state.timeLeft)}`,
+    );
+    statLines.push(
+      `HP: P1 ${Math.round(state.tanks[0]!.hp)}    P2 ${Math.round(state.tanks[1]!.hp)}`,
+    );
   } else {
     statLines.push(`Mode: ${state.mode}`);
   }
@@ -1336,7 +1396,12 @@ function renderGameToText() {
       weapon: weapons[clamp(tank.weaponIdx, 0, weapons.length - 1)]?.name ?? "?",
     })),
     projectile: state.projectile.active
-      ? { x: state.projectile.x, y: state.projectile.y, vx: state.projectile.vx, vy: state.projectile.vy }
+      ? {
+          x: state.projectile.x,
+          y: state.projectile.y,
+          vx: state.projectile.vx,
+          vy: state.projectile.vy,
+        }
       : null,
     current: t
       ? {

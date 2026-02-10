@@ -8,6 +8,7 @@ import { chromium } from "playwright";
 const DEFAULT_URL = "http://127.0.0.1:4174";
 const DEFAULT_OUT_DIR = path.join("output", "smoke");
 const DEFAULT_TIMEOUT_MS = 60_000;
+const MAX_TIMEOUT_MS = 5 * 60_000;
 
 function log(...parts) {
   console.log("[smoke]", ...parts);
@@ -42,6 +43,37 @@ function parseArgs(argv) {
   }
 
   return args;
+}
+
+function sanitizeTimeoutMs(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_TIMEOUT_MS;
+  const clamped = Math.min(Math.max(Math.trunc(parsed), 1_000), MAX_TIMEOUT_MS);
+  return clamped;
+}
+
+function resolveSmokeUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid --url value: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Unsupported URL protocol for smoke test: ${parsed.protocol}`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("URL credentials are not allowed in smoke test target.");
+  }
+
+  const allowedHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  if (!allowedHosts.has(parsed.hostname)) {
+    throw new Error(`Disallowed smoke test host: ${parsed.hostname}`);
+  }
+
+  return parsed.toString();
 }
 
 function sleep(ms) {
@@ -152,7 +184,8 @@ function collectOutput(child, limitBytes = 200_000) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const url = args.url ?? DEFAULT_URL;
+  args.timeoutMs = sanitizeTimeoutMs(args.timeoutMs);
+  const url = resolveSmokeUrl(args.url ?? DEFAULT_URL);
 
   log("Starting", { url, outDir: args.outDir, timeoutMs: args.timeoutMs, noServer: args.noServer });
 
@@ -168,7 +201,9 @@ async function main() {
       try {
         await fs.access(path.join("dist", "index.html"));
       } catch {
-        throw new Error("Missing production build. Run `npm run build` before running the smoke test.");
+        throw new Error(
+          "Missing production build. Run `npm run build` before running the smoke test.",
+        );
       }
 
       log("Starting preview server…");
@@ -237,8 +272,10 @@ async function main() {
     /* eslint-enable no-undef */
 
     await fs.writeFile(path.join(args.outDir, "state.json"), JSON.stringify(checks, null, 2));
-    if (!checks.hasCanvas || !checks.hasHud) throw new Error("Missing core UI elements (#game-canvas/#hud).");
-    if (!checks.hasAdvanceTime || !checks.hasRenderHook) throw new Error("Missing render/advance hooks.");
+    if (!checks.hasCanvas || !checks.hasHud)
+      throw new Error("Missing core UI elements (#game-canvas/#hud).");
+    if (!checks.hasAdvanceTime || !checks.hasRenderHook)
+      throw new Error("Missing render/advance hooks.");
 
     log("Capturing screenshot…");
     await page.screenshot({ path: path.join(args.outDir, "screen.png"), fullPage: true });

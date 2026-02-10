@@ -39,7 +39,12 @@
               <button class="touch__btn" type="button" data-hold="move_left" aria-label="Move left">
                 ◀
               </button>
-              <button class="touch__btn" type="button" data-hold="move_right" aria-label="Move right">
+              <button
+                class="touch__btn"
+                type="button"
+                data-hold="move_right"
+                aria-label="Move right"
+              >
                 ▶
               </button>
             </div>
@@ -61,7 +66,9 @@
                   Power +
                 </button>
               </div>
-              <button id="touch-fire" class="touch__btn touch__btn--fire" type="button">FIRE</button>
+              <button id="touch-fire" class="touch__btn touch__btn--fire" type="button">
+                FIRE
+              </button>
               <div class="touch__row">
                 <button class="touch__btn" type="button" data-weapon="0">1</button>
                 <button class="touch__btn" type="button" data-weapon="1">2</button>
@@ -71,11 +78,20 @@
           </section>
 
           <section id="modal-layer" class="modalLayer" hidden>
-            <div id="pause-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
+            <div
+              id="pause-modal"
+              class="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pause-title"
+              hidden
+            >
               <div class="modal__card">
                 <div class="modal__title" id="pause-title">Paused</div>
                 <div class="modal__actions">
-                  <button id="pause-resume-btn" class="btn btn--primary" type="button">Resume</button>
+                  <button id="pause-resume-btn" class="btn btn--primary" type="button">
+                    Resume
+                  </button>
                   <button id="pause-restart-btn" class="btn" type="button">Restart</button>
                   <button id="pause-settings-btn" class="btn" type="button">Settings</button>
                   <button id="pause-main-menu-btn" class="btn" type="button">Main Menu</button>
@@ -117,11 +133,14 @@
                   </label>
 
                   <div class="hint">
-                    Tip: press <span class="kbd">Esc</span> to pause. Use touch controls on phones/tablets.
+                    Tip: press <span class="kbd">Esc</span> to pause. Use touch controls on
+                    phones/tablets.
                   </div>
                 </div>
                 <div class="modal__actions">
-                  <button id="settings-close-btn" class="btn btn--primary" type="button">Close</button>
+                  <button id="settings-close-btn" class="btn btn--primary" type="button">
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
@@ -137,7 +156,10 @@
             <div><span class="kbd">A</span>/<span class="kbd">D</span> move (fuel)</div>
             <div><span class="kbd">←</span>/<span class="kbd">→</span> angle</div>
             <div><span class="kbd">↑</span>/<span class="kbd">↓</span> power</div>
-            <div><span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> weapon</div>
+            <div>
+              <span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span>
+              weapon
+            </div>
             <div><span class="kbd">Space</span> fire</div>
             <div><span class="kbd">Esc</span> pause/resume</div>
             <div><span class="kbd">R</span> reset</div>

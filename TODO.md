@@ -71,6 +71,10 @@
 - [x] Web remake trajectory preview – Draw a deterministic ballistic preview path in aim phase so players can pre-aim before firing.
 - [x] Web remake camera cues – Add subtle shot follow + impact shake/zoom cues to improve shot readability and feedback.
 - [x] Web remake camera intensity setting – Add `off`/`low`/`default` camera motion settings for accessibility and reduced-motion preference.
+- [x] Split CI into fast-vs-platform workflows – Keep PR gating on fast web checks while moving heavy platform jobs to main/tags/manual runs.
+- [x] Harden smoke test scripts for CI security alerts – Clamp CLI timeout inputs and restrict smoke-test target URLs to localhost loopback hosts.
+- [x] Randomize Godot terrain generation seed – Regenerate a different map profile each match reset instead of fixed-seed terrain.
+- [ ] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.

@@ -8,6 +8,7 @@ import { chromium } from "playwright";
 const DEFAULT_URL = "http://127.0.0.1:4173";
 const DEFAULT_OUT_DIR = path.join("output", "smoke");
 const DEFAULT_TIMEOUT_MS = 60_000;
+const MAX_TIMEOUT_MS = 5 * 60_000;
 
 function log(...parts) {
   // Keep logs minimal but actionable in CI.
@@ -43,6 +44,37 @@ function parseArgs(argv) {
   }
 
   return args;
+}
+
+function sanitizeTimeoutMs(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_TIMEOUT_MS;
+  const clamped = Math.min(Math.max(Math.trunc(parsed), 1_000), MAX_TIMEOUT_MS);
+  return clamped;
+}
+
+function resolveSmokeUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid --url value: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Unsupported URL protocol for smoke test: ${parsed.protocol}`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("URL credentials are not allowed in smoke test target.");
+  }
+
+  const allowedHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  if (!allowedHosts.has(parsed.hostname)) {
+    throw new Error(`Disallowed smoke test host: ${parsed.hostname}`);
+  }
+
+  return parsed.toString();
 }
 
 function sleep(ms) {
@@ -124,7 +156,8 @@ function collectOutput(child, limitBytes = 200_000) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const url = args.url ?? DEFAULT_URL;
+  args.timeoutMs = sanitizeTimeoutMs(args.timeoutMs);
+  const url = resolveSmokeUrl(args.url ?? DEFAULT_URL);
 
   log("Starting", { url, outDir: args.outDir, timeoutMs: args.timeoutMs, noServer: args.noServer });
 
@@ -201,9 +234,9 @@ async function main() {
     log("Waiting for SWF autoload…");
     await withTimeout(
       page.waitForFunction(() => {
-        if (typeof window.render_game_to_text !== "function") return false;
+        if (typeof globalThis.render_game_to_text !== "function") return false;
         try {
-          const parsed = JSON.parse(window.render_game_to_text());
+          const parsed = JSON.parse(globalThis.render_game_to_text());
           return parsed?.loadState === "ready" || parsed?.loadState === "error";
         } catch {
           return false;

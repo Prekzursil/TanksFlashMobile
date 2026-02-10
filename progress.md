@@ -160,3 +160,21 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - replaced unsupported `if: ${{ secrets.* }}` guards with `if: ${{ env.* }}` in `.github/workflows/ci.yml` and `.github/workflows/release.yml`
   - moved optional signing secrets to per-job `env:` blocks for Windows and Android release-sign steps
   - this allows workflows to instantiate normally so PR status checks can attach to commits
+- Split CI for PR gating vs heavy platform visibility:
+  - added fast PR workflow at `.github/workflows/ci-fast.yml` (web + remake web lint/format/build/smoke)
+  - changed `.github/workflows/ci.yml` to `CI Platform` (main/tags/manual only) to keep heavier jobs visible without blocking PRs
+- Addressed review/security comments:
+  - randomized Godot terrain seed in `apps/remake-godot/scripts/main.gd` (`noise.seed = randi()`)
+  - hardened smoke scripts (`apps/web/scripts/smoke_test.mjs`, `apps/remake-web/scripts/smoke_test.mjs`) by:
+    - clamping `--timeout-ms` to sane bounds
+    - validating `--url` protocol/host and restricting targets to localhost loopback
+  - added workflow-level least-privilege token permissions in `.github/workflows/release.yml`
+- Fast-check validation after fixes:
+  - `npm --prefix apps/web run format:check` ✅
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/web run build` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run format:check` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
