@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 const DEFAULT_URL = "http://127.0.0.1:4173";
 const DEFAULT_OUT_DIR = path.join("output", "smoke");
 const DEFAULT_TIMEOUT_MS = 60_000;
-const MAX_TIMEOUT_MS = 5 * 60_000;
+const SERVER_PROBE_URL = "http://127.0.0.1:4173/";
 
 function log(...parts) {
   // Keep logs minimal but actionable in CI.
@@ -33,9 +33,6 @@ function parseArgs(argv) {
     } else if (arg === "--out-dir" && next) {
       args.outDir = next;
       i++;
-    } else if (arg === "--timeout-ms" && next) {
-      args.timeoutMs = Number(next);
-      i++;
     } else if (arg === "--headed") {
       args.headed = true;
     } else if (arg === "--no-server") {
@@ -44,13 +41,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-function sanitizeTimeoutMs(value) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return DEFAULT_TIMEOUT_MS;
-  const clamped = Math.min(Math.max(Math.trunc(parsed), 1_000), MAX_TIMEOUT_MS);
-  return clamped;
 }
 
 function resolveSmokeUrl(rawUrl) {
@@ -156,7 +146,6 @@ function collectOutput(child, limitBytes = 200_000) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  args.timeoutMs = sanitizeTimeoutMs(args.timeoutMs);
   const url = resolveSmokeUrl(args.url ?? DEFAULT_URL);
 
   log("Starting", { url, outDir: args.outDir, timeoutMs: args.timeoutMs, noServer: args.noServer });
@@ -189,7 +178,7 @@ async function main() {
         signal,
       }));
 
-      const ready = waitForHttpOk(url, args.timeoutMs).then(() => ({ type: "ready" }));
+      const ready = waitForHttpOk(SERVER_PROBE_URL, args.timeoutMs).then(() => ({ type: "ready" }));
       const result = await Promise.race([ready, serverExit]);
 
       if (result.type === "exit") {
