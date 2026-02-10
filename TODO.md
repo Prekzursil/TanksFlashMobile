@@ -82,6 +82,7 @@
 - [x] Pin release publish action – Replace `softprops/action-gh-release@v2` with a pinned commit SHA in `release.yml`.
 - [x] Clean up CodeQL default languages – In GitHub settings, disable `Ruby` and `Swift` for default setup (or switch to advanced setup with custom build commands) to clear current default-setup tool errors.
 - [x] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
+- [x] Patch transitive `bl` vulnerability path – Force `bl@1.2.3` via root `overrides` so `swf-extract -> png-stream -> bl` no longer pulls vulnerable `bl@0.9.5`.
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
