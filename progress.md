@@ -142,3 +142,9 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `npm --prefix apps/remake-web run lint` ✅
   - `npm --prefix apps/remake-web run test:smoke` ✅
   - manual Playwright check: set `cameraIntensity=off` in Settings and verified `render_game_to_text().camera` remains zero during firing ✅
+
+- Reverted Azure Artifact Signing workflow experiment and restored prior `.pfx`-based signing pipeline.
+- Added traditional OV/EV certificate buying + CI setup checklist:
+  - `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md`
+  - linked from `docs/DESKTOP_WRAPPER.md`
+  - `TODO.md` updated with completed checklist-doc item while keeping certificate acquisition task open

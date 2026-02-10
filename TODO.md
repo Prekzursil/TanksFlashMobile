@@ -64,6 +64,7 @@
 - [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
 - [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
 - [x] Helper for Windows signing secrets – Add a script to base64-encode a `.pfx` for GitHub Secrets without printing it.
+- [x] Document Windows OV/EV cert checklist – Add step-by-step purchasing and CI configuration checklist for traditional `.pfx` code signing.
 - [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI (optional; shipping unsigned for now).
 - [x] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
 - [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
