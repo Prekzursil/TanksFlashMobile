@@ -46,7 +46,7 @@ function parseArgs(argv) {
 }
 
 function isHttpUrl(value) {
-  return /^https?:\\/\\//i.test(value);
+  return /^https?:\/\//i.test(value);
 }
 
 async function fileExists(p) {
@@ -142,4 +142,3 @@ main().catch((err) => {
   console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
-

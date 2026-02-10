@@ -178,3 +178,21 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `npm --prefix apps/remake-web run lint` ✅
   - `npm --prefix apps/remake-web run build` ✅
   - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Fixed CodeQL/default-setup stability issues:
+  - merged latest `origin/main` and patched `.github/workflows/codeql.yml` to avoid advanced/default setup conflicts:
+    - trigger changed to `workflow_dispatch` only
+    - `java-kotlin` build-mode changed to `none`
+    - upgraded CodeQL action steps to `@v4`
+  - fixed JavaScript parse error flagged by CodeQL in `scripts/import_swf.mjs` (`isHttpUrl` regex)
+- Validation for this batch:
+  - `node --check scripts/import_swf.mjs` ✅
+  - `node scripts/import_swf.mjs` (expected missing-arg usage error, no syntax crash) ✅
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/web run format:check` ✅
+  - `npm --prefix apps/remake-web run format:check` ✅
+  - `npm --prefix apps/web run build` ✅
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅

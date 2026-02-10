@@ -74,6 +74,9 @@
 - [x] Split CI into fast-vs-platform workflows – Keep PR gating on fast web checks while moving heavy platform jobs to main/tags/manual runs.
 - [x] Harden smoke test scripts for CI security alerts – Clamp CLI timeout inputs and restrict smoke-test target URLs to localhost loopback hosts.
 - [x] Randomize Godot terrain generation seed – Regenerate a different map profile each match reset instead of fixed-seed terrain.
+- [x] Prevent CodeQL setup collisions – Keep `.github/workflows/codeql.yml` manual-only so GitHub default setup can run without advanced-vs-default SARIF conflicts.
+- [x] Fix SWF import regex parse error – Repair `scripts/import_swf.mjs` URL regex so JavaScript/TypeScript code scanning can parse the file.
+- [ ] Clean up CodeQL default languages – In GitHub settings, disable `Ruby` and `Swift` for default setup (or switch to advanced setup with custom build commands) to clear current default-setup tool errors.
 - [ ] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
 
 ## Low priority

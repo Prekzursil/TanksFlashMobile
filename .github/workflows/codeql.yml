@@ -1,12 +1,10 @@
 name: CodeQL
 
+# NOTE:
+# This repository uses GitHub's CodeQL default setup for automatic scanning on push/PR.
+# Keep this workflow manual-only to avoid the "advanced + default setup" SARIF conflict.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-  schedule:
-    - cron: "0 3 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,14 +28,14 @@ jobs:
           - language: python
             build-mode: none
           - language: java-kotlin
-            build-mode: autobuild
+            build-mode: none
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -45,7 +43,7 @@ jobs:
 
       - name: Autobuild
         if: ${{ matrix.build-mode == 'autobuild' }}
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
