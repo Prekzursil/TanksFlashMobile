@@ -148,3 +148,11 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md`
   - linked from `docs/DESKTOP_WRAPPER.md`
   - `TODO.md` updated with completed checklist-doc item while keeping certificate acquisition task open
+
+- Expanded `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md` with a provider comparison table:
+  - provider rows: Sectigo, DigiCert, GlobalSign, reseller channel
+  - columns: estimated OV/EV annual bands, key/token delivery policy, practical notes
+- Updated the single open Windows-signing TODO to a concrete completion target:
+  - purchase OV/EV cert via checklist
+  - set `WINDOWS_CERT_PFX_BASE64` and `WINDOWS_CERT_PASSWORD`
+  - validate one signed Windows CI/release run
