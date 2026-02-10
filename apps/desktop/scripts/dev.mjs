@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_URL = "http://127.0.0.1:5173";
+const DEFAULT_DEV_PROBE_URL = "http://127.0.0.1:5173/";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const desktopDir = path.resolve(here, "..");
@@ -29,6 +30,30 @@ async function waitForHttpOk(url, timeoutMs) {
   }
 }
 
+function resolveLocalUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid dev URL: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Unsupported dev URL protocol: ${parsed.protocol}`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("Credentials are not allowed in dev URL.");
+  }
+
+  const allowedHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  if (!allowedHosts.has(parsed.hostname)) {
+    throw new Error(`Disallowed dev URL host: ${parsed.hostname}`);
+  }
+
+  return parsed.toString();
+}
+
 function npmCmd() {
   return process.platform === "win32" ? "npm.cmd" : "npm";
 }
@@ -49,7 +74,7 @@ async function stopProcess(child, timeoutMs = 5_000) {
 }
 
 async function main() {
-  const url = process.env.ELECTRON_START_URL || DEFAULT_URL;
+  const url = resolveLocalUrl(process.env.ELECTRON_START_URL || DEFAULT_URL);
 
   const web = spawn(
     npmCmd(),
@@ -62,7 +87,7 @@ async function main() {
   );
 
   try {
-    await waitForHttpOk(url, 60_000);
+    await waitForHttpOk(DEFAULT_DEV_PROBE_URL, 60_000);
   } catch (err) {
     await stopProcess(web);
     throw err;
@@ -95,4 +120,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

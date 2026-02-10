@@ -76,6 +76,10 @@
 - [x] Randomize Godot terrain generation seed – Regenerate a different map profile each match reset instead of fixed-seed terrain.
 - [x] Prevent CodeQL setup collisions – Keep `.github/workflows/codeql.yml` manual-only so GitHub default setup can run without advanced-vs-default SARIF conflicts.
 - [x] Fix SWF import regex parse error – Repair `scripts/import_swf.mjs` URL regex so JavaScript/TypeScript code scanning can parse the file.
+- [x] Fix desktop dev SSRF warning – Restrict `ELECTRON_START_URL` to localhost and probe only a fixed local dev endpoint in `apps/desktop/scripts/dev.mjs`.
+- [x] Harden signing helper output path – Remove stdout mode from `scripts/pfx_to_base64.mjs` so cert base64 is only written to a local file.
+- [x] Disable Android app backup exports – Set `android:allowBackup="false"` and `android:fullBackupContent="false"` in `AndroidManifest.xml`.
+- [x] Pin release publish action – Replace `softprops/action-gh-release@v2` with a pinned commit SHA in `release.yml`.
 - [ ] Clean up CodeQL default languages – In GitHub settings, disable `Ruby` and `Swift` for default setup (or switch to advanced setup with custom build commands) to clear current default-setup tool errors.
 - [ ] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
 

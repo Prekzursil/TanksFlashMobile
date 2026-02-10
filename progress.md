@@ -196,3 +196,16 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `npm --prefix apps/remake-web run build` ✅
   - `npm --prefix apps/web run test:smoke` ✅
   - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Resolved PR merge conflict against `main` (package lock) and continued security hardening:
+  - merged latest `origin/main` into `feat/godot-spike-batch-01` and resolved `package-lock.json` conflict
+  - fixed CodeQL SSRF on desktop dev helper by validating local URL + probing fixed localhost endpoint (`apps/desktop/scripts/dev.mjs`)
+  - removed potentially unsafe stdout path from cert helper (`scripts/pfx_to_base64.mjs`)
+  - disabled Android app backups in manifest (`android/app/src/main/AndroidManifest.xml`)
+  - pinned third-party release action to commit SHA (`.github/workflows/release.yml`)
+- Validation for follow-up batch:
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - `node --check apps/desktop/scripts/dev.mjs` ✅
+  - `node --check scripts/pfx_to_base64.mjs` ✅
