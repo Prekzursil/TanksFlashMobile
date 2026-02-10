@@ -72,12 +72,19 @@ async function main() {
     throw new Error("Input and output paths must be different.");
   }
 
-  const inputStat = await fs.stat(inputPath).catch(() => null);
-  if (!inputStat || !inputStat.isFile()) {
-    throw new Error(`Input file not found: ${inputPath}`);
+  let buf;
+  try {
+    buf = await fs.readFile(inputPath);
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err) {
+      const code = String(err.code);
+      if (code === "ENOENT" || code === "EISDIR" || code === "ENOTDIR") {
+        throw new Error(`Input file not found or not readable: ${inputPath}`);
+      }
+    }
+    throw err;
   }
 
-  const buf = await fs.readFile(inputPath);
   const base64 = buf.toString("base64");
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
