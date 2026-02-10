@@ -5,7 +5,6 @@ function parseArgs(argv) {
   const args = {
     inPath: null,
     outPath: path.join("output", "windows-cert.pfx.base64"),
-    stdout: false,
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -18,8 +17,6 @@ function parseArgs(argv) {
     } else if (arg === "--out" && next) {
       args.outPath = next;
       i++;
-    } else if (arg === "--stdout") {
-      args.stdout = true;
     }
   }
 
@@ -37,11 +34,6 @@ async function main() {
   const buf = await fs.readFile(args.inPath);
   const base64 = buf.toString("base64");
 
-  if (args.stdout) {
-    process.stdout.write(base64);
-    return;
-  }
-
   await fs.mkdir(path.dirname(args.outPath), { recursive: true });
   await fs.writeFile(args.outPath, base64, { encoding: "utf8" });
   console.log(`Wrote base64 to ${args.outPath}`);
@@ -52,4 +44,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

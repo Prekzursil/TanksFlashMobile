@@ -1,0 +1,21 @@
+; Engine configuration file.
+; It's best edited using the editor and not directly.
+config_version=5
+
+[application]
+config/name="Tanks Remake (Godot Spike)"
+config/description="Clean-room reimplementation spike for the Tanks Flash wrapper project."
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.2")
+config/icon="res://icon.svg"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/dpi/allow_hidpi=true
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

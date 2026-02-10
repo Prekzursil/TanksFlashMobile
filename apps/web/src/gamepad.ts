@@ -39,8 +39,18 @@ function clampInt(value: unknown, min: number, max: number, fallback: number): n
 }
 
 function normalizeSettings(raw: Partial<GamepadSettings> | undefined): GamepadSettings {
-  const actionAButtonIndex = clampInt(raw?.actionAButtonIndex, 0, 15, DEFAULT_SETTINGS.actionAButtonIndex);
-  const actionBButtonIndex = clampInt(raw?.actionBButtonIndex, 0, 15, DEFAULT_SETTINGS.actionBButtonIndex);
+  const actionAButtonIndex = clampInt(
+    raw?.actionAButtonIndex,
+    0,
+    15,
+    DEFAULT_SETTINGS.actionAButtonIndex,
+  );
+  const actionBButtonIndex = clampInt(
+    raw?.actionBButtonIndex,
+    0,
+    15,
+    DEFAULT_SETTINGS.actionBButtonIndex,
+  );
   const axisPressThreshold = clampNumber(
     raw?.axisPressThreshold,
     0.1,

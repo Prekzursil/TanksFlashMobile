@@ -49,3 +49,163 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
 - Added a repo-level `VERSION` file and a `scripts/sync_versions.mjs` helper to keep web/desktop/Android/iOS versions aligned (CI verifies on PRs; Releases verify tag matches `VERSION`).
 - Added optional Android **release** signing on tags (signed `.apk`/`.aab` only when keystore secrets are present; PRs remain debug builds).
 - Added a Gamepad settings panel for button mapping + stick deadzone, persisted via `localStorage`.
+- Added a minimal Godot clean-room reimplementation spike (`apps/remake-godot`) with procedural terrain, destructible craters, turn-based firing, and a win condition; spike docs live in `docs/REIMPLEMENTATION_GODOT.md`.
+- Expanded the Godot spike with fuel-limited movement, per-turn wind, a turn timer, and multiple weapons; documented the remake v1 scope and input plan.
+- Added Godot desktop export presets and a CI job to produce Windows/Linux/macOS export artifacts.
+- Added a Canvas/TypeScript clean-room web remake spike (`apps/remake-web`) with deterministic Playwright hooks (`render_game_to_text`, `advanceTime`) and CI smoke/build artifacts.
+
+## 2026-02-09
+
+- Continued work on branch `feat/godot-spike-batch-01` (same PR flow).
+- Implemented original asset extraction pipeline with SWF parsing + dual-target output:
+  - script: `scripts/extract_original_assets.mjs`
+  - command: `npm run assets:extract:original`
+  - outputs:
+    - `apps/remake-godot/assets/original/`
+    - `apps/remake-web/public/original/`
+- Added/updated root dev dependencies for extraction:
+  - `swf-extract`
+  - `lodash` (runtime dep needed by `swf-extract`)
+- Fixed extraction compatibility issue: normalized extracted image output to PNG (Godot headless import rejected raw extracted JPEG data stream).
+- Integrated original assets into Godot remake:
+  - menu backgrounds + portraits from extracted textures
+  - fire/impact/UI click SFX from extracted audio
+  - paths switched to `.png` textures in `apps/remake-godot/scripts/main.gd`
+- Added audio players and background texture nodes in Godot scene:
+  - `apps/remake-godot/scenes/Main.tscn`
+- Implemented web remake TODOs for HUD/menus/touch/original assets integration:
+  - topbar pause/settings controls
+  - modal pause/settings screens
+  - in-game HUD panel (stats + message)
+  - touch overlay with hold actions + fire/weapon buttons
+  - persisted touch settings (enabled/layout)
+  - imported original images/audio in rendering + SFX
+  - restored continuous game frame loop (`requestAnimationFrame`) for normal runtime
+- Validation runs:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - develop-web-game Playwright client run with action payloads ✅ (`output/web-game/`)
+  - Docker Godot export check ✅ (`barichello/godot-ci:4.2.2`, Linux/X11 export)
+
+## Next up
+
+- Web remake gameplay parity task is still open (`TODO.md`): align remaining behavior differences vs Godot (rules edge cases, balancing, model consistency).
+- Store readiness tasks remain open (submission checklist, privacy/support URL, metadata audit).
+
+## 2026-02-10
+
+- Closed web remake gameplay parity TODO by adding explicit gameplay phase state in `apps/remake-web/src/main.ts`:
+  - `aim`, `firing`, `impact`, `gameover`
+  - phase-based fire/weapon gating aligned to Godot flow
+  - phase now exposed via `render_game_to_text`
+- Added parity tracking document:
+  - `docs/WEB_REMAKE_PARITY.md`
+- Closed store readiness TODO set with docs:
+  - `docs/STORE_SUBMISSION_CHECKLIST.md`
+  - `docs/PRIVACY_POLICY.md`
+  - `docs/SUPPORT.md`
+  - `docs/APP_METADATA_AUDIT.md`
+- Linked store-readiness docs in `README.md`.
+- Updated `TODO.md` to mark:
+  - Web remake gameplay parity ✅
+  - Store submission checklist ✅
+  - Privacy policy + support URL ✅
+  - App metadata audit ✅
+- Validation re-run:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Added web remake gameplay polish batch (option 2) in `apps/remake-web/src/main.ts`:
+  - deterministic aim-phase trajectory preview using current angle/power/weapon/wind
+  - camera follow drift toward active tank/projectile
+  - fire/impact camera cues (brief zoom + impact shake decay)
+  - camera state exposed in `render_game_to_text` for test visibility
+- Updated docs/backlog for this batch:
+  - `docs/REIMPLEMENTATION_WEB.md` (trajectory + camera cues noted)
+  - `docs/WEB_REMAKE_PARITY.md` (web-only polish section)
+  - `TODO.md` (new completed follow-up entries for trajectory preview and camera cues)
+- Validation for polish batch:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - develop-web-game Playwright client run + screenshot/state inspection ✅ (`output/web-game/shot-*.png`, `state-*.json`)
+
+- Added web remake accessibility follow-up for camera motion intensity:
+  - settings control in modal: `default` / `low` / `off`
+  - persisted in `localStorage` as `cameraIntensity`
+  - camera follow/zoom/shake now profile-scaled and can be fully disabled (`off`)
+- Updated web remake docs and TODO to include the new reduced-motion camera setting.
+- Validation for camera-intensity batch:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - manual Playwright check: set `cameraIntensity=off` in Settings and verified `render_game_to_text().camera` remains zero during firing ✅
+
+- Reverted Azure Artifact Signing workflow experiment and restored prior `.pfx`-based signing pipeline.
+- Added traditional OV/EV certificate buying + CI setup checklist:
+  - `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md`
+  - linked from `docs/DESKTOP_WRAPPER.md`
+  - `TODO.md` updated with completed checklist-doc item while keeping certificate acquisition task open
+
+- Expanded `docs/WINDOWS_CERT_OV_EV_CHECKLIST.md` with a provider comparison table:
+  - provider rows: Sectigo, DigiCert, GlobalSign, reseller channel
+  - columns: estimated OV/EV annual bands, key/token delivery policy, practical notes
+- Updated the single open Windows-signing TODO to a concrete completion target:
+  - purchase OV/EV cert via checklist
+  - set `WINDOWS_CERT_PFX_BASE64` and `WINDOWS_CERT_PASSWORD`
+  - validate one signed Windows CI/release run
+- Fixed GitHub Actions startup failures that prevented PR checks from appearing:
+  - replaced unsupported `if: ${{ secrets.* }}` guards with `if: ${{ env.* }}` in `.github/workflows/ci.yml` and `.github/workflows/release.yml`
+  - moved optional signing secrets to per-job `env:` blocks for Windows and Android release-sign steps
+  - this allows workflows to instantiate normally so PR status checks can attach to commits
+- Split CI for PR gating vs heavy platform visibility:
+  - added fast PR workflow at `.github/workflows/ci-fast.yml` (web + remake web lint/format/build/smoke)
+  - changed `.github/workflows/ci.yml` to `CI Platform` (main/tags/manual only) to keep heavier jobs visible without blocking PRs
+- Addressed review/security comments:
+  - randomized Godot terrain seed in `apps/remake-godot/scripts/main.gd` (`noise.seed = randi()`)
+  - hardened smoke scripts (`apps/web/scripts/smoke_test.mjs`, `apps/remake-web/scripts/smoke_test.mjs`) by:
+    - clamping `--timeout-ms` to sane bounds
+    - validating `--url` protocol/host and restricting targets to localhost loopback
+  - added workflow-level least-privilege token permissions in `.github/workflows/release.yml`
+- Fast-check validation after fixes:
+  - `npm --prefix apps/web run format:check` ✅
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/web run build` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run format:check` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Fixed CodeQL/default-setup stability issues:
+  - merged latest `origin/main` and patched `.github/workflows/codeql.yml` to avoid advanced/default setup conflicts:
+    - trigger changed to `workflow_dispatch` only
+    - `java-kotlin` build-mode changed to `none`
+    - upgraded CodeQL action steps to `@v4`
+  - fixed JavaScript parse error flagged by CodeQL in `scripts/import_swf.mjs` (`isHttpUrl` regex)
+- Validation for this batch:
+  - `node --check scripts/import_swf.mjs` ✅
+  - `node scripts/import_swf.mjs` (expected missing-arg usage error, no syntax crash) ✅
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/web run format:check` ✅
+  - `npm --prefix apps/remake-web run format:check` ✅
+  - `npm --prefix apps/web run build` ✅
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+
+- Resolved PR merge conflict against `main` (package lock) and continued security hardening:
+  - merged latest `origin/main` into `feat/godot-spike-batch-01` and resolved `package-lock.json` conflict
+  - fixed CodeQL SSRF on desktop dev helper by validating local URL + probing fixed localhost endpoint (`apps/desktop/scripts/dev.mjs`)
+  - removed potentially unsafe stdout path from cert helper (`scripts/pfx_to_base64.mjs`)
+  - disabled Android app backups in manifest (`android/app/src/main/AndroidManifest.xml`)
+  - pinned third-party release action to commit SHA (`.github/workflows/release.yml`)
+- Validation for follow-up batch:
+  - `npm --prefix apps/web run lint` ✅
+  - `npm --prefix apps/web run test:smoke` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - `node --check apps/desktop/scripts/dev.mjs` ✅
+  - `node --check scripts/pfx_to_base64.mjs` ✅

@@ -23,22 +23,25 @@ Preferred: **GitHub Releases** (created on version tags like `v0.1.0`).
 
 What you’ll see attached to a Release:
 - Web: `Tanks-<tag>-web-dist.zip`
+- Web remake (Canvas/TS): `Tanks-<tag>-remake-web-dist.zip`
+- Remake (Godot): `Tanks-<tag>-remake-godot-windows.exe`, `Tanks-<tag>-remake-godot-linux.x86_64`, `Tanks-<tag>-remake-godot-macos.zip`
 - Windows: `Tanks-<tag>-windows-setup.exe` and `Tanks-<tag>-windows-portable.zip`
 - Android: `Tanks-<tag>-android-debug.apk`
 - Android (signed, optional): `Tanks-<tag>-android-release.apk` and `Tanks-<tag>-android-release.aab` (requires keystore secrets)
 - iOS (Simulator): `Tanks-<tag>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
 
 If there are no Releases yet, use **GitHub Actions artifacts** instead:
-- `web-dist`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
+- `web-dist`, `remake-web-dist`, `godot-windows`, `godot-linux`, `godot-macos`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
 
 Install/run quick notes:
-- Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL and use **Load SWF…**.
+- Web: unzip and serve the folder (e.g. `python3 -m http.server`), then open the URL.
 - Windows: run the setup `.exe`, or unzip the portable build and run `Tanks.exe`.
 - Android: install the `.apk` on-device (you may need to allow “Install unknown apps”).
 - iOS (Simulator): unzip, then install to a running Simulator (e.g. `xcrun simctl install booted App.app`).
 
 SWF note:
-- Releases/artifacts **do not** include the original game SWF. Use the in-app **Load SWF…** button or place it at `assets/original/tanks.swf` for local dev.
+- Releases include the original SWF (`/original/tanks.swf`) so the wrapper runs out-of-the-box.
+- You can still use **Load SWF…** to test a different file.
 
 Maintainers note (version tags):
 - Bump `VERSION`, run `npm run sync:versions`, commit, then tag `v<same-version>` and push the tag.
@@ -49,9 +52,6 @@ Maintainers note (version tags):
 ```bash
 cd apps/web
 npm install
-
-# Optional: copy a local SWF into the dev server path
-npm run sync:swf
 
 npm run dev
 ```
@@ -89,13 +89,15 @@ node scripts/run_web_game_client.mjs --url http://127.0.0.1:5173 --actions-file 
 
 ## About assets / legality
 
-This repo intentionally **does not** commit the original Flash binary or archive artifacts.
+This repo includes the original SWF under an explicit permission grant.
+See `docs/ASSET_POLICY.md` for details and constraints.
 
-If you have a legal copy for personal use, place it at:
+## Store readiness docs
 
-- `assets/original/tanks.swf`
-
-That path is gitignored so it won’t be committed by accident.
+- Submission checklist: `docs/STORE_SUBMISSION_CHECKLIST.md`
+- Privacy policy: `docs/PRIVACY_POLICY.md`
+- Support/contact: `docs/SUPPORT.md`
+- Cross-platform metadata audit: `docs/APP_METADATA_AUDIT.md`
 
 ## Likely technical approach
 
@@ -108,6 +110,13 @@ See `docs/MOBILE_WRAPPER.md` for Android/iOS build steps.
 See `docs/DESKTOP_WRAPPER.md` for the Windows desktop wrapper (Electron).
 
 If Ruffle compatibility isn’t good enough for the full game, we can pivot to a full reimplementation using a cross‑platform engine (e.g., Godot).
+
+## Remake spikes (clean-room)
+
+In parallel with the wrapper track, the repo contains two clean-room remake prototypes:
+
+- Godot spike: `apps/remake-godot/` (docs: `docs/REIMPLEMENTATION_GODOT.md`)
+- Web spike (Canvas/TS): `apps/remake-web/` (docs: `docs/REIMPLEMENTATION_WEB.md`)
 
 ## License
 

@@ -76,3 +76,15 @@ Even if we start with Ruffle, we should structure wrapper code to be reusable:
 - Central “input mapping” layer (keyboard/touch/gamepad)
 - Scalable viewport/layout system
 - Settings UI and persistence
+
+## Current state (practical)
+
+We are now pursuing **both tracks in parallel**:
+
+- Wrapper track: the primary “nostalgia revival” path (Ruffle + packaging).
+- Remake track: clean-room prototypes to validate scope and reduce legal friction by shipping original-free code/assets.
+
+Remake spikes live at:
+
+- `apps/remake-godot/` (Godot 4 spike) — see `docs/REIMPLEMENTATION_GODOT.md`
+- `apps/remake-web/` (Canvas/TypeScript spike) — see `docs/REIMPLEMENTATION_WEB.md`

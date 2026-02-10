@@ -1,0 +1,412 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_nqk18"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_nqk18")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="TopPanel" type="PanelContainer" parent="UI/Hud"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 860.0
+offset_bottom = 188.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/Hud/TopPanel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 834.0
+offset_bottom = 162.0
+
+[node name="Toolbar" type="HBoxContainer" parent="UI/Hud/TopPanel/VBox"]
+offset_right = 824.0
+offset_bottom = 31.0
+
+[node name="PauseButton" type="Button" parent="UI/Hud/TopPanel/VBox/Toolbar"]
+text = "Pause"
+
+[node name="SettingsButton" type="Button" parent="UI/Hud/TopPanel/VBox/Toolbar"]
+text = "Settings"
+
+[node name="RestartButton" type="Button" parent="UI/Hud/TopPanel/VBox/Toolbar"]
+text = "Restart"
+
+[node name="Spacer" type="Control" parent="UI/Hud/TopPanel/VBox/Toolbar"]
+size_flags_horizontal = 3
+
+[node name="StatsLabel" type="Label" parent="UI/Hud/TopPanel/VBox"]
+offset_top = 39.0
+offset_right = 824.0
+offset_bottom = 98.0
+autowrap_mode = 3
+text = "Loading…"
+
+[node name="MessageLabel" type="Label" parent="UI/Hud/TopPanel/VBox"]
+offset_top = 106.0
+offset_right = 824.0
+offset_bottom = 133.0
+autowrap_mode = 3
+text = ""
+
+[node name="HelpLabel" type="Label" parent="UI/Hud/TopPanel/VBox"]
+offset_top = 141.0
+offset_right = 824.0
+offset_bottom = 162.0
+autowrap_mode = 3
+text = "A/D: move | Arrows: aim/power | Space: fire | 1-3: weapon | Esc: pause | R: restart"
+
+[node name="TouchControls" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 0
+
+[node name="MoveCluster" type="Control" parent="UI/TouchControls"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -148.0
+offset_right = 324.0
+offset_bottom = -24.0
+
+[node name="MoveBox" type="HBoxContainer" parent="UI/TouchControls/MoveCluster"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+alignment = 1
+
+[node name="MoveLeftButton" type="Button" parent="UI/TouchControls/MoveCluster/MoveBox"]
+custom_minimum_size = Vector2(120, 120)
+text = "<"
+
+[node name="MoveRightButton" type="Button" parent="UI/TouchControls/MoveCluster/MoveBox"]
+custom_minimum_size = Vector2(120, 120)
+text = ">"
+
+[node name="AimCluster" type="Control" parent="UI/TouchControls"]
+anchors_preset = 14
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -364.0
+offset_top = -356.0
+offset_right = -24.0
+offset_bottom = -24.0
+
+[node name="AimBox" type="VBoxContainer" parent="UI/TouchControls/AimCluster"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+alignment = 1
+
+[node name="AimRow" type="HBoxContainer" parent="UI/TouchControls/AimCluster/AimBox"]
+offset_right = 340.0
+offset_bottom = 31.0
+alignment = 1
+
+[node name="AimLeftButton" type="Button" parent="UI/TouchControls/AimCluster/AimBox/AimRow"]
+custom_minimum_size = Vector2(120, 64)
+text = "Angle -"
+
+[node name="AimRightButton" type="Button" parent="UI/TouchControls/AimCluster/AimBox/AimRow"]
+custom_minimum_size = Vector2(120, 64)
+text = "Angle +"
+
+[node name="PowerRow" type="HBoxContainer" parent="UI/TouchControls/AimCluster/AimBox"]
+offset_top = 39.0
+offset_right = 340.0
+offset_bottom = 70.0
+alignment = 1
+
+[node name="PowerDownButton" type="Button" parent="UI/TouchControls/AimCluster/AimBox/PowerRow"]
+custom_minimum_size = Vector2(120, 64)
+text = "Power -"
+
+[node name="PowerUpButton" type="Button" parent="UI/TouchControls/AimCluster/AimBox/PowerRow"]
+custom_minimum_size = Vector2(120, 64)
+text = "Power +"
+
+[node name="FireButton" type="Button" parent="UI/TouchControls/AimCluster/AimBox"]
+custom_minimum_size = Vector2(240, 100)
+offset_top = 78.0
+offset_right = 340.0
+offset_bottom = 178.0
+text = "FIRE"
+
+[node name="WeaponRow" type="HBoxContainer" parent="UI/TouchControls/AimCluster/AimBox"]
+offset_top = 186.0
+offset_right = 340.0
+offset_bottom = 217.0
+alignment = 1
+
+[node name="Weapon1Button" type="Button" parent="UI/TouchControls/AimCluster/AimBox/WeaponRow"]
+custom_minimum_size = Vector2(72, 56)
+text = "1"
+
+[node name="Weapon2Button" type="Button" parent="UI/TouchControls/AimCluster/AimBox/WeaponRow"]
+custom_minimum_size = Vector2(72, 56)
+text = "2"
+
+[node name="Weapon3Button" type="Button" parent="UI/TouchControls/AimCluster/AimBox/WeaponRow"]
+custom_minimum_size = Vector2(72, 56)
+text = "3"
+
+[node name="MainMenu" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 0
+
+[node name="BgImage" type="TextureRect" parent="UI/MainMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="UI/MainMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="UI/MainMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="Panel" type="PanelContainer" parent="UI/MainMenu/Center"]
+custom_minimum_size = Vector2(560, 0)
+
+[node name="VBox" type="VBoxContainer" parent="UI/MainMenu/Center/Panel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 550.0
+offset_bottom = 10.0
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="UI/MainMenu/Center/Panel/VBox"]
+text = "Tanks Remake"
+
+[node name="SubtitleLabel" type="Label" parent="UI/MainMenu/Center/Panel/VBox"]
+autowrap_mode = 3
+text = "Godot prototype: turn-based artillery with wind + destructible terrain."
+
+[node name="PortraitRow" type="HBoxContainer" parent="UI/MainMenu/Center/Panel/VBox"]
+alignment = 1
+
+[node name="P1Portrait" type="TextureRect" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(180, 260)
+mouse_filter = 2
+
+[node name="Spacer" type="Control" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(16, 0)
+
+[node name="P2Portrait" type="TextureRect" parent="UI/MainMenu/Center/Panel/VBox/PortraitRow"]
+custom_minimum_size = Vector2(180, 260)
+mouse_filter = 2
+
+[node name="StartButton" type="Button" parent="UI/MainMenu/Center/Panel/VBox"]
+text = "Start"
+
+[node name="SettingsButton" type="Button" parent="UI/MainMenu/Center/Panel/VBox"]
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="UI/MainMenu/Center/Panel/VBox"]
+text = "Quit"
+
+[node name="HintLabel" type="Label" parent="UI/MainMenu/Center/Panel/VBox"]
+autowrap_mode = 3
+text = "Keyboard: A/D move, Arrows aim/power, Space fire, 1-3 weapons. Touch controls are available in Settings."
+
+[node name="PauseMenu" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 0
+
+[node name="BgImage" type="TextureRect" parent="UI/PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="UI/PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="UI/PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="Panel" type="PanelContainer" parent="UI/PauseMenu/Center"]
+custom_minimum_size = Vector2(520, 0)
+
+[node name="VBox" type="VBoxContainer" parent="UI/PauseMenu/Center/Panel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 510.0
+offset_bottom = 10.0
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="UI/PauseMenu/Center/Panel/VBox"]
+text = "Paused"
+
+[node name="ResumeButton" type="Button" parent="UI/PauseMenu/Center/Panel/VBox"]
+text = "Resume"
+
+[node name="RestartButton" type="Button" parent="UI/PauseMenu/Center/Panel/VBox"]
+text = "Restart"
+
+[node name="SettingsButton" type="Button" parent="UI/PauseMenu/Center/Panel/VBox"]
+text = "Settings"
+
+[node name="MainMenuButton" type="Button" parent="UI/PauseMenu/Center/Panel/VBox"]
+text = "Main Menu"
+
+[node name="SettingsMenu" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 0
+
+[node name="BgImage" type="TextureRect" parent="UI/SettingsMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="UI/SettingsMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="UI/SettingsMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="Panel" type="PanelContainer" parent="UI/SettingsMenu/Center"]
+custom_minimum_size = Vector2(640, 0)
+
+[node name="VBox" type="VBoxContainer" parent="UI/SettingsMenu/Center/Panel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 630.0
+offset_bottom = 10.0
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="UI/SettingsMenu/Center/Panel/VBox"]
+text = "Settings"
+
+[node name="TouchEnabled" type="CheckBox" parent="UI/SettingsMenu/Center/Panel/VBox"]
+text = "Enable touch controls overlay"
+
+[node name="TouchLayoutRow" type="HBoxContainer" parent="UI/SettingsMenu/Center/Panel/VBox"]
+alignment = 1
+
+[node name="TouchLayoutLabel" type="Label" parent="UI/SettingsMenu/Center/Panel/VBox/TouchLayoutRow"]
+text = "Touch layout:"
+
+[node name="TouchLayoutOption" type="OptionButton" parent="UI/SettingsMenu/Center/Panel/VBox/TouchLayoutRow"]
+
+[node name="BackButton" type="Button" parent="UI/SettingsMenu/Center/Panel/VBox"]
+text = "Back"
+
+[node name="NoteLabel" type="Label" parent="UI/SettingsMenu/Center/Panel/VBox"]
+autowrap_mode = 3
+text = "Tip: Esc pauses. Restart resets the match. Touch overlay is useful on phones/tablets."
+
+[node name="Audio" type="Node" parent="."]
+
+[node name="UiClick" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="Fire" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="Impact" type="AudioStreamPlayer" parent="Audio"]

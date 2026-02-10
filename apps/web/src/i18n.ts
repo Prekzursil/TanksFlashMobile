@@ -68,7 +68,8 @@ export const STRINGS = {
         actionBButton: "Action B button",
         stickDeadzone: "Stick deadzone",
         deadzoneHint: "Higher = less jitter, but needs more stick travel to trigger movement.",
-        mappingHint: "Mapping: D-pad/left stick = move. Action A = {actionA}. Action B = {actionB}.",
+        mappingHint:
+          "Mapping: D-pad/left stick = move. Action A = {actionA}. Action B = {actionB}.",
       },
       storage: {
         title: "Storage",
@@ -79,8 +80,7 @@ export const STRINGS = {
         import: "Import",
         clearWrapper: "Clear wrapper settings",
         clearAll: "Clear all site data (incl. saves)",
-        hint:
-          "Export/import manages localStorage (wrapper settings). Clearing “all site data” also attempts to delete IndexedDB databases (where supported), which may remove game saves stored by Ruffle.",
+        hint: "Export/import manages localStorage (wrapper settings). Clearing “all site data” also attempts to delete IndexedDB databases (where supported), which may remove game saves stored by Ruffle.",
       },
       debug: {
         title: "Debug",
@@ -90,8 +90,7 @@ export const STRINGS = {
         downloadDiagnostics: "Download diagnostics",
         downloadLogs: "Download logs",
         clearLogs: "Clear logs",
-        hint:
-          "Diagnostics include wrapper settings + runtime info + recent wrapper logs. It does not include the SWF itself.",
+        hint: "Diagnostics include wrapper settings + runtime info + recent wrapper logs. It does not include the SWF itself.",
       },
       about: {
         title: "About",
@@ -102,8 +101,7 @@ export const STRINGS = {
       title: "Controls & Tips",
       quickStart: {
         title: "Quick Start",
-        p1:
-          "This project is a wrapper around the original Flash game running inside Ruffle. The wrapper’s job is to provide clean input, scaling, and packaging across devices.",
+        p1: "This project is a wrapper around the original Flash game running inside Ruffle. The wrapper’s job is to provide clean input, scaling, and packaging across devices.",
         p2: "If the game doesn’t load automatically, click",
         p2Suffix: "and choose your .swf file.",
       },
@@ -114,8 +112,7 @@ export const STRINGS = {
         actionA: "Action A:",
         actionB: "Action B:",
         fullscreen: "Fullscreen:",
-        note:
-          "If the SWF UI behaves oddly, try disabling “Enable remap” in Settings. When disabled, the wrapper won’t intercept keyboard events.",
+        note: "If the SWF UI behaves oddly, try disabling “Enable remap” in Settings. When disabled, the wrapper won’t intercept keyboard events.",
       },
       touch: {
         title: "Touch",
@@ -133,8 +130,7 @@ export const STRINGS = {
         actionASuffix: "configured in Settings → Gamepad",
         actionB: "Action B:",
         actionBSuffix: "configured in Settings → Gamepad",
-        note:
-          "The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves strangely, try adjusting the button mapping and stick deadzone in Settings.",
+        note: "The wrapper uses the browser’s “standard” gamepad mapping when available. If your controller behaves strangely, try adjusting the button mapping and stick deadzone in Settings.",
       },
       troubleshooting: {
         title: "Troubleshooting",

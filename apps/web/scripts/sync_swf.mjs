@@ -18,8 +18,8 @@ async function main() {
         "Missing source SWF.",
         `Expected: ${sourceSwf}`,
         "",
-        "Place your legally obtained SWF at that path (it is gitignored),",
-        "or use the in-app file picker as an alternative.",
+        "Place the SWF at that path, then re-run this script.",
+        "If you don't want to bundle it, you can also use the in-app file picker as an alternative.",
       ].join("\n"),
     );
     process.exitCode = 1;

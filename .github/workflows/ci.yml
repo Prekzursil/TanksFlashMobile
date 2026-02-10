@@ -1,10 +1,15 @@
-name: CI
+name: CI Platform
 
 on:
-  pull_request:
   push:
     branches:
       - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -65,9 +70,66 @@ jobs:
           path: apps/web/output/smoke
           if-no-files-found: warn
 
+  remake_web:
+    name: Remake (web spike) build + smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/remake-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/remake-web/package-lock.json
+
+      - name: Verify versions match VERSION
+        run: node ../../scripts/sync_versions.mjs --check
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Smoke test
+        run: npm run test:smoke
+
+      - name: Upload remake web build (dist)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remake-web-dist
+          path: apps/remake-web/dist
+          if-no-files-found: warn
+
+      - name: Upload remake smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remake-web-smoke
+          path: apps/remake-web/output/smoke
+          if-no-files-found: warn
+
   desktop_windows:
     name: Desktop (Windows package)
     runs-on: windows-latest
+    env:
+      WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+      WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,13 +156,13 @@ jobs:
         working-directory: apps/desktop
 
       - name: Prepare Windows code signing certificate (optional)
-        if: ${{ secrets.WINDOWS_CERT_PFX_BASE64 != '' && secrets.WINDOWS_CERT_PASSWORD != '' }}
+        if: ${{ env.WINDOWS_CERT_PFX_BASE64 != '' && env.WINDOWS_CERT_PASSWORD != '' }}
         shell: pwsh
         run: |
           $certPath = Join-Path $env:RUNNER_TEMP "tanks-codesign.pfx"
-          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String("${{ secrets.WINDOWS_CERT_PFX_BASE64 }}"))
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String("${env:WINDOWS_CERT_PFX_BASE64}"))
           "WIN_CSC_LINK=$certPath" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "WIN_CSC_KEY_PASSWORD=${{ secrets.WINDOWS_CERT_PASSWORD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "WIN_CSC_KEY_PASSWORD=$env:WINDOWS_CERT_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Package Windows app
         run: npm run package:win
@@ -124,7 +186,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -177,7 +239,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -245,4 +307,62 @@ jobs:
           path: |
             ios-simulator-out/Tanks-ios-simulator-app.zip
             ios/App/xcodebuild.log
+          if-no-files-found: warn
+
+  godot_desktop:
+    name: Godot (desktop exports)
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.2.2
+    env:
+      GODOT_VERSION: 4.2.2
+      PROJECT_PATH: apps/remake-godot
+      OUT_DIR: output/godot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          DST="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$(dirname "$DST")"
+          if [ -d "$SRC" ] && [ ! -d "$DST" ]; then
+            cp -a "$SRC" "$DST"
+          fi
+
+      - name: Export (Windows/Linux/macOS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"
+          mkdir -p "${WORKSPACE}/${OUT_DIR}/windows" "${WORKSPACE}/${OUT_DIR}/linux" "${WORKSPACE}/${OUT_DIR}/macos"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "Windows Desktop" "${WORKSPACE}/${OUT_DIR}/windows/Tanks.exe"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "Linux/X11" "${WORKSPACE}/${OUT_DIR}/linux/Tanks.x86_64"
+          godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "macOS" "${WORKSPACE}/${OUT_DIR}/macos/Tanks.zip"
+
+      - name: Upload Godot (Windows)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-windows
+          path: output/godot/windows
+          if-no-files-found: warn
+
+      - name: Upload Godot (Linux)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-linux
+          path: output/godot/linux
+          if-no-files-found: warn
+
+      - name: Upload Godot (macOS)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-macos
+          path: output/godot/macos
           if-no-files-found: warn

@@ -6,8 +6,8 @@
   "scripts": {
     "sync:ruffle": "node ./scripts/sync_ruffle.mjs",
     "sync:swf": "node ./scripts/sync_swf.mjs",
-    "predev": "npm run sync:ruffle",
-    "prebuild": "npm run sync:ruffle",
+    "predev": "npm run sync:ruffle && npm run sync:swf",
+    "prebuild": "npm run sync:ruffle && npm run sync:swf",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

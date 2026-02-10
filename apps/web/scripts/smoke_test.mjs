@@ -8,6 +8,7 @@ import { chromium } from "playwright";
 const DEFAULT_URL = "http://127.0.0.1:4173";
 const DEFAULT_OUT_DIR = path.join("output", "smoke");
 const DEFAULT_TIMEOUT_MS = 60_000;
+const SERVER_PROBE_URL = "http://127.0.0.1:4173/";
 
 function log(...parts) {
   // Keep logs minimal but actionable in CI.
@@ -32,9 +33,6 @@ function parseArgs(argv) {
     } else if (arg === "--out-dir" && next) {
       args.outDir = next;
       i++;
-    } else if (arg === "--timeout-ms" && next) {
-      args.timeoutMs = Number(next);
-      i++;
     } else if (arg === "--headed") {
       args.headed = true;
     } else if (arg === "--no-server") {
@@ -43,6 +41,30 @@ function parseArgs(argv) {
   }
 
   return args;
+}
+
+function resolveSmokeUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid --url value: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Unsupported URL protocol for smoke test: ${parsed.protocol}`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("URL credentials are not allowed in smoke test target.");
+  }
+
+  const allowedHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  if (!allowedHosts.has(parsed.hostname)) {
+    throw new Error(`Disallowed smoke test host: ${parsed.hostname}`);
+  }
+
+  return parsed.toString();
 }
 
 function sleep(ms) {
@@ -124,7 +146,7 @@ function collectOutput(child, limitBytes = 200_000) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const url = args.url ?? DEFAULT_URL;
+  const url = resolveSmokeUrl(args.url ?? DEFAULT_URL);
 
   log("Starting", { url, outDir: args.outDir, timeoutMs: args.timeoutMs, noServer: args.noServer });
 
@@ -156,7 +178,7 @@ async function main() {
         signal,
       }));
 
-      const ready = waitForHttpOk(url, args.timeoutMs).then(() => ({ type: "ready" }));
+      const ready = waitForHttpOk(SERVER_PROBE_URL, args.timeoutMs).then(() => ({ type: "ready" }));
       const result = await Promise.race([ready, serverExit]);
 
       if (result.type === "exit") {
@@ -194,7 +216,24 @@ async function main() {
       args.timeoutMs + 5_000,
       `page.goto ${url}`,
     );
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(750);
+
+    // With the SWF bundled, the wrapper should autoload it on startup. This catches cases where
+    // CI/release builds accidentally ship without the SWF.
+    log("Waiting for SWF autoload…");
+    await withTimeout(
+      page.waitForFunction(() => {
+        if (typeof globalThis.render_game_to_text !== "function") return false;
+        try {
+          const parsed = JSON.parse(globalThis.render_game_to_text());
+          return parsed?.loadState === "ready" || parsed?.loadState === "error";
+        } catch {
+          return false;
+        }
+      }),
+      Math.min(args.timeoutMs, 20_000),
+      "page.waitForFunction SWF autoload",
+    );
 
     /* eslint-disable no-undef -- executed in the browser context via page.evaluate */
     log("Running wrapper checks…");
@@ -223,6 +262,22 @@ async function main() {
     }
     if (!checks.hasRuffle) {
       throw new Error("Ruffle runtime not detected (window.RufflePlayer missing).");
+    }
+    if (checks.stateText) {
+      let parsed;
+      try {
+        parsed = JSON.parse(checks.stateText);
+      } catch (err) {
+        throw new Error(`Invalid wrapper state JSON: ${String(err)}`);
+      }
+
+      if (parsed?.loadState !== "ready") {
+        const details =
+          typeof parsed?.lastError === "string" && parsed.lastError.trim()
+            ? ` (${parsed.lastError})`
+            : "";
+        throw new Error(`SWF did not autoload: ${String(parsed?.loadState)}${details}`);
+      }
     }
 
     // Enable touch overlay once to ensure the input layer doesn't throw.
@@ -313,23 +368,6 @@ async function main() {
     );
     await page.click("#helpCloseBtn");
     await page.waitForTimeout(100);
-
-    // Validate wrapper state if available.
-    if (checks.stateText) {
-      try {
-        const parsed = JSON.parse(checks.stateText);
-        if (
-          parsed?.loadState === "error" &&
-          typeof parsed?.lastError === "string" &&
-          !parsed.lastError.includes("Missing SWF") &&
-          !parsed.lastError.includes("Could not check SWF")
-        ) {
-          throw new Error(`Unexpected wrapper error: ${parsed.lastError}`);
-        }
-      } catch (err) {
-        throw new Error(`Invalid wrapper state JSON: ${String(err)}`);
-      }
-    }
 
     const allErrors = [...consoleErrors, ...pageErrors];
     if (allErrors.length) {
