@@ -279,7 +279,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+
+      - name: Reset Gradle dependency caches (Android hardening)
+        run: |
+          set -euo pipefail
+          rm -rf "${HOME}/.gradle/caches"/jars-* || true
+          rm -rf "${HOME}/.gradle/caches"/transforms-* || true
 
       - name: Install root dependencies
         run: npm ci
@@ -298,7 +303,7 @@ jobs:
       - name: Build debug APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew --no-daemon --stacktrace --refresh-dependencies assembleDebug
         working-directory: android
 
       - name: Prepare Android keystore (optional)
@@ -315,7 +320,7 @@ jobs:
 
       - name: Build signed release (optional)
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEYSTORE_PASSWORD != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' }}
-        run: ./gradlew bundleRelease assembleRelease
+        run: ./gradlew --no-daemon --stacktrace --refresh-dependencies bundleRelease assembleRelease
         working-directory: android
 
       - name: Collect release assets
