@@ -25,6 +25,7 @@ const pauseMainMenuBtnEl = document.querySelector<HTMLButtonElement>("#pause-mai
 const settingsModalEl = document.querySelector<HTMLElement>("#settings-modal");
 const settingsTouchEnabledEl = document.querySelector<HTMLInputElement>("#settings-touch-enabled");
 const settingsTouchLayoutEl = document.querySelector<HTMLSelectElement>("#settings-touch-layout");
+const settingsCameraIntensityEl = document.querySelector<HTMLSelectElement>("#settings-camera-intensity");
 const settingsCloseBtnEl = document.querySelector<HTMLButtonElement>("#settings-close-btn");
 
 if (
@@ -48,6 +49,7 @@ if (
   !settingsModalEl ||
   !settingsTouchEnabledEl ||
   !settingsTouchLayoutEl ||
+  !settingsCameraIntensityEl ||
   !settingsCloseBtnEl
 ) {
   throw new Error("Missing required DOM elements");
@@ -76,6 +78,7 @@ const pauseMainMenuBtn = pauseMainMenuBtnEl;
 const settingsModal = settingsModalEl;
 const settingsTouchEnabled = settingsTouchEnabledEl;
 const settingsTouchLayout = settingsTouchLayoutEl;
+const settingsCameraIntensity = settingsCameraIntensityEl;
 const settingsCloseBtn = settingsCloseBtnEl;
 
 const ctxMaybe = canvas.getContext("2d");
@@ -85,6 +88,7 @@ const ctx = ctxMaybe;
 type Mode = "menu" | "playing" | "paused" | "gameover";
 
 type TouchLayout = "right" | "left";
+type CameraIntensity = "off" | "low" | "default";
 
 type UiModal = null | "pause" | "settings";
 type Phase = "aim" | "firing" | "impact" | "gameover";
@@ -249,21 +253,35 @@ function defaultTouchEnabled() {
   return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
-function loadUiSettings(): { touchEnabled: boolean; touchLayout: TouchLayout } {
+function normalizeCameraIntensity(raw: unknown): CameraIntensity {
+  if (raw === "off" || raw === "low" || raw === "default") return raw;
+  return "default";
+}
+
+function loadUiSettings(): { touchEnabled: boolean; touchLayout: TouchLayout; cameraIntensity: CameraIntensity } {
   try {
     const raw = localStorage.getItem(UI_SETTINGS_KEY);
-    if (!raw) return { touchEnabled: defaultTouchEnabled(), touchLayout: "right" };
-    const parsed = JSON.parse(raw) as Partial<{ touchEnabled: boolean; touchLayout: TouchLayout }>;
+    if (!raw) return { touchEnabled: defaultTouchEnabled(), touchLayout: "right", cameraIntensity: "default" };
+    const parsed = JSON.parse(raw) as Partial<{
+      touchEnabled: boolean;
+      touchLayout: TouchLayout;
+      cameraIntensity: CameraIntensity;
+    }>;
     return {
       touchEnabled: typeof parsed.touchEnabled === "boolean" ? parsed.touchEnabled : defaultTouchEnabled(),
       touchLayout: parsed.touchLayout === "left" ? "left" : "right",
+      cameraIntensity: normalizeCameraIntensity(parsed.cameraIntensity),
     };
   } catch {
-    return { touchEnabled: defaultTouchEnabled(), touchLayout: "right" };
+    return { touchEnabled: defaultTouchEnabled(), touchLayout: "right", cameraIntensity: "default" };
   }
 }
 
-function saveUiSettings(settings: { touchEnabled: boolean; touchLayout: TouchLayout }) {
+function saveUiSettings(settings: {
+  touchEnabled: boolean;
+  touchLayout: TouchLayout;
+  cameraIntensity: CameraIntensity;
+}) {
   try {
     localStorage.setItem(UI_SETTINGS_KEY, JSON.stringify(settings));
   } catch {
@@ -276,11 +294,26 @@ const ui: {
   modalReturnMode: Mode;
   touchEnabled: boolean;
   touchLayout: TouchLayout;
+  cameraIntensity: CameraIntensity;
 } = {
   modal: null,
   modalReturnMode: "menu",
   ...loadUiSettings(),
 };
+
+function persistUiSettings() {
+  saveUiSettings({
+    touchEnabled: ui.touchEnabled,
+    touchLayout: ui.touchLayout,
+    cameraIntensity: ui.cameraIntensity,
+  });
+}
+
+function cameraMotionProfile() {
+  if (ui.cameraIntensity === "off") return { followScale: 0, zoomScale: 0, shakeScale: 0 };
+  if (ui.cameraIntensity === "low") return { followScale: 0.5, zoomScale: 0.45, shakeScale: 0.4 };
+  return { followScale: 1, zoomScale: 1, shakeScale: 1 };
+}
 
 const imageCache: {
   bg?: HTMLImageElement;
@@ -575,16 +608,19 @@ function aimAndPowerTick(t: Tank, dt: number) {
 }
 
 function triggerCameraShake(durationSec: number, strengthPx: number) {
+  if (cameraMotionProfile().shakeScale <= 0) return;
   state.camera.shakeDuration = Math.max(state.camera.shakeDuration, durationSec);
   state.camera.shakeTimeLeft = Math.max(state.camera.shakeTimeLeft, durationSec);
   state.camera.shakeStrength = Math.max(state.camera.shakeStrength, strengthPx);
 }
 
 function triggerCameraCue(durationSec = CAMERA_CUE_DECAY_SEC) {
+  if (cameraMotionProfile().zoomScale <= 0) return;
   state.camera.cueTimeLeft = Math.max(state.camera.cueTimeLeft, durationSec);
 }
 
 function tickCamera(dt: number) {
+  const motion = cameraMotionProfile();
   let targetX = WIDTH * 0.5;
   let targetY = HEIGHT * 0.5;
 
@@ -601,8 +637,16 @@ function tickCamera(dt: number) {
     }
   }
 
-  const targetOffsetX = clamp((targetX - WIDTH * 0.5) * 0.16, -CAMERA_MAX_OFFSET_X, CAMERA_MAX_OFFSET_X);
-  const targetOffsetY = clamp((targetY - HEIGHT * 0.5) * 0.12, -CAMERA_MAX_OFFSET_Y, CAMERA_MAX_OFFSET_Y);
+  const targetOffsetX = clamp(
+    (targetX - WIDTH * 0.5) * 0.16 * motion.followScale,
+    -CAMERA_MAX_OFFSET_X,
+    CAMERA_MAX_OFFSET_X,
+  );
+  const targetOffsetY = clamp(
+    (targetY - HEIGHT * 0.5) * 0.12 * motion.followScale,
+    -CAMERA_MAX_OFFSET_Y,
+    CAMERA_MAX_OFFSET_Y,
+  );
   const lerpFactor = clamp(CAMERA_TRACK_LERP * dt, 0, 1);
   state.camera.offsetX = lerp(state.camera.offsetX, targetOffsetX, lerpFactor);
   state.camera.offsetY = lerp(state.camera.offsetY, targetOffsetY, lerpFactor);
@@ -617,7 +661,8 @@ function tickCamera(dt: number) {
 
   state.camera.cueTimeLeft = Math.max(0, state.camera.cueTimeLeft - dt);
   const cueFrac = state.camera.cueTimeLeft > 0 ? state.camera.cueTimeLeft / CAMERA_CUE_DECAY_SEC : 0;
-  const targetZoom = (state.projectile.active ? CAMERA_BASE_SHOT_ZOOM : 0) + cueFrac * CAMERA_CUE_MAX_ZOOM;
+  const targetZoom =
+    ((state.projectile.active ? CAMERA_BASE_SHOT_ZOOM : 0) + cueFrac * CAMERA_CUE_MAX_ZOOM) * motion.zoomScale;
   state.camera.zoom = lerp(state.camera.zoom, targetZoom, clamp(8 * dt, 0, 1));
 }
 
@@ -780,11 +825,12 @@ function tick(dt: number) {
 function draw() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
+  const motion = cameraMotionProfile();
   const shakeFrac =
     state.camera.shakeDuration > 0
       ? clamp(state.camera.shakeTimeLeft / state.camera.shakeDuration, 0, 1)
       : 0;
-  const shakeAmp = state.camera.shakeStrength * shakeFrac;
+  const shakeAmp = state.camera.shakeStrength * shakeFrac * motion.shakeScale;
   const shakeX = Math.sin(state.camera.shakePhase * 1.7) * shakeAmp;
   const shakeY = Math.cos(state.camera.shakePhase * 2.3) * shakeAmp * 0.8;
   const zoom = 1 + state.camera.zoom;
@@ -1015,6 +1061,7 @@ function syncUi() {
   // Settings form state
   settingsTouchEnabled.checked = ui.touchEnabled;
   settingsTouchLayout.value = ui.touchLayout;
+  settingsCameraIntensity.value = ui.cameraIntensity;
 
   // Touch overlay
   touchControls.hidden = !ui.touchEnabled || state.mode !== "playing" || hasModal;
@@ -1190,13 +1237,28 @@ pauseMainMenuBtn.addEventListener("click", () => {
 settingsTouchEnabled.addEventListener("change", () => {
   playSfx(audioCache.uiClick);
   ui.touchEnabled = settingsTouchEnabled.checked;
-  saveUiSettings({ touchEnabled: ui.touchEnabled, touchLayout: ui.touchLayout });
+  persistUiSettings();
   syncUi();
 });
 settingsTouchLayout.addEventListener("change", () => {
   playSfx(audioCache.uiClick);
   ui.touchLayout = settingsTouchLayout.value === "left" ? "left" : "right";
-  saveUiSettings({ touchEnabled: ui.touchEnabled, touchLayout: ui.touchLayout });
+  persistUiSettings();
+  syncUi();
+});
+settingsCameraIntensity.addEventListener("change", () => {
+  playSfx(audioCache.uiClick);
+  ui.cameraIntensity = normalizeCameraIntensity(settingsCameraIntensity.value);
+  if (ui.cameraIntensity === "off") {
+    state.camera.offsetX = 0;
+    state.camera.offsetY = 0;
+    state.camera.zoom = 0;
+    state.camera.shakeTimeLeft = 0;
+    state.camera.shakeDuration = 0;
+    state.camera.shakeStrength = 0;
+    state.camera.cueTimeLeft = 0;
+  }
+  persistUiSettings();
   syncUi();
 });
 settingsCloseBtn.addEventListener("click", () => {
@@ -1287,6 +1349,7 @@ function renderGameToText() {
       modal: ui.modal,
       touchEnabled: ui.touchEnabled,
       touchLayout: ui.touchLayout,
+      cameraIntensity: ui.cameraIntensity,
     },
     camera: {
       offsetX: state.camera.offsetX,

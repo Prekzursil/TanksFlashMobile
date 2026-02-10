@@ -131,3 +131,14 @@ Original prompt: Maintain a persistent `TODO.md` backlog and, each run, implemen
   - `npm --prefix apps/remake-web run lint` ✅
   - `npm --prefix apps/remake-web run test:smoke` ✅
   - develop-web-game Playwright client run + screenshot/state inspection ✅ (`output/web-game/shot-*.png`, `state-*.json`)
+
+- Added web remake accessibility follow-up for camera motion intensity:
+  - settings control in modal: `default` / `low` / `off`
+  - persisted in `localStorage` as `cameraIntensity`
+  - camera follow/zoom/shake now profile-scaled and can be fully disabled (`off`)
+- Updated web remake docs and TODO to include the new reduced-motion camera setting.
+- Validation for camera-intensity batch:
+  - `npm --prefix apps/remake-web run build` ✅
+  - `npm --prefix apps/remake-web run lint` ✅
+  - `npm --prefix apps/remake-web run test:smoke` ✅
+  - manual Playwright check: set `cameraIntensity=off` in Settings and verified `render_game_to_text().camera` remains zero during firing ✅

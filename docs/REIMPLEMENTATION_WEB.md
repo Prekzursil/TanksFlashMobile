@@ -44,9 +44,11 @@ Then open the printed URL.
 - Touch controls for movement, aim, power, weapon select, and fire.
 - Aim-phase trajectory preview for ballistic pre-aim.
 - Camera cues during combat (projectile follow drift + impact shake/zoom).
+- Camera intensity settings (`default`, `low`, `off`) for reduced-motion preference.
 - Settings persistence in `localStorage`:
   - `touchEnabled` (auto-default for coarse pointers)
   - `touchLayout` (`right` or `left` handed)
+  - `cameraIntensity` (`default`, `low`, `off`)
 
 ## Imported Original Assets
 

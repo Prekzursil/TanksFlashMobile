@@ -69,6 +69,7 @@
 - [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
 - [x] Web remake trajectory preview – Draw a deterministic ballistic preview path in aim phase so players can pre-aim before firing.
 - [x] Web remake camera cues – Add subtle shot follow + impact shake/zoom cues to improve shot readability and feedback.
+- [x] Web remake camera intensity setting – Add `off`/`low`/`default` camera motion settings for accessibility and reduced-motion preference.
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
