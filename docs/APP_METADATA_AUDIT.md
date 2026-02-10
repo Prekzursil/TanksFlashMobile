@@ -75,7 +75,7 @@ Status: PASS
 
 ## Notes
 
-- Windows code signing certificate remains optional/unresolved TODO.
+- Windows Artifact Signing setup (Azure OIDC secrets/account provisioning) remains optional/unresolved TODO.
 - Before each release tag, run version sync and re-run this audit quickly:
   - `npm run sync:versions`
   - verify `VERSION` equals the release tag version.

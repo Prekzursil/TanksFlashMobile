@@ -64,7 +64,7 @@
 - [x] Windows signing + metadata – Add app icon, publisher metadata, and code signing support for the Electron installer.
 - [x] Add portable Windows ZIP artifact – Produce a `.zip` alongside the NSIS installer for easier unsigned distribution.
 - [x] Helper for Windows signing secrets – Add a script to base64-encode a `.pfx` for GitHub Secrets without printing it.
-- [ ] Acquire Windows code signing certificate – Provide a real `.pfx` and configure GitHub Secrets to enable signing in CI (optional; shipping unsigned for now).
+- [ ] Configure Azure Artifact Signing secrets – Provision Artifact Signing account/profile + OIDC app and set `AZURE_*` signing secrets to enable signed Windows CI/release artifacts.
 - [x] Release versioning – Align version numbers across `apps/web`, `apps/desktop`, and Capacitor (Android/iOS) and surface the current version in the UI.
 - [x] Android release signing in CI – On tag builds, optionally produce a signed APK/AAB when keystore secrets are present (keep debug artifacts for PRs).
 - [x] Web remake trajectory preview – Draw a deterministic ballistic preview path in aim phase so players can pre-aim before firing.
