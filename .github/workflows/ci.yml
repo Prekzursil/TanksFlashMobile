@@ -196,8 +196,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-          cache: gradle
+          java-version: 21
+
+      - name: Reset Gradle dependency caches (Android hardening)
+        run: |
+          set -euo pipefail
+          rm -rf "${HOME}/.gradle/caches"/jars-* || true
+          rm -rf "${HOME}/.gradle/caches"/transforms-* || true
 
       - name: Install root dependencies
         run: npm ci
@@ -216,7 +221,7 @@ jobs:
       - name: Build debug APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew --no-daemon --stacktrace --refresh-dependencies assembleDebug
         working-directory: android
 
       - name: Upload Android debug APK

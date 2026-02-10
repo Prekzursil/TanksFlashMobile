@@ -29,6 +29,7 @@ What you’ll see attached to a Release:
 - Android: `Tanks-<tag>-android-debug.apk`
 - Android (signed, optional): `Tanks-<tag>-android-release.apk` and `Tanks-<tag>-android-release.aab` (requires keystore secrets)
 - iOS (Simulator): `Tanks-<tag>-ios-simulator-app.zip` (macOS + Simulator only; no App Store signing)
+- iOS (local signed, optional/manual): `Tanks-<tag>-ios-local-signed.ipa` (uploaded manually after local free-Apple-ID signing)
 
 If there are no Releases yet, use **GitHub Actions artifacts** instead:
 - `web-dist`, `remake-web-dist`, `godot-windows`, `godot-linux`, `godot-macos`, `desktop-windows`, `android-debug-apk`, `ios-simulator-app`
@@ -39,6 +40,9 @@ Install/run quick notes:
 - Android: install the `.apk` on-device (you may need to allow “Install unknown apps”).
 - iOS (Simulator): unzip, then install to a running Simulator (e.g. `xcrun simctl install booted App.app`).
 
+Full install/run guide:
+- `docs/RELEASE_RUN_GUIDE.md`
+
 SWF note:
 - Releases include the original SWF (`/original/tanks.swf`) so the wrapper runs out-of-the-box.
 - You can still use **Load SWF…** to test a different file.
@@ -46,6 +50,8 @@ SWF note:
 Maintainers note (version tags):
 - Bump `VERSION`, run `npm run sync:versions`, commit, then tag `v<same-version>` and push the tag.
 - The Release workflow verifies the tag matches `VERSION` before publishing artifacts.
+- For free local iOS signing, upload the generated IPA manually:
+  - `gh release upload v0.1.0 /absolute/path/to/Tanks-v0.1.0-ios-local-signed.ipa --clobber`
 
 ## Quick start (web)
 
