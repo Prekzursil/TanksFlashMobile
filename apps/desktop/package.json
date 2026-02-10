@@ -37,7 +37,7 @@
       }
     ],
     "directories": {
-      "buildResources": "build",
+      "buildResources": "assets",
       "output": "dist"
     },
     "win": {
@@ -45,7 +45,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "build/icon.ico",
+      "icon": "assets/icon.ico",
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
@@ -54,9 +54,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Tanks",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico"
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
     }
   }
 }

@@ -80,8 +80,8 @@
 - [x] Harden signing helper output path – Remove stdout mode from `scripts/pfx_to_base64.mjs` so cert base64 is only written to a local file.
 - [x] Disable Android app backup exports – Set `android:allowBackup="false"` and `android:fullBackupContent="false"` in `AndroidManifest.xml`.
 - [x] Pin release publish action – Replace `softprops/action-gh-release@v2` with a pinned commit SHA in `release.yml`.
-- [ ] Clean up CodeQL default languages – In GitHub settings, disable `Ruby` and `Swift` for default setup (or switch to advanced setup with custom build commands) to clear current default-setup tool errors.
-- [ ] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
+- [x] Clean up CodeQL default languages – In GitHub settings, disable `Ruby` and `Swift` for default setup (or switch to advanced setup with custom build commands) to clear current default-setup tool errors.
+- [x] Stabilize platform CI jobs on main/tags – Fix remaining desktop/icon packaging and Godot export-template path issues so non-PR platform workflow can go green.
 
 ## Low priority
 - [x] Gamepad support – Map common controllers to the input layer (Xbox/PS/Switch layouts) and document the mappings.
