@@ -135,11 +135,25 @@ jobs:
       - name: Prepare export templates
         run: |
           set -euo pipefail
-          SRC="/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           DST="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          CANDIDATES=(
+            "${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+            "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+            "/home/godot/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+            "/github/home/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          )
           mkdir -p "$(dirname "$DST")"
-          if [ -d "$SRC" ] && [ ! -d "$DST" ]; then
-            cp -a "$SRC" "$DST"
+          if [ ! -d "$DST" ]; then
+            for SRC in "${CANDIDATES[@]}"; do
+              if [ -d "$SRC" ]; then
+                cp -a "$SRC" "$DST"
+                break
+              fi
+            done
+          fi
+          if [ ! -d "$DST" ]; then
+            echo "Could not locate Godot export templates for ${GODOT_VERSION}.stable"
+            exit 1
           fi
 
       - name: Export (Windows/Linux/macOS)
