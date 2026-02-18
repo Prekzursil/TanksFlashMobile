@@ -43,6 +43,8 @@ Install/run quick notes:
 Full install/run guide:
 - `docs/RELEASE_RUN_GUIDE.md`
 
+**Security note**: Releases include `SHA256SUMS.txt` for checksum verification. Always verify artifact integrity before installation — see checksum verification section in `docs/RELEASE_RUN_GUIDE.md`.
+
 SWF note:
 - Releases include the original SWF (`/original/tanks.swf`) so the wrapper runs out-of-the-box.
 - You can still use **Load SWF…** to test a different file.
