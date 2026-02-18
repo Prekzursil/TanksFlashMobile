@@ -28,3 +28,6 @@ Weekly and PR-level curation should focus on UX/perf/a11y regressions and artifa
 - Intake issues via `.github/ISSUE_TEMPLATE/agent_task.yml`.
 - Queue work by adding `agent:ready`.
 - Queue workflow posts a task packet and notifies `@copilot`.
+
+## Queue Trigger Warning
+Applying label `agent:ready` triggers the queue workflow immediately.
