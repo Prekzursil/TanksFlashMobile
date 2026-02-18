@@ -95,12 +95,49 @@ gh release upload v0.1.0 /absolute/path/to/Tanks-v0.1.0-ios-local-signed.ipa --c
 
 ## 6) Verify checksums
 
-Releases include `SHA256SUMS.txt`.
+Releases include `SHA256SUMS.txt` for artifact integrity verification.
 
-Use it to verify downloaded files:
+### Verification steps
+
+1. Download `SHA256SUMS.txt` from the release.
+2. Download one or more artifact files (e.g., `Tanks-<tag>-web-dist.zip`).
+3. Place all downloads in the same directory.
+4. Run the verification command:
 
 ```bash
 sha256sum -c SHA256SUMS.txt
 ```
 
-(Run from a folder containing both `SHA256SUMS.txt` and the artifact files.)
+Expected output for successfully verified files:
+```
+Tanks-v0.1.0-web-dist.zip: OK
+Tanks-v0.1.0-windows-setup.exe: OK
+```
+
+If a file has been tampered with or corrupted, you'll see `FAILED` instead of `OK`.
+
+### Platform-specific checksum commands
+
+- **Linux/macOS**: `sha256sum -c SHA256SUMS.txt`
+- **Windows (PowerShell)**: 
+  ```powershell
+  Get-Content SHA256SUMS.txt | ForEach-Object {
+    $hash, $file = $_ -split '\s+', 2
+    $computed = (Get-FileHash -Algorithm SHA256 $file).Hash
+    if ($computed -eq $hash.ToUpper()) {
+      Write-Host "$file : OK" -ForegroundColor Green
+    } else {
+      Write-Host "$file : FAILED" -ForegroundColor Red
+    }
+  }
+  ```
+- **Windows (Git Bash)**: `sha256sum -c SHA256SUMS.txt`
+
+### Why verify checksums?
+
+Checksum verification ensures:
+- Files were not corrupted during download
+- Files have not been tampered with by malicious actors
+- You have the exact artifacts that were built and published by the release workflow
+
+**Security best practice**: Always verify checksums before installing artifacts, especially when downloading from mirrors or third-party sources.
