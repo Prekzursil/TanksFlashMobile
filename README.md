@@ -126,6 +126,14 @@ In parallel with the wrapper track, the repo contains two clean-room remake prot
 - Godot spike: `apps/remake-godot/` (docs: `docs/REIMPLEMENTATION_GODOT.md`)
 - Web spike (Canvas/TS): `apps/remake-web/` (docs: `docs/REIMPLEMENTATION_WEB.md`)
 
+## Security
+
+Report vulnerabilities privately through GitHub Security Advisories:
+<https://github.com/Prekzursil/TanksFlashMobile/security/advisories/new>
+
+See [SECURITY.md](SECURITY.md) for supported versions, response targets, and
+coordinated disclosure expectations.
+
 ## License
 
 MIT for this repo’s original code (see `LICENSE`). Third-party attributions live in `THIRD_PARTY_NOTICES.md`.
