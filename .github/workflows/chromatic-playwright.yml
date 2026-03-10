@@ -1,0 +1,78 @@
+name: Chromatic Playwright
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/chromatic-playwright.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/chromatic-playwright.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chromatic-playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: Chromatic Playwright
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Verify versions match VERSION
+        run: node ../../scripts/sync_versions.mjs --check
+
+      - name: Validate Chromatic token
+        run: |
+          if [ -z "${{ secrets.CHROMATIC_PROJECT_TOKEN }}" ]; then
+            echo "CHROMATIC_PROJECT_TOKEN is not configured for this repository."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Build web
+        run: npm run build
+
+      - name: Generate Playwright archives
+        env:
+          CHROMATIC_ARCHIVE_LOCATION: test-results/chromatic-archives
+        run: npm run e2e:chromatic
+
+      - name: Upload to Chromatic
+        env:
+          CHROMATIC_ARCHIVE_LOCATION: test-results/chromatic-archives
+        run: npx chromatic --playwright --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+      - name: Upload Chromatic artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-chromatic-artifacts
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: warn

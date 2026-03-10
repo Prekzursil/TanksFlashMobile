@@ -15,7 +15,9 @@
     "test:smoke": "node ./scripts/smoke_test.mjs",
     "lint": "eslint .",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "e2e:chromatic": "playwright test --config=playwright.visual.config.mjs e2e/visual/chromatic.spec.mjs --project=chromium",
+    "e2e:applitools": "playwright test --config=playwright.visual.config.mjs e2e/visual/applitools.spec.mjs --project=chromium"
   },
   "dependencies": {
     "@ruffle-rs/ruffle": "0.2.0-nightly.2026.2.7"
@@ -29,6 +31,10 @@
     "prettier": "3.8.1",
     "typescript-eslint": "8.54.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "@applitools/eyes-playwright": "^1.45.0",
+    "@chromatic-com/playwright": "^0.12.8",
+    "@playwright/test": "^1.58.2",
+    "chromatic": "^13.3.2"
   }
 }
