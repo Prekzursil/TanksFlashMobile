@@ -3,14 +3,8 @@ name: Chromatic Playwright
 on:
   push:
     branches: [main]
-    paths:
-      - "apps/web/**"
-      - ".github/workflows/chromatic-playwright.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "apps/web/**"
-      - ".github/workflows/chromatic-playwright.yml"
   workflow_dispatch:
 
 permissions:
