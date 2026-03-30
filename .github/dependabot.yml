@@ -1,0 +1,142 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    npm-root-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: npm
+  directory: /apps/web
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    npm-apps-web-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: npm
+  directory: /apps/desktop
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    npm-apps-desktop-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: npm
+  directory: /apps/remake-web
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    npm-apps-remake-web-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: npm
+  directory: /apps/web/public/ruffle
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    npm-apps-web-public-ruffle-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: gradle
+  directory: /android
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    gradle-android-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  groups:
+    github-actions-root-patch-minor:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+      - minor
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  labels:
+  - dependencies
+  - type:chore
+  - area:ci
