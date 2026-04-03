@@ -17,7 +17,7 @@
     "package:win": "npm run sync:web && electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
-    "electron": "40.2.1",
+    "electron": "40.8.3",
     "electron-builder": "26.7.0"
   },
   "build": {
