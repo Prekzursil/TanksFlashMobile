@@ -23,18 +23,18 @@
     "@ruffle-rs/ruffle": "0.2.0-nightly.2026.2.7"
   },
   "devDependencies": {
-    "@applitools/eyes-playwright": "^1.46.3",
-    "@chromatic-com/playwright": "^0.12.8",
-    "@playwright/test": "1.58.2",
-    "@eslint/js": "9.39.2",
-    "eslint": "9.39.2",
+    "@applitools/eyes-playwright": "^1.46.4",
+    "@chromatic-com/playwright": "^0.13.0",
+    "@playwright/test": "1.59.1",
+    "@eslint/js": "9.39.4",
+    "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
-    "globals": "17.3.0",
-    "chromatic": "^16.0.0",
-    "playwright": "1.58.2",
+    "globals": "17.4.0",
+    "chromatic": "^16.1.0",
+    "playwright": "1.59.1",
     "prettier": "3.8.1",
-    "typescript-eslint": "8.54.0",
+    "typescript-eslint": "8.58.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.3.2"
   }
 }
