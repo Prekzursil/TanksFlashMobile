@@ -33,7 +33,7 @@
     "@capacitor/cli": "^8.0.2",
     "@capacitor/core": "^6.1.0",
     "@capacitor/ios": "^6.1.0",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "swf-extract": "^1.1.0"
   },
   "overrides": {
