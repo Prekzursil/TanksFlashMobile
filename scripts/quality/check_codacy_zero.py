@@ -157,7 +157,6 @@ def main() -> int:
                 status = "fail"
                 break
             except Exception as exc:  # pragma: no cover - network/runtime surface
-                last_exc = exc
                 findings.append(f"Codacy API request failed: {exc}")
                 status = "fail"
                 break
