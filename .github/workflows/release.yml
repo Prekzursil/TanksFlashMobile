@@ -16,6 +16,8 @@ jobs:
   verify:
     name: Verify tag/version sync
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,6 +47,8 @@ jobs:
     name: Build (web dist zip)
     runs-on: ubuntu-latest
     needs: verify
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: apps/web
@@ -85,6 +89,8 @@ jobs:
     name: Build (remake web dist zip)
     runs-on: ubuntu-latest
     needs: verify
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: apps/remake-web
@@ -125,6 +131,8 @@ jobs:
     name: Build (remake Godot desktop exports)
     runs-on: ubuntu-latest
     needs: verify
+    permissions:
+      contents: read
     container:
       image: barichello/godot-ci:4.2.2
     env:
@@ -183,6 +191,8 @@ jobs:
     name: Build (Windows installer + portable zip)
     runs-on: windows-latest
     needs: verify
+    permissions:
+      contents: read
     env:
       WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
       WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
@@ -260,6 +270,8 @@ jobs:
     name: Build (Android debug APK)
     runs-on: ubuntu-latest
     needs: verify
+    permissions:
+      contents: read
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -361,6 +373,8 @@ jobs:
     name: Build (iOS simulator .app zip)
     runs-on: macos-latest
     needs: verify
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
