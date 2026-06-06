@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "npm run test:smoke",
     "test:smoke": "node ./scripts/smoke_test.mjs",
+    "test:unit": "vitest run",
+    "coverage": "vitest run --coverage",
     "e2e:chromatic": "playwright test --config ./playwright.chromatic.config.ts ./e2e/chromatic/game-shell.spec.ts",
     "e2e:applitools": "playwright test --config ./playwright.chromatic.config.ts ./e2e/applitools-core-routes.spec.ts --project=chromium --workers=1",
     "lint": "eslint .",
@@ -25,16 +27,19 @@
   "devDependencies": {
     "@applitools/eyes-playwright": "^1.46.3",
     "@chromatic-com/playwright": "^0.12.8",
-    "@playwright/test": "1.58.2",
     "@eslint/js": "9.39.2",
+    "@playwright/test": "1.58.2",
+    "@vitest/coverage-v8": "^2.1.9",
+    "chromatic": "^16.0.0",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.3.0",
-    "chromatic": "^16.0.0",
+    "jsdom": "^29.1.1",
     "playwright": "1.58.2",
     "prettier": "3.8.1",
-    "typescript-eslint": "8.54.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "typescript-eslint": "8.54.0",
+    "vite": "^7.2.4",
+    "vitest": "^2.1.9"
   }
 }
