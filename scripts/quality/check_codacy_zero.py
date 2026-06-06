@@ -157,7 +157,10 @@ def main() -> int:
                 status = "fail"
                 break
             except Exception as exc:  # pragma: no cover - network/runtime surface
-                last_exc = exc
+                # This branch always breaks out of the loop, so the value is
+                # never read by the for/else handler below; do not store it
+                # (CodeQL py/unused-local-variable). The HTTPError 404 path
+                # above still records last_exc because it continues the loop.
                 findings.append(f"Codacy API request failed: {exc}")
                 status = "fail"
                 break
