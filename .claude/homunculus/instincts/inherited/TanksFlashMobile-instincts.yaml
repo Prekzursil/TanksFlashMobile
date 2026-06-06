@@ -1,0 +1,395 @@
+# Instincts generated from https://github.com/Prekzursil/TanksFlashMobile
+# Generated: 2026-06-06T00:56:42.452Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: TanksFlashMobile-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix, test
+
+## Evidence
+
+- 2 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix: resolve CodeQL and SonarCloud code-scanning findings, test(web): add vitest + LCOV coverage tooling and a starter unit suite
+
+---
+id: TanksFlashMobile-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Commit Length
+
+## Action
+
+Write moderate-length commit messages (~64 characters)
+
+## Evidence
+
+- Average commit message length: 64 chars
+- Based on 2 commits
+
+---
+id: TanksFlashMobile-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: TanksFlashMobile-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: TanksFlashMobile-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Export Style
+
+## Action
+
+Prefer default exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: default
+
+---
+id: TanksFlashMobile-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.ts
+
+---
+id: TanksFlashMobile-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Prekzursil/TanksFlashMobile
+---
+
+# TanksFlashMobile Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: tanksflashmobile-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct File Naming
+
+## Action
+
+Name the file using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.files: camelCase
+
+---
+id: tanksflashmobile-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.functions: camelCase
+
+---
+id: tanksflashmobile-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in namingConventions.classes: PascalCase
+
+---
+id: tanksflashmobile-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for the constant name
+
+## Evidence
+
+- Pattern in namingConventions.constants: SCREAMING_SNAKE_CASE
+
+---
+id: tanksflashmobile-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in importStyle: relative
+
+---
+id: tanksflashmobile-instinct-export-style
+trigger: "When exporting modules or components"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Export Style
+
+## Action
+
+Use default exports
+
+## Evidence
+
+- Pattern in exportStyle: default
+
+---
+id: tanksflashmobile-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Test File Pattern
+
+## Action
+
+Name the file with a .test.ts suffix
+
+## Evidence
+
+- Pattern in testing.filePattern: *.test.ts
+
+---
+id: tanksflashmobile-instinct-test-framework
+trigger: "When writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Test Framework
+
+## Action
+
+Use the vitest framework
+
+## Evidence
+
+- Pattern in testing.framework: vitest
+- test(web): add vitest + LCOV coverage tooling and a starter unit suite
+
+---
+id: tanksflashmobile-instinct-test-type
+trigger: "When writing tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Test Type
+
+## Action
+
+Write unit tests
+
+## Evidence
+
+- Pattern in testing.testTypes: unit
+
+---
+id: tanksflashmobile-instinct-commit-prefix-fix
+trigger: "When committing a bug fix"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Commit Prefix Fix
+
+## Action
+
+Prefix the commit message with fix:
+
+## Evidence
+
+- Commit: fix: resolve CodeQL and SonarCloud code-scanning findings
+
+---
+id: tanksflashmobile-instinct-commit-prefix-test
+trigger: "When committing new or updated tests"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Commit Prefix Test
+
+## Action
+
+Prefix the commit message with test:
+
+## Evidence
+
+- Commit: test(web): add vitest + LCOV coverage tooling and a starter unit suite
+
+---
+id: tanksflashmobile-instinct-commit-format-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Commit Format Length
+
+## Action
+
+Keep the commit message concise (around 64 characters on average)
+
+## Evidence
+
+- Pattern in commits.averageLength: 64
+
+---
+id: tanksflashmobile-instinct-error-handling
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Prekzursil/TanksFlashMobile
+---
+
+# Tanksflashmobile Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in errorHandling.style: try-catch
+
