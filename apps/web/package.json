@@ -20,21 +20,21 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
-    "@ruffle-rs/ruffle": "0.2.0-nightly.2026.2.7"
+    "@ruffle-rs/ruffle": "0.3.0"
   },
   "devDependencies": {
-    "@applitools/eyes-playwright": "^1.46.3",
-    "@chromatic-com/playwright": "^0.12.8",
-    "@playwright/test": "1.58.2",
-    "@eslint/js": "9.39.2",
-    "eslint": "9.39.2",
+    "@applitools/eyes-playwright": "^1.47.8",
+    "@chromatic-com/playwright": "^0.14.9",
+    "@playwright/test": "1.61.0",
+    "@eslint/js": "9.39.4",
+    "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
-    "globals": "17.3.0",
-    "chromatic": "^16.0.0",
-    "playwright": "1.58.2",
-    "prettier": "3.8.1",
-    "typescript-eslint": "8.54.0",
+    "globals": "17.6.0",
+    "chromatic": "^16.10.1",
+    "playwright": "1.61.0",
+    "prettier": "3.8.4",
+    "typescript-eslint": "8.61.1",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.3.5"
   }
 }
