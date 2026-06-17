@@ -264,6 +264,10 @@ function applyUiScale() {
 
 applyUiScale();
 
+// Static app shell: every interpolated value comes from the compile-time i18n
+// bundle (getStrings("en")), not from user or network input, so this is not an
+// XSS sink. Keep the directive on the line immediately above the assignment.
+// nosemgrep: js-inner-html-assignment
 app.innerHTML = `
   <div class="layout">
     <header class="topbar">

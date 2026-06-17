@@ -1,0 +1,22 @@
+# osv-scanner configuration for the lean dependency gate (pinned tool: osv-scanner 2.3.8).
+# The gate runs `osv-scanner scan source --config=osv-scanner.toml --recursive .`
+# and must report 0 actionable CVEs.
+#
+# POLICY: ignore entries are allowed ONLY for a genuinely-unfixable vuln (no
+# non-breaking upgrade) OR one that is provably not reachable in THIS product,
+# each with a reason + dated review note (greppable). We do NOT use a baseline
+# file — clean-zero is reached by upgrading where a safe fix exists, and only by
+# a reasoned per-CVE ignore where it does not.
+#
+# Lockfiles scanned (recursive from repo root):
+#   - package-lock.json                 (root tooling deps)
+#   - apps/web/package-lock.json        (Capacitor/Vite web client)
+#   - apps/remake-web/package-lock.json (remake web client)
+#   - apps/desktop/package-lock.json    (Electron desktop shell)
+#
+# Add a dated, reasoned [[IgnoredVulns]] entry below only for a future vuln that is
+# genuinely unfixable or provably unreachable, e.g.:
+#
+#   [[IgnoredVulns]]
+#   id = "GHSA-xxxx-xxxx-xxxx"
+#   # 2026-06-17 — <reason: unfixable upstream / not reachable in this product>.

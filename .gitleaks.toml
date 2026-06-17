@@ -1,0 +1,31 @@
+# gitleaks configuration for the lean secrets gate (pinned tool: gitleaks 8.30.1).
+# The gate runs via pre-commit over the working tree and must report 0.
+# Extends the upstream default ruleset; we only add path/match allowlists for
+# vendored dependencies, generated trees, and genuine, greppable test fixtures
+# (no real secrets). No findings are allowlisted today — this carries only the
+# never-scan path list.
+title = "TanksFlashMobile lean secrets gate"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Vendored deps, build output, and generated trees (not real secrets)."
+
+# Never scan third-party / generated / build trees. These are not our source and
+# produce only upstream-example false positives.
+paths = [
+  '''(^|/)\.venv/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)vendor/''',
+  '''(^|/)dist/''',
+  '''(^|/)build/''',
+  '''(^|/)out/''',
+  '''(^|/)\.git/''',
+  '''.*\.egg-info/''',
+  # Native platform build outputs (Capacitor android/ios + Electron desktop).
+  '''(^|/)android/app/build/''',
+  '''(^|/)android/\.gradle/''',
+  '''(^|/)ios/App/Pods/''',
+  '''(^|/)apps/desktop/(dist|release)/''',
+]

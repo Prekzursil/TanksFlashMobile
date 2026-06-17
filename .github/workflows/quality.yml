@@ -1,0 +1,30 @@
+name: quality
+
+# Lean 6-gate quality gate (ADDITIVE — see the lean-gate charter, decided
+# 2026-06-16). This thin caller delegates to the shared reusable workflow in
+# Prekzursil/quality-zero-platform. The gate set is the closed charter:
+#   1. Lint+format+imports+sec-lint (autofix, via .pre-commit-config.yaml)
+#   2. Types (tsc --noEmit / basedpyright)
+#   3. Tests + coverage (strict 100% line+branch)
+#   4. SAST (opengrep, pinned in-repo ruleset under .quality/opengrep)
+#   5. Secrets (gitleaks, .gitleaks.toml allowlist) + push-protection
+#   6. Deps (osv-scanner.toml + Dependabot)
+#
+# It does NOT replace the existing fleet reusable workflows still wired in this
+# repo (quality-zero-platform.yml etc.); removal of the old SaaS machinery is
+# deferred to the migration runbook. Pinned to the template branch so this PR's
+# CI is real now; the runbook re-pins to a tag after the template merges.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@feat/lean-quality-template

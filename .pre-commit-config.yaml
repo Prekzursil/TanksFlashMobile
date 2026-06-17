@@ -1,0 +1,62 @@
+# Lean quality gates — local auto-fixers + fast checks (gate 1 + gate 5).
+# `pre-commit run --all-files` is the entrypoint the reusable CI workflow runs.
+# Every rev is pinned; bump versions here together with the lean charter pins.
+#
+# Scope note: JS/TS *formatting* for this repo is already owned by the per-app
+# Prettier setup (apps/*/package.json `format` / `format:check` + .prettierrc),
+# run in the existing app CI. To honor one-formatter-per-concern (and avoid a
+# disruptive CRLF/LF rewrite of the whole tree), this pre-commit config wires the
+# lean LINT autofixers (ruff for Python, oxlint for JS/TS — correctness category)
+# plus the secrets hook, and leaves JS/TS formatting to the existing Prettier lane.
+minimum_pre_commit_version: "3.5.0"
+
+default_language_version:
+  python: python3
+
+exclude: |-
+  (?x)^(
+    node_modules/|
+    apps/web/node_modules/|
+    apps/remake-web/node_modules/|
+    apps/desktop/node_modules/|
+    apps/remake-godot/|
+    dist/|
+    build/|
+    out/|
+    android/app/build/|
+    android/\.gradle/|
+    ios/App/Pods/|
+    vendor/|
+    \.venv/|
+    .*\.egg-info/
+  )
+
+repos:
+  # --- Gate 1: Python lint + format (ruff 0.15.17) ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.17
+    hooks:
+      - id: ruff
+        name: ruff (lint --fix)
+        args: ["--fix"]
+        files: '\.py$'
+      - id: ruff-format
+        name: ruff (format)
+        files: '\.py$'
+
+  # --- Gate 1: JS/TS lint (oxlint 1.69.0; correctness category, see .oxlintrc.json) ---
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v1.69.0
+    hooks:
+      - id: oxlint
+        name: oxlint (correctness, --fix)
+        args: ["--config", ".oxlintrc.json", "--fix", "--deny-warnings"]
+        files: '^(apps/web/src|apps/remake-web/src|apps/desktop|scripts)/.*\.(ts|tsx|js|jsx|mjs|cjs)$'
+
+  # --- Gate 5: secrets (gitleaks 8.30.1) ---
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: gitleaks (secrets)
+        args: ["--config", ".gitleaks.toml"]

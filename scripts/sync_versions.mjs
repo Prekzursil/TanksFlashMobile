@@ -29,7 +29,7 @@ function normalizeNewline(text) {
 
 function isValidVersion(value) {
   // Simple semver-ish validation; allows pre-release/build metadata.
-  return /^[0-9]+\.[0-9]+\.[0-9]+([\-+][0-9A-Za-z.-]+)?$/.test(value);
+  return /^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$/.test(value);
 }
 
 function updateJsonVersion(filePath, version) {

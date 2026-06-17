@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "out",
+    "dist",
+    "build",
+    "release",
+    "node_modules",
+    "coverage",
+    "android",
+    "ios",
+    "apps/remake-godot",
+    "*.config.ts",
+    "*.config.js"
+  ]
+}
