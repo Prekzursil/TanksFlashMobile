@@ -35,6 +35,8 @@ def lerp(a: int, b: int, t: float) -> int:
 def vertical_gradient(size: int, top: Color, bottom: Color) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     px = img.load()
+    if px is None:  # pragma: no cover - Image.load() only returns None on closed images
+        raise RuntimeError("Failed to load pixel access for gradient image")
     for y in range(size):
         t = y / max(1, size - 1)
         c = Color(
