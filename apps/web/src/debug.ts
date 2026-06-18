@@ -1,4 +1,4 @@
-export type LogLevel = "info" | "warn" | "error";
+export type LogLevel = 'info' | 'warn' | 'error';
 
 export type LogEntry = {
   ts: string;
@@ -40,8 +40,8 @@ export function createLogBuffer(maxEntries = 200) {
     let warn = 0;
     let error = 0;
     for (const e of entries) {
-      if (e.level === "info") info++;
-      else if (e.level === "warn") warn++;
+      if (e.level === 'info') info++;
+      else if (e.level === 'warn') warn++;
       else error++;
     }
     return { info, warn, error, total: entries.length };
@@ -51,8 +51,8 @@ export function createLogBuffer(maxEntries = 200) {
 }
 
 export function hookGlobalErrors(add: (level: LogLevel, msg: string, data?: unknown) => void) {
-  window.addEventListener("error", (ev) => {
-    add("error", "window.error", {
+  window.addEventListener('error', (ev) => {
+    add('error', 'window.error', {
       message: ev.message,
       filename: ev.filename,
       lineno: ev.lineno,
@@ -60,10 +60,10 @@ export function hookGlobalErrors(add: (level: LogLevel, msg: string, data?: unkn
     });
   });
 
-  window.addEventListener("unhandledrejection", (ev) => {
+  window.addEventListener('unhandledrejection', (ev) => {
     const reason = ev.reason;
-    add("error", "window.unhandledrejection", {
-      reason: typeof reason === "string" ? reason : String(reason),
+    add('error', 'window.unhandledrejection', {
+      reason: typeof reason === 'string' ? reason : String(reason),
     });
   });
 }

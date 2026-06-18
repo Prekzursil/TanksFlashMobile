@@ -1,4 +1,4 @@
-import type { InputMapper, KeyCode } from "./input";
+import type { InputMapper, KeyCode } from './input';
 
 export type GamepadInput = {
   isSupported: () => boolean;
@@ -17,7 +17,7 @@ export type GamepadSettings = {
 
 export type GamepadInputOptions = {
   onStatusChange?: () => void;
-  log?: (level: "info" | "warn" | "error", msg: string, data?: unknown) => void;
+  log?: (level: 'info' | 'warn' | 'error', msg: string, data?: unknown) => void;
   getSettings?: () => Partial<GamepadSettings>;
 };
 
@@ -29,12 +29,12 @@ const DEFAULT_SETTINGS: GamepadSettings = {
 };
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
 }
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, Math.trunc(value)));
 }
 
@@ -82,7 +82,7 @@ function normalizeSettings(raw: Partial<GamepadSettings> | undefined): GamepadSe
 
 function getAxis(gamepad: Gamepad, index: number): number {
   const v = gamepad.axes?.[index];
-  if (typeof v !== "number" || !Number.isFinite(v)) return 0;
+  if (typeof v !== 'number' || !Number.isFinite(v)) return 0;
   return v;
 }
 
@@ -132,7 +132,7 @@ function computeDesired(
     dpadLeft ||
     axisNegativeActive(
       axisX,
-      prev.has("ArrowLeft") && !prev.has("ArrowRight") && !dpadRight,
+      prev.has('ArrowLeft') && !prev.has('ArrowRight') && !dpadRight,
       pressThreshold,
       releaseThreshold,
     );
@@ -140,7 +140,7 @@ function computeDesired(
     dpadRight ||
     axisPositiveActive(
       axisX,
-      prev.has("ArrowRight") && !prev.has("ArrowLeft") && !dpadLeft,
+      prev.has('ArrowRight') && !prev.has('ArrowLeft') && !dpadLeft,
       pressThreshold,
       releaseThreshold,
     );
@@ -148,7 +148,7 @@ function computeDesired(
     dpadUp ||
     axisNegativeActive(
       axisY,
-      prev.has("ArrowUp") && !prev.has("ArrowDown") && !dpadDown,
+      prev.has('ArrowUp') && !prev.has('ArrowDown') && !dpadDown,
       pressThreshold,
       releaseThreshold,
     );
@@ -156,7 +156,7 @@ function computeDesired(
     dpadDown ||
     axisPositiveActive(
       axisY,
-      prev.has("ArrowDown") && !prev.has("ArrowUp") && !dpadUp,
+      prev.has('ArrowDown') && !prev.has('ArrowUp') && !dpadUp,
       pressThreshold,
       releaseThreshold,
     );
@@ -171,13 +171,13 @@ function computeDesired(
     down = false;
   }
 
-  if (left) out.add("ArrowLeft");
-  if (right) out.add("ArrowRight");
-  if (up) out.add("ArrowUp");
-  if (down) out.add("ArrowDown");
+  if (left) out.add('ArrowLeft');
+  if (right) out.add('ArrowRight');
+  if (up) out.add('ArrowUp');
+  if (down) out.add('ArrowDown');
 
-  if (buttonPressed(gamepad, settings.actionAButtonIndex)) out.add("Space");
-  if (buttonPressed(gamepad, settings.actionBButtonIndex)) out.add("Enter");
+  if (buttonPressed(gamepad, settings.actionAButtonIndex)) out.add('Space');
+  if (buttonPressed(gamepad, settings.actionBButtonIndex)) out.add('Enter');
 
   return out;
 }
@@ -192,7 +192,7 @@ export function createGamepadInput(
   input: InputMapper,
   options: GamepadInputOptions = {},
 ): GamepadInput {
-  const supported = typeof navigator !== "undefined" && typeof navigator.getGamepads === "function";
+  const supported = typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function';
 
   let enabled = supported;
   let disposed = false;
@@ -266,7 +266,7 @@ export function createGamepadInput(
   }
 
   function onConnected(ev: GamepadEvent) {
-    options.log?.("info", "gamepad.connected", {
+    options.log?.('info', 'gamepad.connected', {
       id: ev.gamepad.id,
       index: ev.gamepad.index,
       mapping: ev.gamepad.mapping,
@@ -275,7 +275,7 @@ export function createGamepadInput(
   }
 
   function onDisconnected(ev: GamepadEvent) {
-    options.log?.("info", "gamepad.disconnected", {
+    options.log?.('info', 'gamepad.disconnected', {
       id: ev.gamepad.id,
       index: ev.gamepad.index,
       mapping: ev.gamepad.mapping,
@@ -285,8 +285,8 @@ export function createGamepadInput(
   }
 
   if (supported) {
-    window.addEventListener("gamepadconnected", onConnected);
-    window.addEventListener("gamepaddisconnected", onDisconnected);
+    window.addEventListener('gamepadconnected', onConnected);
+    window.addEventListener('gamepaddisconnected', onDisconnected);
     rafId = window.requestAnimationFrame(tick);
   }
 
@@ -310,8 +310,8 @@ export function createGamepadInput(
     dispose() {
       disposed = true;
       if (rafId) window.cancelAnimationFrame(rafId);
-      window.removeEventListener("gamepadconnected", onConnected);
-      window.removeEventListener("gamepaddisconnected", onDisconnected);
+      window.removeEventListener('gamepadconnected', onConnected);
+      window.removeEventListener('gamepaddisconnected', onDisconnected);
       for (const index of [...activeByIndex.keys()]) releaseIndex(index);
     },
   };

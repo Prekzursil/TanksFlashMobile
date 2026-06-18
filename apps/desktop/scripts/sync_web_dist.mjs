@@ -1,15 +1,15 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const desktopDir = path.resolve(here, "..");
-const webDistDir = path.resolve(desktopDir, "..", "web", "dist");
-const outDir = path.join(desktopDir, "web");
+const desktopDir = path.resolve(here, '..');
+const webDistDir = path.resolve(desktopDir, '..', 'web', 'dist');
+const outDir = path.join(desktopDir, 'web');
 
 async function main() {
   try {
-    await fs.access(path.join(webDistDir, "index.html"));
+    await fs.access(path.join(webDistDir, 'index.html'));
   } catch {
     throw new Error(
       `Missing web build at ${webDistDir}. Run \`npm --prefix apps/web run build\` first.`,
@@ -27,4 +27,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

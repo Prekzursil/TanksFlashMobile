@@ -1,7 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 function usage() {
   console.log(`sync_versions.mjs
@@ -15,16 +15,16 @@ The canonical version is stored in the repo root VERSION file (e.g. 0.1.0).
 }
 
 function readText(filePath) {
-  return fs.readFileSync(filePath, "utf8");
+  return fs.readFileSync(filePath, 'utf8');
 }
 
 function writeText(filePath, text) {
-  fs.writeFileSync(filePath, text, "utf8");
+  fs.writeFileSync(filePath, text, 'utf8');
 }
 
 function normalizeNewline(text) {
   // Preserve trailing newline for nicer diffs.
-  return text.endsWith("\n") ? text : `${text}\n`;
+  return text.endsWith('\n') ? text : `${text}\n`;
 }
 
 function isValidVersion(value) {
@@ -46,8 +46,8 @@ function updatePackageLockVersion(filePath, version) {
   const obj = JSON.parse(raw);
   const before = obj.version;
   obj.version = version;
-  if (obj.packages && obj.packages[""] && typeof obj.packages[""] === "object") {
-    obj.packages[""].version = version;
+  if (obj.packages && obj.packages[''] && typeof obj.packages[''] === 'object') {
+    obj.packages[''].version = version;
   }
   const next = normalizeNewline(`${JSON.stringify(obj, null, 2)}`);
   return { before, next, changed: raw !== next };
@@ -62,12 +62,7 @@ function replaceOrThrow(raw, regex, replacement, filePath) {
 
 function updateAndroidVersionName(filePath, version) {
   const raw = readText(filePath);
-  const next = replaceOrThrow(
-    raw,
-    /versionName\s+"[^"]*"/,
-    `versionName "${version}"`,
-    filePath,
-  );
+  const next = replaceOrThrow(raw, /versionName\s+"[^"]*"/, `versionName "${version}"`, filePath);
   return { before: raw, next, changed: raw !== next };
 }
 
@@ -84,15 +79,15 @@ function updateIosMarketingVersion(filePath, version) {
 
 function main() {
   const args = new Set(process.argv.slice(2));
-  if (args.has("--help") || args.has("-h")) {
+  if (args.has('--help') || args.has('-h')) {
     usage();
     process.exit(0);
   }
-  const checkOnly = args.has("--check");
+  const checkOnly = args.has('--check');
 
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const root = path.resolve(here, "..");
-  const versionPath = path.join(root, "VERSION");
+  const root = path.resolve(here, '..');
+  const versionPath = path.join(root, 'VERSION');
   const version = readText(versionPath).trim();
 
   if (!isValidVersion(version)) {
@@ -101,43 +96,43 @@ function main() {
 
   const targets = [
     {
-      kind: "json",
-      path: path.join(root, "apps", "web", "package.json"),
+      kind: 'json',
+      path: path.join(root, 'apps', 'web', 'package.json'),
       update: updateJsonVersion,
     },
     {
-      kind: "lock",
-      path: path.join(root, "apps", "web", "package-lock.json"),
+      kind: 'lock',
+      path: path.join(root, 'apps', 'web', 'package-lock.json'),
       update: updatePackageLockVersion,
     },
     {
-      kind: "json",
-      path: path.join(root, "apps", "remake-web", "package.json"),
+      kind: 'json',
+      path: path.join(root, 'apps', 'remake-web', 'package.json'),
       update: updateJsonVersion,
     },
     {
-      kind: "lock",
-      path: path.join(root, "apps", "remake-web", "package-lock.json"),
+      kind: 'lock',
+      path: path.join(root, 'apps', 'remake-web', 'package-lock.json'),
       update: updatePackageLockVersion,
     },
     {
-      kind: "json",
-      path: path.join(root, "apps", "desktop", "package.json"),
+      kind: 'json',
+      path: path.join(root, 'apps', 'desktop', 'package.json'),
       update: updateJsonVersion,
     },
     {
-      kind: "lock",
-      path: path.join(root, "apps", "desktop", "package-lock.json"),
+      kind: 'lock',
+      path: path.join(root, 'apps', 'desktop', 'package-lock.json'),
       update: updatePackageLockVersion,
     },
     {
-      kind: "android",
-      path: path.join(root, "android", "app", "build.gradle"),
+      kind: 'android',
+      path: path.join(root, 'android', 'app', 'build.gradle'),
       update: updateAndroidVersionName,
     },
     {
-      kind: "ios",
-      path: path.join(root, "ios", "App", "App.xcodeproj", "project.pbxproj"),
+      kind: 'ios',
+      path: path.join(root, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj'),
       update: updateIosMarketingVersion,
     },
   ];
@@ -157,11 +152,11 @@ function main() {
 
   if (checkOnly) {
     if (mismatches.length) {
-      console.error("Version mismatch vs VERSION for:");
+      console.error('Version mismatch vs VERSION for:');
       for (const p of mismatches) console.error(`- ${path.relative(root, p)}`);
       process.exit(1);
     }
-    console.log("OK: all versions match VERSION");
+    console.log('OK: all versions match VERSION');
     return;
   }
 
