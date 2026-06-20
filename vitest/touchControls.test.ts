@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createTouchControls, type TouchLayout } from '../../apps/web/src/touchControls';
-import type { InputMapper, KeyCode } from '../../apps/web/src/input';
+import { createTouchControls, type TouchLayout } from '../apps/web/src/touchControls';
+import type { InputMapper, KeyCode } from '../apps/web/src/input';
 
 // jsdom implements neither pointer capture nor PointerEvent; install minimal
 // shims so the production code paths run unchanged.

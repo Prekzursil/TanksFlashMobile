@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeStageLayout, type ScaleMode } from '../../apps/web/src/viewport';
+import { computeStageLayout, type ScaleMode } from '../apps/web/src/viewport';
 
 const base = { baseWidth: 800, baseHeight: 600 };
 

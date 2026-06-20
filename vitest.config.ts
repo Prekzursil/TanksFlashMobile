@@ -8,7 +8,7 @@ import { defineConfig } from 'vitest/config';
 //
 // COVERAGE SCOPE (`coverage.include`): the genuinely unit-testable first-party
 // TypeScript modules of the web client. These are pure-logic / thin-DOM units
-// exercised directly by the suites under `tests/web/`. Excluded from coverage
+// exercised directly by the suites under `vitest/`. Excluded from coverage
 // (NOT weakening — each is a non-unit surface or a non-source artifact):
 //   - apps/web/src/main.ts   : the browser BOOTSTRAP entrypoint. It has no
 //       exports and executes top-level DOM wiring on import (querySelector('#app'),
@@ -21,7 +21,12 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    include: ['tests/**/*.test.ts'],
+    // NB: the suites live under vitest/ (NOT tests/). The lean workflow's Python
+    // test-surface detection matches `tests/**` / `**/tests/**`; a `tests/` dir of
+    // *.test.ts files would falsely flag Python as having a test surface and fail
+    // the Python coverage lane. Keeping them under vitest/ avoids that collision
+    // while the filename-based jsts detection (**/*.test.*) still finds them.
+    include: ['vitest/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary'],

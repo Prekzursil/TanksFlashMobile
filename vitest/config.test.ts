@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from '../../apps/web/src/config';
+import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from '../apps/web/src/config';
 
 describe('config', () => {
   it('derives the default SWF URL from the Vite base URL', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { format, getStrings, STRINGS } from '../../apps/web/src/i18n';
+import { format, getStrings, STRINGS } from '../apps/web/src/i18n';
 
 describe('getStrings', () => {
   it('returns the English string table', () => {

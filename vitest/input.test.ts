@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createInputMapper, type KeyCode } from '../../apps/web/src/input';
+import { createInputMapper, type KeyCode } from '../apps/web/src/input';
 
 type Captured = { type: string; code: string; key: string; keyCode: number; which: number };
 

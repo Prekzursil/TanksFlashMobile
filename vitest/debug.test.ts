@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createLogBuffer, hookGlobalErrors, type LogLevel } from '../../apps/web/src/debug';
+import { createLogBuffer, hookGlobalErrors, type LogLevel } from '../apps/web/src/debug';
 
 describe('createLogBuffer', () => {
   it('records entries with timestamp, monotonic time, level and message', () => {

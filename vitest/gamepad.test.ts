@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createGamepadInput, type GamepadSettings } from '../../apps/web/src/gamepad';
-import type { InputMapper, KeyCode } from '../../apps/web/src/input';
+import { createGamepadInput, type GamepadSettings } from '../apps/web/src/gamepad';
+import type { InputMapper, KeyCode } from '../apps/web/src/input';
 
 // ── Test doubles ────────────────────────────────────────────────────────────
 
