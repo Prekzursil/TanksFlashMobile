@@ -4,7 +4,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+# Pillow is a dev-only dependency for this manually-run asset generator; it is
+# intentionally not part of the app/test runtime, so the self-contained lean
+# quality gate does not install it. Suppress only the missing-import diagnostic
+# so the rest of the file stays fully type-checked.
+from PIL import (  # pyright: ignore[reportMissingImports]
+    Image,
+    ImageDraw,
+    ImageFilter,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
