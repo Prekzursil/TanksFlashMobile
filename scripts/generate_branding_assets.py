@@ -4,7 +4,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+# Pillow is a dev-only dependency for this manually-run asset generator; it is
+# intentionally not part of the app/test runtime, so the self-contained lean
+# quality gate does not install it. Suppress only the missing-import diagnostic
+# so the rest of the file stays fully type-checked.
+from PIL import (  # pyright: ignore[reportMissingImports]
+    Image,
+    ImageDraw,
+    ImageFilter,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +43,8 @@ def lerp(a: int, b: int, t: float) -> int:
 def vertical_gradient(size: int, top: Color, bottom: Color) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     px = img.load()
+    if px is None:  # pragma: no cover - Image.load() only returns None on closed images
+        raise RuntimeError("Failed to load pixel access for gradient image")
     for y in range(size):
         t = y / max(1, size - 1)
         c = Color(
@@ -61,7 +71,9 @@ def cover_resize(im: Image.Image, target_w: int, target_h: int) -> Image.Image:
     return resized.crop((left, top, left + target_w, top + target_h))
 
 
-def draw_tank(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], fill: Color) -> None:
+def draw_tank(
+    draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], fill: Color
+) -> None:
     # A simple, friendly tank silhouette using basic shapes.
     x0, y0, x1, y1 = box
     w = x1 - x0
@@ -120,7 +132,11 @@ def make_icon(size: int, background: bool) -> Image.Image:
     mdraw = ImageDraw.Draw(mask)
     pad = int(size * 0.14)
     mdraw.ellipse((pad, pad, size - pad, size - pad), fill=255)
-    base = Image.composite(grad, base, mask) if background else Image.composite(grad, base, mask)
+    base = (
+        Image.composite(grad, base, mask)
+        if background
+        else Image.composite(grad, base, mask)
+    )
 
     # Tank with soft shadow
     tank_layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -188,11 +204,25 @@ def main() -> None:
     save_png(icon_base.resize((512, 512), Image.Resampling.LANCZOS), desktop_icon_png)
 
     # iOS (Capacitor) – replace the existing assets in-place
-    ios_icon = REPO_ROOT / "ios" / "App" / "App" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon-512@2x.png"
+    ios_icon = (
+        REPO_ROOT
+        / "ios"
+        / "App"
+        / "App"
+        / "Assets.xcassets"
+        / "AppIcon.appiconset"
+        / "AppIcon-512@2x.png"
+    )
     save_png(icon_base, ios_icon)
 
-    ios_splash_dir = REPO_ROOT / "ios" / "App" / "App" / "Assets.xcassets" / "Splash.imageset"
-    for name in ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"]:
+    ios_splash_dir = (
+        REPO_ROOT / "ios" / "App" / "App" / "Assets.xcassets" / "Splash.imageset"
+    )
+    for name in [
+        "splash-2732x2732.png",
+        "splash-2732x2732-1.png",
+        "splash-2732x2732-2.png",
+    ]:
         save_png(splash_base, ios_splash_dir / name)
 
     # Android icons
@@ -214,8 +244,14 @@ def main() -> None:
 
     for folder, size in launcher_sizes.items():
         target_dir = android_res / folder
-        save_png(icon_base.resize((size, size), Image.Resampling.LANCZOS), target_dir / "ic_launcher.png")
-        save_png(icon_base.resize((size, size), Image.Resampling.LANCZOS), target_dir / "ic_launcher_round.png")
+        save_png(
+            icon_base.resize((size, size), Image.Resampling.LANCZOS),
+            target_dir / "ic_launcher.png",
+        )
+        save_png(
+            icon_base.resize((size, size), Image.Resampling.LANCZOS),
+            target_dir / "ic_launcher_round.png",
+        )
 
     for folder, size in foreground_sizes.items():
         target_dir = android_res / folder
@@ -251,4 +287,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

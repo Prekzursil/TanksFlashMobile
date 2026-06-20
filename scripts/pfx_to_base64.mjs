@@ -1,12 +1,12 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(scriptDir, "..");
-const OUTPUT_DIR = path.join(repoRoot, "output");
-const DEFAULT_OUT = path.join(OUTPUT_DIR, "windows-cert.pfx.base64");
-const ALLOWED_CERT_EXTENSIONS = new Set([".pfx", ".p12"]);
+const repoRoot = path.resolve(scriptDir, '..');
+const OUTPUT_DIR = path.join(repoRoot, 'output');
+const DEFAULT_OUT = path.join(OUTPUT_DIR, 'windows-cert.pfx.base64');
+const ALLOWED_CERT_EXTENSIONS = new Set(['.pfx', '.p12']);
 
 function parseArgs(argv) {
   const args = {
@@ -18,15 +18,15 @@ function parseArgs(argv) {
     const arg = argv[i];
     const next = argv[i + 1];
 
-    if (arg === "--in") {
-      if (!next || next.startsWith("--")) {
-        throw new Error("Missing value for --in");
+    if (arg === '--in') {
+      if (!next || next.startsWith('--')) {
+        throw new Error('Missing value for --in');
       }
       args.inPath = next;
       i++;
-    } else if (arg === "--out") {
-      if (!next || next.startsWith("--")) {
-        throw new Error("Missing value for --out");
+    } else if (arg === '--out') {
+      if (!next || next.startsWith('--')) {
+        throw new Error('Missing value for --out');
       }
       args.outPath = next;
       i++;
@@ -50,10 +50,10 @@ function resolveInputPath(value) {
 function resolveOutputPath(value) {
   const candidate = path.isAbsolute(value) ? path.normalize(value) : path.resolve(repoRoot, value);
   const rel = path.relative(OUTPUT_DIR, candidate);
-  if (rel.startsWith("..") || path.isAbsolute(rel)) {
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
     throw new Error(`Refusing to write outside ${OUTPUT_DIR}: ${candidate}`);
   }
-  if (path.extname(candidate).toLowerCase() !== ".base64") {
+  if (path.extname(candidate).toLowerCase() !== '.base64') {
     throw new Error(`Output must end with .base64. Got: ${candidate}`);
   }
   return candidate;
@@ -63,34 +63,34 @@ async function main() {
   const args = parseArgs(process.argv);
 
   if (!args.inPath) {
-    throw new Error("Missing required arg: --in /path/to/codesign.pfx");
+    throw new Error('Missing required arg: --in /path/to/codesign.pfx');
   }
 
   const inputPath = resolveInputPath(args.inPath);
   const outputPath = resolveOutputPath(args.outPath);
   if (inputPath === outputPath) {
-    throw new Error("Input and output paths must be different.");
+    throw new Error('Input and output paths must be different.');
   }
 
   let buf;
   try {
     buf = await fs.readFile(inputPath);
   } catch (err) {
-    if (err && typeof err === "object" && "code" in err) {
+    if (err && typeof err === 'object' && 'code' in err) {
       const code = String(err.code);
-      if (code === "ENOENT" || code === "EISDIR" || code === "ENOTDIR") {
+      if (code === 'ENOENT' || code === 'EISDIR' || code === 'ENOTDIR') {
         throw new Error(`Input file not found or not readable: ${inputPath}`);
       }
     }
     throw err;
   }
 
-  const base64 = buf.toString("base64");
+  const base64 = buf.toString('base64');
 
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await fs.writeFile(outputPath, base64, { encoding: "utf8", mode: 0o600 });
+  await fs.writeFile(outputPath, base64, { encoding: 'utf8', mode: 0o600 });
   console.log(`Wrote base64 to ${outputPath}`);
-  console.log("Note: this file is sensitive; delete it after setting GitHub secrets.");
+  console.log('Note: this file is sensitive; delete it after setting GitHub secrets.');
 }
 
 main().catch((err) => {

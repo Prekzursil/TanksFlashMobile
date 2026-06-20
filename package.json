@@ -26,17 +26,23 @@
     "assets:generate": "python3 scripts/generate_branding_assets.py",
     "assets:extract:original": "node scripts/extract_original_assets.mjs --write-web --write-godot --force",
     "swf:import": "node ./scripts/import_swf.mjs",
-    "sync:swf:web": "npm --prefix apps/web run sync:swf"
+    "sync:swf:web": "npm --prefix apps/web run sync:swf",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@capacitor/android": "^6.1.0",
     "@capacitor/cli": "^8.0.2",
     "@capacitor/core": "^6.1.0",
     "@capacitor/ios": "^6.1.0",
+    "@vitest/coverage-v8": "3.2.6",
+    "jsdom": "27.0.0",
     "lodash": "^4.17.23",
-    "swf-extract": "^1.1.0"
+    "swf-extract": "^1.1.0",
+    "vitest": "3.2.6"
   },
   "overrides": {
-    "bl": "1.2.3"
+    "bl": "1.2.3",
+    "esbuild": "0.28.1"
   }
 }

@@ -1,0 +1,12 @@
+# Ruff config for the lean lint+format gate (gate 1, pinned tool: ruff 0.15.17).
+# Ruff is run via .pre-commit-config.yaml as `ruff --fix` + `ruff-format` and must
+# report 0. Defaults (E/F/W) are kept; only reasoned, greppable per-file ignores
+# are added below.
+
+[lint.per-file-ignores]
+# The scripts/quality/check_*_zero.py helpers intentionally mutate sys.path to
+# import the sibling security_helpers module before the rest of their imports
+# (a deliberate, correct pattern), which trips E402 "module import not at top".
+# These are the legacy SaaS-gate checkers slated for removal in the lean-gate
+# migration runbook; the E402 here is not a real defect.
+"scripts/quality/*.py" = ["E402"]

@@ -1,72 +1,72 @@
-import "./style.css";
-import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from "./config";
-import { createLogBuffer, hookGlobalErrors, type LogLevel } from "./debug";
-import { createGamepadInput } from "./gamepad";
-import { format, getStrings } from "./i18n";
-import { createInputMapper, type KeyCode } from "./input";
-import { createTouchControls, type TouchLayout, type TouchPreset } from "./touchControls";
-import { computeStageLayout, type ScaleMode } from "./viewport";
+import './style.css';
+import { DEFAULT_STAGE_SIZE, DEFAULT_SWF_URL, STORAGE_KEYS } from './config';
+import { createLogBuffer, hookGlobalErrors, type LogLevel } from './debug';
+import { createGamepadInput } from './gamepad';
+import { format, getStrings } from './i18n';
+import { createInputMapper, type KeyCode } from './input';
+import { createTouchControls, type TouchLayout, type TouchPreset } from './touchControls';
+import { computeStageLayout, type ScaleMode } from './viewport';
 
 declare const __APP_VERSION__: string;
 
-type LoadState = "idle" | "loading" | "ready" | "error";
+type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 type SwfSource =
-  | { type: "none" }
-  | { type: "url"; url: string }
-  | { type: "file"; name: string; url: string };
+  | { type: 'none' }
+  | { type: 'url'; url: string }
+  | { type: 'file'; name: string; url: string };
 
 type Keybinds = Record<KeyCode, string>;
 type TouchLayouts = Partial<Record<TouchPreset, TouchLayout>>;
 
-const S = getStrings("en");
+const S = getStrings('en');
 
 const DEFAULT_KEYBINDS: Keybinds = {
-  ArrowUp: "ArrowUp",
-  ArrowDown: "ArrowDown",
-  ArrowLeft: "ArrowLeft",
-  ArrowRight: "ArrowRight",
-  Space: "Space",
-  Enter: "Enter",
+  ArrowUp: 'ArrowUp',
+  ArrowDown: 'ArrowDown',
+  ArrowLeft: 'ArrowLeft',
+  ArrowRight: 'ArrowRight',
+  Space: 'Space',
+  Enter: 'Enter',
 };
 
 const KEY_OPTIONS: { code: string; label: string }[] = [
-  { code: "ArrowUp", label: "Arrow Up" },
-  { code: "ArrowDown", label: "Arrow Down" },
-  { code: "ArrowLeft", label: "Arrow Left" },
-  { code: "ArrowRight", label: "Arrow Right" },
-  { code: "KeyW", label: "W" },
-  { code: "KeyA", label: "A" },
-  { code: "KeyS", label: "S" },
-  { code: "KeyD", label: "D" },
-  { code: "KeyI", label: "I" },
-  { code: "KeyJ", label: "J" },
-  { code: "KeyK", label: "K" },
-  { code: "KeyL", label: "L" },
-  { code: "KeyZ", label: "Z" },
-  { code: "KeyX", label: "X" },
-  { code: "Space", label: "Space" },
-  { code: "Enter", label: "Enter" },
+  { code: 'ArrowUp', label: 'Arrow Up' },
+  { code: 'ArrowDown', label: 'Arrow Down' },
+  { code: 'ArrowLeft', label: 'Arrow Left' },
+  { code: 'ArrowRight', label: 'Arrow Right' },
+  { code: 'KeyW', label: 'W' },
+  { code: 'KeyA', label: 'A' },
+  { code: 'KeyS', label: 'S' },
+  { code: 'KeyD', label: 'D' },
+  { code: 'KeyI', label: 'I' },
+  { code: 'KeyJ', label: 'J' },
+  { code: 'KeyK', label: 'K' },
+  { code: 'KeyL', label: 'L' },
+  { code: 'KeyZ', label: 'Z' },
+  { code: 'KeyX', label: 'X' },
+  { code: 'Space', label: 'Space' },
+  { code: 'Enter', label: 'Enter' },
 ];
 
 const VALID_KEY_CODES = new Set(KEY_OPTIONS.map((o) => o.code));
 
 const GAMEPAD_BUTTON_OPTIONS: { index: number; label: string }[] = [
-  { index: 0, label: "Button 0 (Bottom / A / Cross)" },
-  { index: 1, label: "Button 1 (Right / B / Circle)" },
-  { index: 2, label: "Button 2 (Left / X / Square)" },
-  { index: 3, label: "Button 3 (Top / Y / Triangle)" },
-  { index: 4, label: "Button 4 (Left bumper)" },
-  { index: 5, label: "Button 5 (Right bumper)" },
-  { index: 6, label: "Button 6 (Left trigger)" },
-  { index: 7, label: "Button 7 (Right trigger)" },
-  { index: 8, label: "Button 8 (Back / Share)" },
-  { index: 9, label: "Button 9 (Start / Options)" },
-  { index: 10, label: "Button 10 (Left stick click)" },
-  { index: 11, label: "Button 11 (Right stick click)" },
-  { index: 12, label: "Button 12 (D-pad Up)" },
-  { index: 13, label: "Button 13 (D-pad Down)" },
-  { index: 14, label: "Button 14 (D-pad Left)" },
-  { index: 15, label: "Button 15 (D-pad Right)" },
+  { index: 0, label: 'Button 0 (Bottom / A / Cross)' },
+  { index: 1, label: 'Button 1 (Right / B / Circle)' },
+  { index: 2, label: 'Button 2 (Left / X / Square)' },
+  { index: 3, label: 'Button 3 (Top / Y / Triangle)' },
+  { index: 4, label: 'Button 4 (Left bumper)' },
+  { index: 5, label: 'Button 5 (Right bumper)' },
+  { index: 6, label: 'Button 6 (Left trigger)' },
+  { index: 7, label: 'Button 7 (Right trigger)' },
+  { index: 8, label: 'Button 8 (Back / Share)' },
+  { index: 9, label: 'Button 9 (Start / Options)' },
+  { index: 10, label: 'Button 10 (Left stick click)' },
+  { index: 11, label: 'Button 11 (Right stick click)' },
+  { index: 12, label: 'Button 12 (D-pad Up)' },
+  { index: 13, label: 'Button 13 (D-pad Down)' },
+  { index: 14, label: 'Button 14 (D-pad Left)' },
+  { index: 15, label: 'Button 15 (D-pad Right)' },
 ];
 
 const GAMEPAD_BUTTON_LABELS = new Map(GAMEPAD_BUTTON_OPTIONS.map((o) => [o.index, o.label]));
@@ -88,10 +88,10 @@ function clampInt(value: number, min: number, max: number) {
 }
 
 const VALID_TOUCH_PRESETS = new Set<TouchPreset>([
-  "compact",
-  "comfortable",
-  "leftHanded",
-  "tablet",
+  'compact',
+  'comfortable',
+  'leftHanded',
+  'tablet',
 ]);
 
 function defaultTouchLayout(): TouchLayout {
@@ -102,14 +102,14 @@ function defaultTouchLayout(): TouchLayout {
 }
 
 function parseTouchLayout(raw: unknown): TouchLayout | null {
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
   const left = (raw as { left?: unknown }).left;
   const right = (raw as { right?: unknown }).right;
-  if (typeof left !== "object" || left === null || Array.isArray(left)) return null;
-  if (typeof right !== "object" || right === null || Array.isArray(right)) return null;
+  if (typeof left !== 'object' || left === null || Array.isArray(left)) return null;
+  if (typeof right !== 'object' || right === null || Array.isArray(right)) return null;
 
   const clampOffset = (value: unknown): number | null => {
-    if (typeof value !== "number" || !Number.isFinite(value)) return null;
+    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
     // Layout offsets are relative to screen CSS px; clamp to avoid absurd values.
     return clampInt(value, -5000, 5000);
   };
@@ -125,9 +125,9 @@ function parseTouchLayout(raw: unknown): TouchLayout | null {
 
 function loadTouchPreset(): TouchPreset {
   const raw = localStorage.getItem(STORAGE_KEYS.touchPreset);
-  if (!raw) return "compact";
+  if (!raw) return 'compact';
   if (VALID_TOUCH_PRESETS.has(raw as TouchPreset)) return raw as TouchPreset;
-  return "compact";
+  return 'compact';
 }
 
 function loadTouchLayouts(): TouchLayouts {
@@ -135,7 +135,7 @@ function loadTouchLayouts(): TouchLayouts {
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
 
     const out: TouchLayouts = {};
     for (const [preset, value] of Object.entries(parsed)) {
@@ -150,10 +150,10 @@ function loadTouchLayouts(): TouchLayouts {
 }
 
 function jsonDownload(payload: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -172,8 +172,8 @@ function loadInt(key: string, fallback: number, min: number, max: number) {
 
 function loadBool(key: string, fallback: boolean): boolean {
   const raw = localStorage.getItem(key);
-  if (raw === "1") return true;
-  if (raw === "0") return false;
+  if (raw === '1') return true;
+  if (raw === '0') return false;
   return fallback;
 }
 
@@ -185,7 +185,7 @@ function loadKeybinds(): Keybinds {
     const next: Keybinds = { ...DEFAULT_KEYBINDS };
     (Object.keys(DEFAULT_KEYBINDS) as KeyCode[]).forEach((targetKey) => {
       const value = parsed[targetKey];
-      if (typeof value === "string" && VALID_KEY_CODES.has(value)) {
+      if (typeof value === 'string' && VALID_KEY_CODES.has(value)) {
         next[targetKey] = value;
       }
     });
@@ -218,9 +218,9 @@ const state: {
   debugOverlay: boolean;
   lastError: string | null;
 } = {
-  loadState: "idle",
-  swf: { type: "none" },
-  scaleMode: (localStorage.getItem(STORAGE_KEYS.scaleMode) as ScaleMode) ?? "fit",
+  loadState: 'idle',
+  swf: { type: 'none' },
+  scaleMode: (localStorage.getItem(STORAGE_KEYS.scaleMode) as ScaleMode) ?? 'fit',
   uiScale: loadInt(STORAGE_KEYS.uiScale, 100, 80, 140),
   isFullscreen: Boolean(document.fullscreenElement),
   volume: loadInt(STORAGE_KEYS.volume, 100, 0, 100),
@@ -254,16 +254,20 @@ if (state.gamepadActionAButtonIndex === state.gamepadActionBButtonIndex) {
   localStorage.setItem(STORAGE_KEYS.gamepadActionBButton, String(state.gamepadActionBButtonIndex));
 }
 
-const app = document.querySelector<HTMLDivElement>("#app");
-if (!app) throw new Error("Missing #app root element");
+const app = document.querySelector<HTMLDivElement>('#app');
+if (!app) throw new Error('Missing #app root element');
 
 function applyUiScale() {
   const scale = clampInt(state.uiScale, 80, 140) / 100;
-  document.documentElement.style.setProperty("--ui-scale", String(scale));
+  document.documentElement.style.setProperty('--ui-scale', String(scale));
 }
 
 applyUiScale();
 
+// Static app shell: every interpolated value comes from the compile-time i18n
+// bundle (getStrings("en")), not from user or network input, so this is not an
+// XSS sink. Keep the directive on the line immediately above the assignment.
+// nosemgrep: js-inner-html-assignment
 app.innerHTML = `
   <div class="layout">
     <header class="topbar">
@@ -611,63 +615,63 @@ function required<T extends Element>(selector: string): T {
   return el as T;
 }
 
-const viewport = required<HTMLDivElement>("#viewport");
-const stage = required<HTMLDivElement>("#stage");
-const playerContainer = required<HTMLDivElement>("#playerContainer");
-const status = required<HTMLDivElement>("#status");
-const settingsBtn = required<HTMLButtonElement>("#settingsBtn");
-const helpBtn = required<HTMLButtonElement>("#helpBtn");
-const settingsDialog = required<HTMLDialogElement>("#settingsDialog");
-const settingsCloseBtn = required<HTMLButtonElement>("#settingsCloseBtn");
-const helpDialog = required<HTMLDialogElement>("#helpDialog");
-const helpCloseBtn = required<HTMLButtonElement>("#helpCloseBtn");
-const scaleSelect = required<HTMLSelectElement>("#scaleMode");
-const uiScaleEl = required<HTMLInputElement>("#uiScale");
-const uiScaleValueEl = required<HTMLSpanElement>("#uiScaleValue");
-const fullscreenBtn = required<HTMLButtonElement>("#fullscreenBtn");
-const touchEnabledEl = required<HTMLInputElement>("#touchEnabled");
-const touchPresetEl = required<HTMLSelectElement>("#touchPreset");
-const touchControlsFields = required<HTMLDivElement>("#touchControlsFields");
-const touchSizeEl = required<HTMLInputElement>("#touchSize");
-const touchSizeValueEl = required<HTMLSpanElement>("#touchSizeValue");
-const touchOpacityEl = required<HTMLInputElement>("#touchOpacity");
-const touchOpacityValueEl = required<HTMLSpanElement>("#touchOpacityValue");
-const touchEditLayoutEl = required<HTMLInputElement>("#touchEditLayout");
-const touchResetLayoutBtn = required<HTMLButtonElement>("#touchResetLayoutBtn");
-const muteEl = required<HTMLInputElement>("#mute");
-const volumeEl = required<HTMLInputElement>("#volume");
-const volumeValueEl = required<HTMLSpanElement>("#volumeValue");
-const gamepadEnabledEl = required<HTMLInputElement>("#gamepadEnabled");
-const gamepadStatusEl = required<HTMLDivElement>("#gamepadStatus");
-const gamepadActionAEl = required<HTMLSelectElement>("#gamepadActionA");
-const gamepadActionBEl = required<HTMLSelectElement>("#gamepadActionB");
-const gamepadDeadzoneEl = required<HTMLInputElement>("#gamepadDeadzone");
-const gamepadDeadzoneValueEl = required<HTMLSpanElement>("#gamepadDeadzoneValue");
-const gamepadMappingHintEl = required<HTMLDivElement>("#gamepadMappingHint");
-const keyRemapEnabledEl = required<HTMLInputElement>("#keyRemapEnabled");
-const keyUpEl = required<HTMLSelectElement>("#keyUp");
-const keyDownEl = required<HTMLSelectElement>("#keyDown");
-const keyLeftEl = required<HTMLSelectElement>("#keyLeft");
-const keyRightEl = required<HTMLSelectElement>("#keyRight");
-const keyAEl = required<HTMLSelectElement>("#keyA");
-const keyBEl = required<HTMLSelectElement>("#keyB");
-const resetKeybindsBtn = required<HTMLButtonElement>("#resetKeybindsBtn");
-const storageExportScopeEl = required<HTMLSelectElement>("#storageExportScope");
-const exportStorageBtn = required<HTMLButtonElement>("#exportStorageBtn");
-const importStorageBtn = required<HTMLButtonElement>("#importStorageBtn");
-const importStorageInput = required<HTMLInputElement>("#importStorageInput");
-const clearWrapperBtn = required<HTMLButtonElement>("#clearWrapperBtn");
-const clearAllBtn = required<HTMLButtonElement>("#clearAllBtn");
-const debugEnabledEl = required<HTMLInputElement>("#debugEnabled");
-const debugOverlayCheckboxEl = required<HTMLInputElement>("#debugOverlay");
-const copyDiagnosticsBtn = required<HTMLButtonElement>("#copyDiagnosticsBtn");
-const downloadDiagnosticsBtn = required<HTMLButtonElement>("#downloadDiagnosticsBtn");
-const downloadLogsBtn = required<HTMLButtonElement>("#downloadLogsBtn");
-const clearLogsBtn = required<HTMLButtonElement>("#clearLogsBtn");
-const logCountsEl = required<HTMLDivElement>("#logCounts");
-const debugOverlayEl = required<HTMLDivElement>("#debugOverlayEl");
-const loadFileBtn = required<HTMLButtonElement>("#loadFileBtn");
-const fileInput = required<HTMLInputElement>("#fileInput");
+const viewport = required<HTMLDivElement>('#viewport');
+const stage = required<HTMLDivElement>('#stage');
+const playerContainer = required<HTMLDivElement>('#playerContainer');
+const status = required<HTMLDivElement>('#status');
+const settingsBtn = required<HTMLButtonElement>('#settingsBtn');
+const helpBtn = required<HTMLButtonElement>('#helpBtn');
+const settingsDialog = required<HTMLDialogElement>('#settingsDialog');
+const settingsCloseBtn = required<HTMLButtonElement>('#settingsCloseBtn');
+const helpDialog = required<HTMLDialogElement>('#helpDialog');
+const helpCloseBtn = required<HTMLButtonElement>('#helpCloseBtn');
+const scaleSelect = required<HTMLSelectElement>('#scaleMode');
+const uiScaleEl = required<HTMLInputElement>('#uiScale');
+const uiScaleValueEl = required<HTMLSpanElement>('#uiScaleValue');
+const fullscreenBtn = required<HTMLButtonElement>('#fullscreenBtn');
+const touchEnabledEl = required<HTMLInputElement>('#touchEnabled');
+const touchPresetEl = required<HTMLSelectElement>('#touchPreset');
+const touchControlsFields = required<HTMLDivElement>('#touchControlsFields');
+const touchSizeEl = required<HTMLInputElement>('#touchSize');
+const touchSizeValueEl = required<HTMLSpanElement>('#touchSizeValue');
+const touchOpacityEl = required<HTMLInputElement>('#touchOpacity');
+const touchOpacityValueEl = required<HTMLSpanElement>('#touchOpacityValue');
+const touchEditLayoutEl = required<HTMLInputElement>('#touchEditLayout');
+const touchResetLayoutBtn = required<HTMLButtonElement>('#touchResetLayoutBtn');
+const muteEl = required<HTMLInputElement>('#mute');
+const volumeEl = required<HTMLInputElement>('#volume');
+const volumeValueEl = required<HTMLSpanElement>('#volumeValue');
+const gamepadEnabledEl = required<HTMLInputElement>('#gamepadEnabled');
+const gamepadStatusEl = required<HTMLDivElement>('#gamepadStatus');
+const gamepadActionAEl = required<HTMLSelectElement>('#gamepadActionA');
+const gamepadActionBEl = required<HTMLSelectElement>('#gamepadActionB');
+const gamepadDeadzoneEl = required<HTMLInputElement>('#gamepadDeadzone');
+const gamepadDeadzoneValueEl = required<HTMLSpanElement>('#gamepadDeadzoneValue');
+const gamepadMappingHintEl = required<HTMLDivElement>('#gamepadMappingHint');
+const keyRemapEnabledEl = required<HTMLInputElement>('#keyRemapEnabled');
+const keyUpEl = required<HTMLSelectElement>('#keyUp');
+const keyDownEl = required<HTMLSelectElement>('#keyDown');
+const keyLeftEl = required<HTMLSelectElement>('#keyLeft');
+const keyRightEl = required<HTMLSelectElement>('#keyRight');
+const keyAEl = required<HTMLSelectElement>('#keyA');
+const keyBEl = required<HTMLSelectElement>('#keyB');
+const resetKeybindsBtn = required<HTMLButtonElement>('#resetKeybindsBtn');
+const storageExportScopeEl = required<HTMLSelectElement>('#storageExportScope');
+const exportStorageBtn = required<HTMLButtonElement>('#exportStorageBtn');
+const importStorageBtn = required<HTMLButtonElement>('#importStorageBtn');
+const importStorageInput = required<HTMLInputElement>('#importStorageInput');
+const clearWrapperBtn = required<HTMLButtonElement>('#clearWrapperBtn');
+const clearAllBtn = required<HTMLButtonElement>('#clearAllBtn');
+const debugEnabledEl = required<HTMLInputElement>('#debugEnabled');
+const debugOverlayCheckboxEl = required<HTMLInputElement>('#debugOverlay');
+const copyDiagnosticsBtn = required<HTMLButtonElement>('#copyDiagnosticsBtn');
+const downloadDiagnosticsBtn = required<HTMLButtonElement>('#downloadDiagnosticsBtn');
+const downloadLogsBtn = required<HTMLButtonElement>('#downloadLogsBtn');
+const clearLogsBtn = required<HTMLButtonElement>('#clearLogsBtn');
+const logCountsEl = required<HTMLDivElement>('#logCounts');
+const debugOverlayEl = required<HTMLDivElement>('#debugOverlayEl');
+const loadFileBtn = required<HTMLButtonElement>('#loadFileBtn');
+const fileInput = required<HTMLInputElement>('#fileInput');
 
 let playerEl: RufflePlayerElement | null = null;
 let lastObjectUrl: string | null = null;
@@ -744,33 +748,33 @@ function truncate(text: string, max = 160): string {
 
 function renderDebugOverlay() {
   const visible = state.debugEnabled && state.debugOverlay;
-  debugOverlayEl.classList.toggle("hidden", !visible);
+  debugOverlayEl.classList.toggle('hidden', !visible);
   if (!visible) return;
 
   const counts = logs.counts();
   const swfLabel =
-    state.swf.type === "url"
+    state.swf.type === 'url'
       ? state.swf.url
-      : state.swf.type === "file"
+      : state.swf.type === 'file'
         ? state.swf.name
-        : "(none)";
+        : '(none)';
 
-  const lastErr = state.lastError ? truncate(state.lastError) : "-";
+  const lastErr = state.lastError ? truncate(state.lastError) : '-';
   debugOverlayEl.textContent = [
-    "TANKS debug",
+    'TANKS debug',
     `version: ${__APP_VERSION__}`,
     `load: ${state.loadState}`,
     `swf: ${swfLabel}`,
-    `scale: ${state.scaleMode}  full: ${state.isFullscreen ? "yes" : "no"}`,
-    `touch: ${state.touchEnabled ? "on" : "off"}  pad: ${state.gamepadEnabled ? "on" : "off"} (${gamepadInput.getConnectedCount()})  vol: ${state.volume}`,
+    `scale: ${state.scaleMode}  full: ${state.isFullscreen ? 'yes' : 'no'}`,
+    `touch: ${state.touchEnabled ? 'on' : 'off'}  pad: ${state.gamepadEnabled ? 'on' : 'off'} (${gamepadInput.getConnectedCount()})  vol: ${state.volume}`,
     `logs: ${counts.total} (err ${counts.error}, warn ${counts.warn})`,
     `error: ${lastErr}`,
-  ].join("\n");
+  ].join('\n');
 }
 
 function persistDebugSettings() {
-  localStorage.setItem(STORAGE_KEYS.debugEnabled, state.debugEnabled ? "1" : "0");
-  localStorage.setItem(STORAGE_KEYS.debugOverlay, state.debugOverlay ? "1" : "0");
+  localStorage.setItem(STORAGE_KEYS.debugEnabled, state.debugEnabled ? '1' : '0');
+  localStorage.setItem(STORAGE_KEYS.debugOverlay, state.debugOverlay ? '1' : '0');
 }
 
 function applyDebugUi() {
@@ -783,12 +787,12 @@ function applyDebugUi() {
   downloadLogsBtn.disabled = !state.debugEnabled;
   clearLogsBtn.disabled = !state.debugEnabled;
 
-  debugOverlayEl.classList.toggle("hidden", !(state.debugEnabled && state.debugOverlay));
+  debugOverlayEl.classList.toggle('hidden', !(state.debugEnabled && state.debugOverlay));
   scheduleDebugOverlayRender();
 }
 
 // Init debug UI state
-addLog("info", "wrapper.start", {
+addLog('info', 'wrapper.start', {
   mode: import.meta.env.MODE,
   baseUrl: import.meta.env.BASE_URL,
   version: __APP_VERSION__,
@@ -814,7 +818,7 @@ function closeHelp() {
 function isTextInputLike(el: EventTarget | null): boolean {
   const target = el as HTMLElement | null;
   const tag = target?.tagName?.toLowerCase();
-  return tag === "input" || tag === "textarea" || tag === "select";
+  return tag === 'input' || tag === 'textarea' || tag === 'select';
 }
 
 function listLocalStorageKeys(): string[] {
@@ -830,38 +834,38 @@ function listLocalStorageKeys(): string[] {
 function tanksKeysOnly(entries: Record<string, string>) {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(entries)) {
-    if (k.startsWith("tanks.")) out[k] = v;
+    if (k.startsWith('tanks.')) out[k] = v;
   }
   return out;
 }
 
-function readLocalStorage(scope: "tanks" | "all"): Record<string, string> {
+function readLocalStorage(scope: 'tanks' | 'all'): Record<string, string> {
   const keys = listLocalStorageKeys();
   const out: Record<string, string> = {};
   for (const k of keys) {
-    if (scope === "tanks" && !k.startsWith("tanks.")) continue;
+    if (scope === 'tanks' && !k.startsWith('tanks.')) continue;
     const v = localStorage.getItem(k);
     if (v != null) out[k] = v;
   }
   return out;
 }
 
-function removeLocalStorageKeys(scope: "tanks" | "all") {
-  if (scope === "all") {
+function removeLocalStorageKeys(scope: 'tanks' | 'all') {
+  if (scope === 'all') {
     localStorage.clear();
     return;
   }
   for (const k of listLocalStorageKeys()) {
-    if (k.startsWith("tanks.")) localStorage.removeItem(k);
+    if (k.startsWith('tanks.')) localStorage.removeItem(k);
   }
 }
 
-async function deleteIndexedDb(name: string): Promise<"ok" | "blocked" | "error"> {
+async function deleteIndexedDb(name: string): Promise<'ok' | 'blocked' | 'error'> {
   return await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase(name);
-    req.onsuccess = () => resolve("ok");
-    req.onerror = () => resolve("error");
-    req.onblocked = () => resolve("blocked");
+    req.onsuccess = () => resolve('ok');
+    req.onerror = () => resolve('error');
+    req.onblocked = () => resolve('blocked');
   });
 }
 
@@ -874,7 +878,7 @@ async function clearSiteData() {
   const errors: string[] = [];
 
   const idbAny = indexedDB as unknown as { databases?: () => Promise<Array<{ name?: string }>> };
-  if (typeof idbAny.databases === "function") {
+  if (typeof idbAny.databases === 'function') {
     const dbs = await idbAny.databases();
     const names = dbs
       .map((d) => d.name)
@@ -883,8 +887,8 @@ async function clearSiteData() {
 
     for (const name of names) {
       const result = await deleteIndexedDb(name);
-      if (result === "ok") deleted.push(name);
-      else if (result === "blocked") blocked.push(name);
+      if (result === 'ok') deleted.push(name);
+      else if (result === 'blocked') blocked.push(name);
       else errors.push(name);
     }
   }
@@ -897,24 +901,24 @@ function setStatus(message: string) {
 }
 
 function setError(message: string) {
-  state.loadState = "error";
+  state.loadState = 'error';
   state.lastError = message;
   setStatus(message);
-  addLog("error", "wrapper.error", { message });
+  addLog('error', 'wrapper.error', { message });
   scheduleDebugOverlayRender();
 }
 
 function setReady(message?: string) {
-  state.loadState = "ready";
+  state.loadState = 'ready';
   state.lastError = null;
   if (message) setStatus(message);
-  addLog("info", "wrapper.ready", { message: message ?? null });
+  addLog('info', 'wrapper.ready', { message: message ?? null });
   scheduleDebugOverlayRender();
 }
 
 function updateFullscreenState() {
   state.isFullscreen = Boolean(document.fullscreenElement);
-  fullscreenBtn.textContent = state.isFullscreen ? "Exit Fullscreen" : "Fullscreen";
+  fullscreenBtn.textContent = state.isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
   scheduleDebugOverlayRender();
 }
 
@@ -935,12 +939,12 @@ function resizeStage() {
 }
 
 function applyTouchStyle() {
-  touchControls.el.style.setProperty("--touch-opacity", String(state.touchOpacity / 100));
-  touchControls.el.style.setProperty("--touch-size", `${state.touchSize}px`);
+  touchControls.el.style.setProperty('--touch-opacity', String(state.touchOpacity / 100));
+  touchControls.el.style.setProperty('--touch-size', `${state.touchSize}px`);
   const gap = Math.max(8, Math.round(state.touchSize * 0.18));
   const font = Math.max(14, Math.round(state.touchSize * 0.32));
-  touchControls.el.style.setProperty("--touch-gap", `${gap}px`);
-  touchControls.el.style.setProperty("--touch-font", `${font}px`);
+  touchControls.el.style.setProperty('--touch-gap', `${gap}px`);
+  touchControls.el.style.setProperty('--touch-font', `${font}px`);
 }
 
 function applyVolume() {
@@ -959,12 +963,12 @@ function ensurePlayer(): RufflePlayerElement {
   const ruffle = window.RufflePlayer?.newest?.();
   if (!ruffle) {
     throw new Error(
-      "Ruffle runtime not found. Run `npm install` then `npm run dev` (it syncs Ruffle into /public/ruffle).",
+      'Ruffle runtime not found. Run `npm install` then `npm run dev` (it syncs Ruffle into /public/ruffle).',
     );
   }
 
   const el = ruffle.createPlayer();
-  el.classList.add("rufflePlayer");
+  el.classList.add('rufflePlayer');
   playerContainer.replaceChildren(el);
   playerEl = el;
   applyVolume();
@@ -972,12 +976,12 @@ function ensurePlayer(): RufflePlayerElement {
 }
 
 async function loadSwfUrl(url: string, source: SwfSource) {
-  state.loadState = "loading";
+  state.loadState = 'loading';
   state.lastError = null;
   setStatus(S.status.loadingSwf);
-  addLog("info", "swf.load.start", {
-    urlType: url.startsWith("blob:") ? "blob" : url.startsWith("http") ? "http" : "other",
-    source: source.type === "file" ? { type: "file", name: source.name } : source,
+  addLog('info', 'swf.load.start', {
+    urlType: url.startsWith('blob:') ? 'blob' : url.startsWith('http') ? 'http' : 'other',
+    source: source.type === 'file' ? { type: 'file', name: source.name } : source,
   });
 
   try {
@@ -985,51 +989,51 @@ async function loadSwfUrl(url: string, source: SwfSource) {
     const result = el.ruffle().load(url);
     await Promise.resolve(result);
     state.swf = source;
-    addLog("info", "swf.load.ok", { source: source.type });
-    setReady(source.type === "file" ? `Loaded: ${source.name}` : `Loaded: ${url}`);
+    addLog('info', 'swf.load.ok', { source: source.type });
+    setReady(source.type === 'file' ? `Loaded: ${source.name}` : `Loaded: ${url}`);
   } catch (err) {
-    addLog("error", "swf.load.failed", { err: String(err) });
+    addLog('error', 'swf.load.failed', { err: String(err) });
     setError(`Failed to load SWF: ${String(err)}`);
   }
 }
 
 async function tryAutoLoadDefaultSwf() {
-  addLog("info", "swf.autoload.check", { url: DEFAULT_SWF_URL });
+  addLog('info', 'swf.autoload.check', { url: DEFAULT_SWF_URL });
   try {
-    const resp = await fetch(DEFAULT_SWF_URL, { method: "HEAD" });
+    const resp = await fetch(DEFAULT_SWF_URL, { method: 'HEAD' });
     if (!resp.ok) {
-      addLog("warn", "swf.autoload.missing", { url: DEFAULT_SWF_URL, status: resp.status });
+      addLog('warn', 'swf.autoload.missing', { url: DEFAULT_SWF_URL, status: resp.status });
       setError(
         [
           `Missing SWF at ${DEFAULT_SWF_URL}`,
-          "Run `npm run sync:swf` from apps/web/ or use “Load SWF…” to select a file.",
-        ].join(" — "),
+          'Run `npm run sync:swf` from apps/web/ or use “Load SWF…” to select a file.',
+        ].join(' — '),
       );
       return;
     }
   } catch {
-    addLog("warn", "swf.autoload.check_failed", { url: DEFAULT_SWF_URL });
+    addLog('warn', 'swf.autoload.check_failed', { url: DEFAULT_SWF_URL });
     setError(
-      [`Could not check SWF at ${DEFAULT_SWF_URL}`, "Use “Load SWF…” to select a file."].join(
-        " — ",
+      [`Could not check SWF at ${DEFAULT_SWF_URL}`, 'Use “Load SWF…” to select a file.'].join(
+        ' — ',
       ),
     );
     return;
   }
 
-  await loadSwfUrl(DEFAULT_SWF_URL, { type: "url", url: DEFAULT_SWF_URL });
+  await loadSwfUrl(DEFAULT_SWF_URL, { type: 'url', url: DEFAULT_SWF_URL });
 }
 
 async function toggleFullscreen() {
   try {
-    addLog("info", "fullscreen.toggle", { from: Boolean(document.fullscreenElement) });
+    addLog('info', 'fullscreen.toggle', { from: Boolean(document.fullscreenElement) });
     if (!document.fullscreenElement) {
-      await viewport.requestFullscreen?.({ navigationUI: "hide" } as unknown as FullscreenOptions);
+      await viewport.requestFullscreen?.({ navigationUI: 'hide' } as unknown as FullscreenOptions);
     } else {
       await document.exitFullscreen?.();
     }
   } catch (err) {
-    addLog("error", "fullscreen.failed", { err: String(err) });
+    addLog('error', 'fullscreen.failed', { err: String(err) });
     setError(`Fullscreen failed: ${String(err)}`);
   }
 }
@@ -1039,9 +1043,9 @@ resizeStage();
 
 function detectDefaultTouchEnabled(): boolean {
   const persisted = localStorage.getItem(STORAGE_KEYS.touchEnabled);
-  if (persisted === "1") return true;
-  if (persisted === "0") return false;
-  return window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+  if (persisted === '1') return true;
+  if (persisted === '0') return false;
+  return window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
 }
 
 state.touchEnabled = detectDefaultTouchEnabled();
@@ -1058,7 +1062,7 @@ function persistKeybinds() {
 function populateKeySelect(select: HTMLSelectElement) {
   select.replaceChildren(
     ...KEY_OPTIONS.map((opt) => {
-      const o = document.createElement("option");
+      const o = document.createElement('option');
       o.value = opt.code;
       o.textContent = opt.label;
       return o;
@@ -1069,7 +1073,7 @@ function populateKeySelect(select: HTMLSelectElement) {
 function populateGamepadButtonSelect(select: HTMLSelectElement) {
   select.replaceChildren(
     ...GAMEPAD_BUTTON_OPTIONS.map((opt) => {
-      const o = document.createElement("option");
+      const o = document.createElement('option');
       o.value = String(opt.index);
       o.textContent = opt.label;
       return o;
@@ -1109,7 +1113,7 @@ function setKeybindValue(target: KeyCode, physicalCode: string) {
   if (!VALID_KEY_CODES.has(physicalCode)) return;
   state.keybinds[target] = physicalCode;
   persistKeybinds();
-  inputMapper.releaseAllFrom("keyboard");
+  inputMapper.releaseAllFrom('keyboard');
   updateKeybindSelectDisabledOptions();
 }
 
@@ -1176,7 +1180,7 @@ function syncSettingsUi() {
   updateGamepadButtonSelectDisabledOptions();
 
   touchEnabledEl.checked = state.touchEnabled;
-  touchControlsFields.style.display = state.touchEnabled ? "" : "none";
+  touchControlsFields.style.display = state.touchEnabled ? '' : 'none';
 
   touchPresetEl.value = state.touchPreset;
   touchSizeEl.value = String(state.touchSize);
@@ -1212,36 +1216,36 @@ populateGamepadButtonSelect(gamepadActionBEl);
 
 syncSettingsUi();
 
-scaleSelect.addEventListener("change", () => {
+scaleSelect.addEventListener('change', () => {
   state.scaleMode = scaleSelect.value as ScaleMode;
   localStorage.setItem(STORAGE_KEYS.scaleMode, state.scaleMode);
   resizeStage();
 });
 
-uiScaleEl.addEventListener("input", () => {
+uiScaleEl.addEventListener('input', () => {
   state.uiScale = clampInt(Number(uiScaleEl.value), 80, 140);
   localStorage.setItem(STORAGE_KEYS.uiScale, String(state.uiScale));
   applyUiScale();
   syncSettingsUi();
 });
 
-fullscreenBtn.addEventListener("click", () => {
+fullscreenBtn.addEventListener('click', () => {
   void toggleFullscreen();
 });
 
-settingsBtn.addEventListener("click", () => openSettings());
-settingsCloseBtn.addEventListener("click", () => closeSettings());
-settingsDialog.addEventListener("click", (ev) => {
+settingsBtn.addEventListener('click', () => openSettings());
+settingsCloseBtn.addEventListener('click', () => closeSettings());
+settingsDialog.addEventListener('click', (ev) => {
   if (ev.target === settingsDialog) closeSettings();
 });
 
-helpBtn.addEventListener("click", () => openHelp());
-helpCloseBtn.addEventListener("click", () => closeHelp());
-helpDialog.addEventListener("click", (ev) => {
+helpBtn.addEventListener('click', () => openHelp());
+helpCloseBtn.addEventListener('click', () => closeHelp());
+helpDialog.addEventListener('click', (ev) => {
   if (ev.target === helpDialog) closeHelp();
 });
 
-muteEl.addEventListener("change", () => {
+muteEl.addEventListener('change', () => {
   if (muteEl.checked) {
     if (state.volume > 0) lastNonZeroVolume = state.volume;
     state.volume = 0;
@@ -1253,7 +1257,7 @@ muteEl.addEventListener("change", () => {
   applyVolume();
 });
 
-volumeEl.addEventListener("input", () => {
+volumeEl.addEventListener('input', () => {
   const next = clampInt(Number(volumeEl.value), 0, 100);
   if (next > 0) lastNonZeroVolume = next;
   state.volume = next;
@@ -1262,40 +1266,40 @@ volumeEl.addEventListener("input", () => {
   applyVolume();
 });
 
-gamepadEnabledEl.addEventListener("change", () => {
+gamepadEnabledEl.addEventListener('change', () => {
   state.gamepadEnabled = Boolean(gamepadEnabledEl.checked);
-  localStorage.setItem(STORAGE_KEYS.gamepadEnabled, state.gamepadEnabled ? "1" : "0");
-  addLog("info", "gamepad.enabled", { enabled: state.gamepadEnabled });
+  localStorage.setItem(STORAGE_KEYS.gamepadEnabled, state.gamepadEnabled ? '1' : '0');
+  addLog('info', 'gamepad.enabled', { enabled: state.gamepadEnabled });
   gamepadInput.setEnabled(state.gamepadEnabled);
   syncSettingsUi();
 });
 
-gamepadActionAEl.addEventListener("change", () => {
+gamepadActionAEl.addEventListener('change', () => {
   state.gamepadActionAButtonIndex = clampInt(Number(gamepadActionAEl.value), 0, 15);
   localStorage.setItem(STORAGE_KEYS.gamepadActionAButton, String(state.gamepadActionAButtonIndex));
-  addLog("info", "gamepad.map.actionA", { index: state.gamepadActionAButtonIndex });
+  addLog('info', 'gamepad.map.actionA', { index: state.gamepadActionAButtonIndex });
   updateGamepadButtonSelectDisabledOptions();
   syncSettingsUi();
 });
 
-gamepadActionBEl.addEventListener("change", () => {
+gamepadActionBEl.addEventListener('change', () => {
   state.gamepadActionBButtonIndex = clampInt(Number(gamepadActionBEl.value), 0, 15);
   localStorage.setItem(STORAGE_KEYS.gamepadActionBButton, String(state.gamepadActionBButtonIndex));
-  addLog("info", "gamepad.map.actionB", { index: state.gamepadActionBButtonIndex });
+  addLog('info', 'gamepad.map.actionB', { index: state.gamepadActionBButtonIndex });
   updateGamepadButtonSelectDisabledOptions();
   syncSettingsUi();
 });
 
-gamepadDeadzoneEl.addEventListener("input", () => {
+gamepadDeadzoneEl.addEventListener('input', () => {
   state.gamepadAxisDeadzone = clampInt(Number(gamepadDeadzoneEl.value), 20, 80);
   localStorage.setItem(STORAGE_KEYS.gamepadAxisDeadzone, String(state.gamepadAxisDeadzone));
-  addLog("info", "gamepad.deadzone", { deadzone: state.gamepadAxisDeadzone });
+  addLog('info', 'gamepad.deadzone', { deadzone: state.gamepadAxisDeadzone });
   syncSettingsUi();
 });
 
-touchEnabledEl.addEventListener("change", () => {
+touchEnabledEl.addEventListener('change', () => {
   state.touchEnabled = Boolean(touchEnabledEl.checked);
-  localStorage.setItem(STORAGE_KEYS.touchEnabled, state.touchEnabled ? "1" : "0");
+  localStorage.setItem(STORAGE_KEYS.touchEnabled, state.touchEnabled ? '1' : '0');
   touchControls.setEnabled(state.touchEnabled);
   if (!state.touchEnabled && state.touchEditing) {
     state.touchEditing = false;
@@ -1304,7 +1308,7 @@ touchEnabledEl.addEventListener("change", () => {
   syncSettingsUi();
 });
 
-touchPresetEl.addEventListener("change", () => {
+touchPresetEl.addEventListener('change', () => {
   state.touchPreset = touchPresetEl.value as TouchPreset;
   localStorage.setItem(STORAGE_KEYS.touchPreset, state.touchPreset);
   state.touchSize = PRESET_TOUCH_SIZE[state.touchPreset] ?? state.touchSize;
@@ -1315,21 +1319,21 @@ touchPresetEl.addEventListener("change", () => {
   syncSettingsUi();
 });
 
-touchSizeEl.addEventListener("input", () => {
+touchSizeEl.addEventListener('input', () => {
   state.touchSize = clampInt(Number(touchSizeEl.value), 40, 96);
   localStorage.setItem(STORAGE_KEYS.touchSize, String(state.touchSize));
   applyTouchStyle();
   syncSettingsUi();
 });
 
-touchOpacityEl.addEventListener("input", () => {
+touchOpacityEl.addEventListener('input', () => {
   state.touchOpacity = clampInt(Number(touchOpacityEl.value), 20, 100);
   localStorage.setItem(STORAGE_KEYS.touchOpacity, String(state.touchOpacity));
   applyTouchStyle();
   syncSettingsUi();
 });
 
-touchEditLayoutEl.addEventListener("change", () => {
+touchEditLayoutEl.addEventListener('change', () => {
   state.touchEditing = Boolean(touchEditLayoutEl.checked);
   touchControls.setEditMode(state.touchEditing);
   if (state.touchEditing) {
@@ -1338,111 +1342,111 @@ touchEditLayoutEl.addEventListener("change", () => {
   syncSettingsUi();
 });
 
-touchResetLayoutBtn.addEventListener("click", () => {
+touchResetLayoutBtn.addEventListener('click', () => {
   state.touchLayouts[state.touchPreset] = defaultTouchLayout();
   schedulePersistTouchLayouts();
   touchControls.setLayout(touchLayoutForPreset(state.touchPreset));
   setStatus(S.status.touchLayoutReset);
 });
 
-keyRemapEnabledEl.addEventListener("change", () => {
+keyRemapEnabledEl.addEventListener('change', () => {
   state.keyRemapEnabled = Boolean(keyRemapEnabledEl.checked);
-  localStorage.setItem(STORAGE_KEYS.keyRemapEnabled, state.keyRemapEnabled ? "1" : "0");
-  addLog("info", "keyremap.enabled", { enabled: state.keyRemapEnabled });
-  inputMapper.releaseAllFrom("keyboard");
+  localStorage.setItem(STORAGE_KEYS.keyRemapEnabled, state.keyRemapEnabled ? '1' : '0');
+  addLog('info', 'keyremap.enabled', { enabled: state.keyRemapEnabled });
+  inputMapper.releaseAllFrom('keyboard');
   syncSettingsUi();
 });
 
-keyUpEl.addEventListener("change", () => setKeybindValue("ArrowUp", keyUpEl.value));
-keyDownEl.addEventListener("change", () => setKeybindValue("ArrowDown", keyDownEl.value));
-keyLeftEl.addEventListener("change", () => setKeybindValue("ArrowLeft", keyLeftEl.value));
-keyRightEl.addEventListener("change", () => setKeybindValue("ArrowRight", keyRightEl.value));
-keyAEl.addEventListener("change", () => setKeybindValue("Space", keyAEl.value));
-keyBEl.addEventListener("change", () => setKeybindValue("Enter", keyBEl.value));
+keyUpEl.addEventListener('change', () => setKeybindValue('ArrowUp', keyUpEl.value));
+keyDownEl.addEventListener('change', () => setKeybindValue('ArrowDown', keyDownEl.value));
+keyLeftEl.addEventListener('change', () => setKeybindValue('ArrowLeft', keyLeftEl.value));
+keyRightEl.addEventListener('change', () => setKeybindValue('ArrowRight', keyRightEl.value));
+keyAEl.addEventListener('change', () => setKeybindValue('Space', keyAEl.value));
+keyBEl.addEventListener('change', () => setKeybindValue('Enter', keyBEl.value));
 
-resetKeybindsBtn.addEventListener("click", () => {
+resetKeybindsBtn.addEventListener('click', () => {
   state.keybinds = { ...DEFAULT_KEYBINDS };
   persistKeybinds();
-  inputMapper.releaseAllFrom("keyboard");
+  inputMapper.releaseAllFrom('keyboard');
   syncSettingsUi();
 });
 
-exportStorageBtn.addEventListener("click", () => {
-  const scope = storageExportScopeEl.value === "all" ? "all" : "tanks";
-  addLog("info", "storage.export", { scope });
+exportStorageBtn.addEventListener('click', () => {
+  const scope = storageExportScopeEl.value === 'all' ? 'all' : 'tanks';
+  addLog('info', 'storage.export', { scope });
   const payload = {
     version: 1,
     createdAt: new Date().toISOString(),
     origin: window.location.origin,
     scope,
-    note: "Export includes localStorage only (not IndexedDB).",
+    note: 'Export includes localStorage only (not IndexedDB).',
     localStorage: readLocalStorage(scope),
   };
-  addLog("info", "storage.export.ok", { scope, keys: Object.keys(payload.localStorage).length });
+  addLog('info', 'storage.export.ok', { scope, keys: Object.keys(payload.localStorage).length });
   jsonDownload(payload, `tanks-storage-${scope}-${new Date().toISOString().slice(0, 19)}.json`);
 });
 
-importStorageBtn.addEventListener("click", () => {
-  addLog("info", "storage.import.open", {});
-  importStorageInput.value = "";
+importStorageBtn.addEventListener('click', () => {
+  addLog('info', 'storage.import.open', {});
+  importStorageInput.value = '';
   importStorageInput.click();
 });
 
-importStorageInput.addEventListener("change", async () => {
+importStorageInput.addEventListener('change', async () => {
   const file = importStorageInput.files?.[0];
   if (!file) return;
   try {
     const text = await file.text();
     const parsed = JSON.parse(text) as unknown;
     const rawMap =
-      typeof parsed === "object" && parsed !== null && "localStorage" in parsed
+      typeof parsed === 'object' && parsed !== null && 'localStorage' in parsed
         ? (parsed as { localStorage?: unknown }).localStorage
         : parsed;
 
-    if (typeof rawMap !== "object" || rawMap === null || Array.isArray(rawMap)) {
-      throw new Error("Invalid import format. Expected { localStorage: { key: value } }.");
+    if (typeof rawMap !== 'object' || rawMap === null || Array.isArray(rawMap)) {
+      throw new Error('Invalid import format. Expected { localStorage: { key: value } }.');
     }
 
     const entries: Record<string, string> = {};
     for (const [k, v] of Object.entries(rawMap as Record<string, unknown>)) {
-      if (typeof v === "string") entries[k] = v;
+      if (typeof v === 'string') entries[k] = v;
     }
 
     // Safety default: import wrapper keys only.
-    removeLocalStorageKeys("tanks");
+    removeLocalStorageKeys('tanks');
     const tanksOnly = tanksKeysOnly(entries);
     for (const [k, v] of Object.entries(tanksOnly)) localStorage.setItem(k, v);
 
-    addLog("info", "storage.import.ok", { keys: Object.keys(tanksOnly).length });
+    addLog('info', 'storage.import.ok', { keys: Object.keys(tanksOnly).length });
     setStatus(
       format(S.status.importedWrapperKeysReloading, { count: Object.keys(tanksOnly).length }),
     );
     window.location.reload();
   } catch (err) {
-    addLog("error", "storage.import.failed", { err: String(err) });
+    addLog('error', 'storage.import.failed', { err: String(err) });
     setError(`Import failed: ${String(err)}`);
   }
 });
 
-clearWrapperBtn.addEventListener("click", () => {
-  const ok = window.confirm("Clear wrapper settings (tanks.* keys) and reload?");
+clearWrapperBtn.addEventListener('click', () => {
+  const ok = window.confirm('Clear wrapper settings (tanks.* keys) and reload?');
   if (!ok) return;
-  addLog("warn", "storage.clear_wrapper", {});
-  removeLocalStorageKeys("tanks");
+  addLog('warn', 'storage.clear_wrapper', {});
+  removeLocalStorageKeys('tanks');
   setStatus(S.status.clearedWrapperReloading);
   window.location.reload();
 });
 
-clearAllBtn.addEventListener("click", async () => {
+clearAllBtn.addEventListener('click', async () => {
   const ok = window.confirm(
-    "Clear ALL site data (localStorage + IndexedDB where supported) and reload?\n\nThis may remove game saves.",
+    'Clear ALL site data (localStorage + IndexedDB where supported) and reload?\n\nThis may remove game saves.',
   );
   if (!ok) return;
-  addLog("warn", "storage.clear_all", {});
+  addLog('warn', 'storage.clear_all', {});
   setStatus(S.status.clearingSiteData);
   try {
     const result = await clearSiteData();
-    addLog("info", "storage.clear_all.ok", {
+    addLog('info', 'storage.clear_all.ok', {
       deleted: result.deleted.length,
       blocked: result.blocked.length,
       errors: result.errors.length,
@@ -1454,12 +1458,12 @@ clearAllBtn.addEventListener("click", async () => {
     ].filter(Boolean);
     setStatus(
       noteParts.length
-        ? format(S.status.reloadingWithNotes, { notes: noteParts.join(" — ") })
+        ? format(S.status.reloadingWithNotes, { notes: noteParts.join(' — ') })
         : S.status.reloading,
     );
     window.location.reload();
   } catch (err) {
-    addLog("error", "storage.clear_all.failed", { err: String(err) });
+    addLog('error', 'storage.clear_all.failed', { err: String(err) });
     setError(`Clear failed: ${String(err)}`);
   }
 });
@@ -1474,7 +1478,7 @@ function safeJsonValue(value: unknown): unknown {
 
 async function listIndexedDbNames(): Promise<string[] | null> {
   const idbAny = indexedDB as unknown as { databases?: () => Promise<Array<{ name?: string }>> };
-  if (typeof idbAny.databases !== "function") return null;
+  if (typeof idbAny.databases !== 'function') return null;
   try {
     const dbs = await idbAny.databases();
     return dbs
@@ -1488,12 +1492,12 @@ async function listIndexedDbNames(): Promise<string[] | null> {
 
 async function collectDiagnostics() {
   const idbNames = await listIndexedDbNames();
-  const hasRuffle = typeof window.RufflePlayer?.newest === "function";
+  const hasRuffle = typeof window.RufflePlayer?.newest === 'function';
   const ruffleConfig = safeJsonValue(window.RufflePlayer?.config ?? null);
   const logEntries = logs.snapshot();
 
   return {
-    kind: "tanks-diagnostics",
+    kind: 'tanks-diagnostics',
     generatedAt: new Date().toISOString(),
     location: {
       href: window.location.href,
@@ -1513,7 +1517,7 @@ async function collectDiagnostics() {
       language: navigator.language,
       languages: Array.isArray(navigator.languages) ? navigator.languages : [],
       deviceMemory:
-        "deviceMemory" in navigator
+        'deviceMemory' in navigator
           ? (navigator as unknown as { deviceMemory?: number }).deviceMemory
           : null,
       hardwareConcurrency: navigator.hardwareConcurrency,
@@ -1563,7 +1567,7 @@ async function collectDiagnostics() {
       config: ruffleConfig,
     },
     storage: {
-      localStorageWrapperKeys: listLocalStorageKeys().filter((k) => k.startsWith("tanks.")),
+      localStorageWrapperKeys: listLocalStorageKeys().filter((k) => k.startsWith('tanks.')),
       indexedDbNames: idbNames,
     },
     logs: {
@@ -1574,7 +1578,7 @@ async function collectDiagnostics() {
 }
 
 function diagnosticsFilename(prefix: string) {
-  const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
+  const stamp = new Date().toISOString().replaceAll(':', '-').slice(0, 19);
   return `${prefix}-${stamp}.json`;
 }
 
@@ -1588,21 +1592,21 @@ async function copyToClipboard(text: string) {
   }
 }
 
-debugEnabledEl.addEventListener("change", () => {
+debugEnabledEl.addEventListener('change', () => {
   state.debugEnabled = Boolean(debugEnabledEl.checked);
   persistDebugSettings();
-  addLog("info", "debug.enabled", { enabled: state.debugEnabled });
+  addLog('info', 'debug.enabled', { enabled: state.debugEnabled });
   applyDebugUi();
 });
 
-debugOverlayCheckboxEl.addEventListener("change", () => {
+debugOverlayCheckboxEl.addEventListener('change', () => {
   state.debugOverlay = Boolean(debugOverlayCheckboxEl.checked);
   persistDebugSettings();
-  addLog("info", "debug.overlay", { overlay: state.debugOverlay });
+  addLog('info', 'debug.overlay', { overlay: state.debugOverlay });
   applyDebugUi();
 });
 
-copyDiagnosticsBtn.addEventListener("click", async () => {
+copyDiagnosticsBtn.addEventListener('click', async () => {
   if (!state.debugEnabled) return;
   try {
     const payload = await collectDiagnostics();
@@ -1610,119 +1614,119 @@ copyDiagnosticsBtn.addEventListener("click", async () => {
     const ok = await copyToClipboard(text);
     if (ok) {
       setStatus(S.status.diagnosticsCopied);
-      addLog("info", "debug.diagnostics.copied", { bytes: text.length });
+      addLog('info', 'debug.diagnostics.copied', { bytes: text.length });
     } else {
-      jsonDownload(payload, diagnosticsFilename("tanks-diagnostics"));
+      jsonDownload(payload, diagnosticsFilename('tanks-diagnostics'));
       setStatus(S.status.clipboardUnavailableDownloaded);
-      addLog("warn", "debug.diagnostics.copy_failed", {});
+      addLog('warn', 'debug.diagnostics.copy_failed', {});
     }
   } catch (err) {
     setError(`Diagnostics failed: ${String(err)}`);
-    addLog("error", "debug.diagnostics.failed", { err: String(err) });
+    addLog('error', 'debug.diagnostics.failed', { err: String(err) });
   }
 });
 
-downloadDiagnosticsBtn.addEventListener("click", async () => {
+downloadDiagnosticsBtn.addEventListener('click', async () => {
   if (!state.debugEnabled) return;
   try {
     const payload = await collectDiagnostics();
-    jsonDownload(payload, diagnosticsFilename("tanks-diagnostics"));
-    addLog("info", "debug.diagnostics.downloaded", {});
+    jsonDownload(payload, diagnosticsFilename('tanks-diagnostics'));
+    addLog('info', 'debug.diagnostics.downloaded', {});
   } catch (err) {
     setError(`Diagnostics failed: ${String(err)}`);
-    addLog("error", "debug.diagnostics.failed", { err: String(err) });
+    addLog('error', 'debug.diagnostics.failed', { err: String(err) });
   }
 });
 
-downloadLogsBtn.addEventListener("click", () => {
+downloadLogsBtn.addEventListener('click', () => {
   if (!state.debugEnabled) return;
   const payload = {
-    kind: "tanks-logs",
+    kind: 'tanks-logs',
     generatedAt: new Date().toISOString(),
     counts: logs.counts(),
     entries: logs.snapshot(),
   };
-  jsonDownload(payload, diagnosticsFilename("tanks-logs"));
-  addLog("info", "debug.logs.downloaded", {});
+  jsonDownload(payload, diagnosticsFilename('tanks-logs'));
+  addLog('info', 'debug.logs.downloaded', {});
 });
 
-clearLogsBtn.addEventListener("click", () => {
+clearLogsBtn.addEventListener('click', () => {
   if (!state.debugEnabled) return;
   logs.clear();
-  addLog("info", "debug.logs.cleared", {});
+  addLog('info', 'debug.logs.cleared', {});
   applyDebugUi();
 });
 
-document.addEventListener("fullscreenchange", () => {
+document.addEventListener('fullscreenchange', () => {
   updateFullscreenState();
   resizeStage();
 });
 
-window.addEventListener("resize", () => {
+window.addEventListener('resize', () => {
   resizeStage();
 });
 
-loadFileBtn.addEventListener("click", () => {
+loadFileBtn.addEventListener('click', () => {
   fileInput.click();
 });
 
-fileInput.addEventListener("change", () => {
+fileInput.addEventListener('change', () => {
   const file = fileInput.files?.[0];
   if (!file) return;
 
   if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
   lastObjectUrl = URL.createObjectURL(file);
 
-  addLog("info", "swf.file.selected", { name: file.name, size: file.size, type: file.type });
-  void loadSwfUrl(lastObjectUrl, { type: "file", name: file.name, url: lastObjectUrl });
+  addLog('info', 'swf.file.selected', { name: file.name, size: file.size, type: file.type });
+  void loadSwfUrl(lastObjectUrl, { type: 'file', name: file.name, url: lastObjectUrl });
 });
 
-document.addEventListener("keydown", (ev) => {
-  if (ev.key.toLowerCase() !== "f") return;
+document.addEventListener('keydown', (ev) => {
+  if (ev.key.toLowerCase() !== 'f') return;
   if (!ev.isTrusted) return;
   if (isTextInputLike(ev.target)) return;
   ev.preventDefault();
   void toggleFullscreen();
 });
 
-function handleRemapKey(ev: KeyboardEvent, type: "down" | "up") {
+function handleRemapKey(ev: KeyboardEvent, type: 'down' | 'up') {
   if (!ev.isTrusted) return;
   if (isTextInputLike(ev.target)) return;
   if (!state.keyRemapEnabled) return;
 
   const mapped = lookupMappedKey(ev.code);
   if (!mapped) return;
-  if (ev.code === "KeyF") return;
+  if (ev.code === 'KeyF') return;
 
   ev.preventDefault();
   ev.stopPropagation();
 
-  if (type === "down") inputMapper.pressFrom("keyboard", mapped);
-  else inputMapper.releaseFrom("keyboard", mapped);
+  if (type === 'down') inputMapper.pressFrom('keyboard', mapped);
+  else inputMapper.releaseFrom('keyboard', mapped);
 }
 
 document.addEventListener(
-  "keydown",
+  'keydown',
   (ev) => {
-    handleRemapKey(ev, "down");
+    handleRemapKey(ev, 'down');
   },
   { capture: true },
 );
 document.addEventListener(
-  "keyup",
+  'keyup',
   (ev) => {
-    handleRemapKey(ev, "up");
+    handleRemapKey(ev, 'up');
   },
   { capture: true },
 );
 
-window.addEventListener("blur", () => {
+window.addEventListener('blur', () => {
   inputMapper.releaseAll();
 });
 
 window.render_game_to_text = () =>
   JSON.stringify({
-    note: "Wrapper state only (SWF runs inside Ruffle).",
+    note: 'Wrapper state only (SWF runs inside Ruffle).',
     loadState: state.loadState,
     swf: state.swf,
     scaleMode: state.scaleMode,

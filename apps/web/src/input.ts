@@ -1,14 +1,14 @@
-export type KeyCode = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Space" | "Enter";
+export type KeyCode = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Space' | 'Enter';
 
 type KeyboardDispatchTarget = Window | Document | HTMLElement;
 type InputSource = string;
 
-const DEFAULT_SOURCE: InputSource = "__default__";
+const DEFAULT_SOURCE: InputSource = '__default__';
 
 function codeToKey(code: KeyCode): string {
   switch (code) {
-    case "Space":
-      return " ";
+    case 'Space':
+      return ' ';
     default:
       return code;
   }
@@ -16,7 +16,7 @@ function codeToKey(code: KeyCode): string {
 
 function dispatchKeyboardEvent(
   target: KeyboardDispatchTarget,
-  type: "keydown" | "keyup",
+  type: 'keydown' | 'keyup',
   code: KeyCode,
 ) {
   const key = codeToKey(code);
@@ -24,15 +24,15 @@ function dispatchKeyboardEvent(
   // Note: keyCode/which are deprecated, but some runtimes still look at them.
   // We include them when possible.
   const keyCode =
-    code === "Enter"
+    code === 'Enter'
       ? 13
-      : code === "Space"
+      : code === 'Space'
         ? 32
-        : code === "ArrowLeft"
+        : code === 'ArrowLeft'
           ? 37
-          : code === "ArrowUp"
+          : code === 'ArrowUp'
             ? 38
-            : code === "ArrowRight"
+            : code === 'ArrowRight'
               ? 39
               : 40;
 
@@ -45,8 +45,8 @@ function dispatchKeyboardEvent(
 
   // Some properties are readonly; best-effort define for compatibility.
   try {
-    Object.defineProperty(ev, "keyCode", { value: keyCode });
-    Object.defineProperty(ev, "which", { value: keyCode });
+    Object.defineProperty(ev, 'keyCode', { value: keyCode });
+    Object.defineProperty(ev, 'which', { value: keyCode });
   } catch {
     // ignore
   }
@@ -103,7 +103,7 @@ export function createInputMapper(getTargets: () => KeyboardDispatchTarget[]): I
     sources.add(source);
 
     if (!wasPressed) {
-      forEachTarget((t) => dispatchKeyboardEvent(t, "keydown", code));
+      forEachTarget((t) => dispatchKeyboardEvent(t, 'keydown', code));
     }
   }
 
@@ -114,12 +114,13 @@ export function createInputMapper(getTargets: () => KeyboardDispatchTarget[]): I
     codes.delete(code);
     if (codes.size === 0) codesBySource.delete(source);
 
-    const sources = sourcesByCode.get(code);
-    if (!sources) return;
+    // Invariant: pressFrom always writes codesBySource and sourcesByCode
+    // together, so if `codes` held this code, sourcesByCode must hold it too.
+    const sources = sourcesByCode.get(code) as Set<InputSource>;
     sources.delete(source);
     if (sources.size === 0) {
       sourcesByCode.delete(code);
-      forEachTarget((t) => dispatchKeyboardEvent(t, "keyup", code));
+      forEachTarget((t) => dispatchKeyboardEvent(t, 'keyup', code));
     }
   }
 
@@ -136,7 +137,7 @@ export function createInputMapper(getTargets: () => KeyboardDispatchTarget[]): I
     codesBySource.clear();
     sourcesByCode.clear();
     for (const code of codes) {
-      forEachTarget((t) => dispatchKeyboardEvent(t, "keyup", code));
+      forEachTarget((t) => dispatchKeyboardEvent(t, 'keyup', code));
     }
   }
 

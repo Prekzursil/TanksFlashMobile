@@ -1,19 +1,19 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { createRequire } from "node:module";
-import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const { readFromBufferP, extractImages, extractSounds } = require("swf-extract");
+const { readFromBufferP, extractImages, extractSounds } = require('swf-extract');
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(scriptDir, "..");
+const repoRoot = path.resolve(scriptDir, '..');
 
-const DEFAULT_SWF = path.join(repoRoot, "assets", "original", "tanks.swf");
-const DEFAULT_OUT = path.join(repoRoot, "output", "original-extracted");
-const DEFAULT_GODOT_OUT = path.join(repoRoot, "apps", "remake-godot", "assets", "original");
-const DEFAULT_WEB_OUT = path.join(repoRoot, "apps", "remake-web", "public", "original");
+const DEFAULT_SWF = path.join(repoRoot, 'assets', 'original', 'tanks.swf');
+const DEFAULT_OUT = path.join(repoRoot, 'output', 'original-extracted');
+const DEFAULT_GODOT_OUT = path.join(repoRoot, 'apps', 'remake-godot', 'assets', 'original');
+const DEFAULT_WEB_OUT = path.join(repoRoot, 'apps', 'remake-web', 'public', 'original');
 
 function parseArgs(argv) {
   const args = {
@@ -27,17 +27,17 @@ function parseArgs(argv) {
   for (let i = 2; i < argv.length; i++) {
     const arg = argv[i];
     const next = argv[i + 1];
-    if (arg === "--swf" && next) {
+    if (arg === '--swf' && next) {
       args.swf = path.isAbsolute(next) ? next : path.resolve(repoRoot, next);
       i++;
-    } else if (arg === "--out" && next) {
+    } else if (arg === '--out' && next) {
       args.out = path.isAbsolute(next) ? next : path.resolve(repoRoot, next);
       i++;
-    } else if (arg === "--write-godot") {
+    } else if (arg === '--write-godot') {
       args.writeGodot = true;
-    } else if (arg === "--write-web") {
+    } else if (arg === '--write-web') {
       args.writeWeb = true;
-    } else if (arg === "--force") {
+    } else if (arg === '--force') {
       args.force = true;
     }
   }
@@ -74,8 +74,8 @@ async function ensureEmptyDir(dir, { force }) {
 
 async function writeAssetsToDir(destDir, { images, sounds, force }) {
   await ensureEmptyDir(destDir, { force });
-  const imagesDir = path.join(destDir, "images");
-  const soundsDir = path.join(destDir, "sounds");
+  const imagesDir = path.join(destDir, 'images');
+  const soundsDir = path.join(destDir, 'sounds');
   await fs.mkdir(imagesDir, { recursive: true });
   await fs.mkdir(soundsDir, { recursive: true });
 
@@ -94,7 +94,7 @@ async function writeAssetsToDir(destDir, { images, sounds, force }) {
     swf: path.relative(repoRoot, DEFAULT_SWF),
     images: images.map((i) => ({
       characterId: i.characterId,
-      type: "png",
+      type: 'png',
       sourceType: i.imgType,
       file: `images/char_${i.characterId}.png`,
       bytes: i.imgData.length,
@@ -107,13 +107,13 @@ async function writeAssetsToDir(destDir, { images, sounds, force }) {
     })),
   };
 
-  await fs.writeFile(path.join(destDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  await fs.writeFile(path.join(destDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 }
 
 async function toPngBuffer(imgData, imgType) {
-  if (imgType === "png") return imgData;
+  if (imgType === 'png') return imgData;
 
-  if (imgType === "jpeg" || imgType === "jpg") {
+  if (imgType === 'jpeg' || imgType === 'jpg') {
     return await convertWithPythonPillow(imgData);
   }
 
@@ -122,26 +122,28 @@ async function toPngBuffer(imgData, imgType) {
 
 async function convertWithPythonPillow(inputBuffer) {
   return await new Promise((resolve, reject) => {
-    const py = spawn("python3", [
-      "-c",
+    const py = spawn('python3', [
+      '-c',
       [
-        "import io, sys",
-        "from PIL import Image",
-        "img = Image.open(sys.stdin.buffer)",
-        "out = io.BytesIO()",
+        'import io, sys',
+        'from PIL import Image',
+        'img = Image.open(sys.stdin.buffer)',
+        'out = io.BytesIO()',
         "img.save(out, format='PNG')",
-        "sys.stdout.buffer.write(out.getvalue())",
-      ].join("; "),
+        'sys.stdout.buffer.write(out.getvalue())',
+      ].join('; '),
     ]);
 
     const stdout = [];
     const stderr = [];
-    py.stdout.on("data", (chunk) => stdout.push(chunk));
-    py.stderr.on("data", (chunk) => stderr.push(chunk));
-    py.on("error", (err) => reject(err));
-    py.on("close", (code) => {
+    py.stdout.on('data', (chunk) => stdout.push(chunk));
+    py.stderr.on('data', (chunk) => stderr.push(chunk));
+    py.on('error', (err) => reject(err));
+    py.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(`python3 image conversion failed: ${Buffer.concat(stderr).toString("utf8")}`));
+        reject(
+          new Error(`python3 image conversion failed: ${Buffer.concat(stderr).toString('utf8')}`),
+        );
         return;
       }
       resolve(Buffer.concat(stdout));
@@ -169,10 +171,10 @@ async function main() {
   if (args.writeWeb) targets.push(DEFAULT_WEB_OUT);
 
   if (targets.length === 0) {
-    throw new Error("No output targets selected. Pass --out and/or --write-godot/--write-web.");
+    throw new Error('No output targets selected. Pass --out and/or --write-godot/--write-web.');
   }
 
-  console.log("Extracting SWF assets…");
+  console.log('Extracting SWF assets…');
   console.log(`- SWF: ${path.relative(repoRoot, args.swf)}`);
   console.log(`- Images: ${images.length}`);
   console.log(`- Sounds: ${sounds.length}`);
@@ -182,7 +184,7 @@ async function main() {
     await writeAssetsToDir(destDir, { images, sounds, force: args.force });
   }
 
-  console.log("Done.");
+  console.log('Done.');
 }
 
 main().catch((err) => {
