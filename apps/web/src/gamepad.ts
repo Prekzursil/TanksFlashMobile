@@ -224,13 +224,19 @@ export function createGamepadInput(
   function tick() {
     if (disposed) return;
 
-    const gamepads = supported ? Array.from(navigator.getGamepads()) : [];
+    // tick() is only ever scheduled from within the `if (supported)` start block
+    // (or re-scheduled from inside tick itself), so `supported` is invariantly
+    // true here and navigator.getGamepads is guaranteed to exist.
+    const gamepads = Array.from(navigator.getGamepads());
     updateConnectedCount(gamepads);
 
     const settings = normalizeSettings(options.getSettings?.());
 
     if (!enabled) {
-      for (const index of [...activeByIndex.keys()]) releaseIndex(index);
+      // Nothing to release here: setEnabled(false) is the only path that clears
+      // `enabled`, and it already releases every active index, so activeByIndex
+      // is guaranteed empty while disabled. The disabled tick just keeps the
+      // rAF loop alive so re-enabling resumes seamlessly.
       rafId = window.requestAnimationFrame(tick);
       return;
     }

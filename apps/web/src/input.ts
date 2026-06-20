@@ -114,8 +114,9 @@ export function createInputMapper(getTargets: () => KeyboardDispatchTarget[]): I
     codes.delete(code);
     if (codes.size === 0) codesBySource.delete(source);
 
-    const sources = sourcesByCode.get(code);
-    if (!sources) return;
+    // Invariant: pressFrom always writes codesBySource and sourcesByCode
+    // together, so if `codes` held this code, sourcesByCode must hold it too.
+    const sources = sourcesByCode.get(code) as Set<InputSource>;
     sources.delete(source);
     if (sources.size === 0) {
       sourcesByCode.delete(code);
