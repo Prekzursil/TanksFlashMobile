@@ -17,8 +17,8 @@
     "package:win": "npm run sync:web && electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
-    "electron": "40.8.5",
-    "electron-builder": "26.7.0"
+    "electron": "40.10.5",
+    "electron-builder": "26.15.3"
   },
   "build": {
     "appId": "com.prekzursil.tanks",
