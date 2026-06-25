@@ -1,34 +1,34 @@
-import './style.css';
+import "./style.css";
 
 declare const __APP_VERSION__: string;
 
-const canvasEl = document.querySelector<HTMLCanvasElement>('#game-canvas');
-const startBtnEl = document.querySelector<HTMLButtonElement>('#start-btn');
-const resetBtnEl = document.querySelector<HTMLButtonElement>('#reset-btn');
-const pauseBtnEl = document.querySelector<HTMLButtonElement>('#pause-btn');
-const settingsBtnEl = document.querySelector<HTMLButtonElement>('#settings-btn');
-const fullscreenBtnEl = document.querySelector<HTMLButtonElement>('#fullscreen-btn');
-const hudEl = document.querySelector<HTMLDivElement>('#hud');
-const hudPanelEl = document.querySelector<HTMLElement>('#hud-panel');
-const hudStatsEl = document.querySelector<HTMLElement>('#hud-stats');
-const hudMessageEl = document.querySelector<HTMLElement>('#hud-message');
+const canvasEl = document.querySelector<HTMLCanvasElement>("#game-canvas");
+const startBtnEl = document.querySelector<HTMLButtonElement>("#start-btn");
+const resetBtnEl = document.querySelector<HTMLButtonElement>("#reset-btn");
+const pauseBtnEl = document.querySelector<HTMLButtonElement>("#pause-btn");
+const settingsBtnEl = document.querySelector<HTMLButtonElement>("#settings-btn");
+const fullscreenBtnEl = document.querySelector<HTMLButtonElement>("#fullscreen-btn");
+const hudEl = document.querySelector<HTMLDivElement>("#hud");
+const hudPanelEl = document.querySelector<HTMLElement>("#hud-panel");
+const hudStatsEl = document.querySelector<HTMLElement>("#hud-stats");
+const hudMessageEl = document.querySelector<HTMLElement>("#hud-message");
 
-const touchControlsEl = document.querySelector<HTMLElement>('#touch-controls');
+const touchControlsEl = document.querySelector<HTMLElement>("#touch-controls");
 
-const modalLayerEl = document.querySelector<HTMLElement>('#modal-layer');
-const pauseModalEl = document.querySelector<HTMLElement>('#pause-modal');
-const pauseResumeBtnEl = document.querySelector<HTMLButtonElement>('#pause-resume-btn');
-const pauseRestartBtnEl = document.querySelector<HTMLButtonElement>('#pause-restart-btn');
-const pauseSettingsBtnEl = document.querySelector<HTMLButtonElement>('#pause-settings-btn');
-const pauseMainMenuBtnEl = document.querySelector<HTMLButtonElement>('#pause-main-menu-btn');
+const modalLayerEl = document.querySelector<HTMLElement>("#modal-layer");
+const pauseModalEl = document.querySelector<HTMLElement>("#pause-modal");
+const pauseResumeBtnEl = document.querySelector<HTMLButtonElement>("#pause-resume-btn");
+const pauseRestartBtnEl = document.querySelector<HTMLButtonElement>("#pause-restart-btn");
+const pauseSettingsBtnEl = document.querySelector<HTMLButtonElement>("#pause-settings-btn");
+const pauseMainMenuBtnEl = document.querySelector<HTMLButtonElement>("#pause-main-menu-btn");
 
-const settingsModalEl = document.querySelector<HTMLElement>('#settings-modal');
-const settingsTouchEnabledEl = document.querySelector<HTMLInputElement>('#settings-touch-enabled');
-const settingsTouchLayoutEl = document.querySelector<HTMLSelectElement>('#settings-touch-layout');
+const settingsModalEl = document.querySelector<HTMLElement>("#settings-modal");
+const settingsTouchEnabledEl = document.querySelector<HTMLInputElement>("#settings-touch-enabled");
+const settingsTouchLayoutEl = document.querySelector<HTMLSelectElement>("#settings-touch-layout");
 const settingsCameraIntensityEl = document.querySelector<HTMLSelectElement>(
-  '#settings-camera-intensity',
+  "#settings-camera-intensity",
 );
-const settingsCloseBtnEl = document.querySelector<HTMLButtonElement>('#settings-close-btn');
+const settingsCloseBtnEl = document.querySelector<HTMLButtonElement>("#settings-close-btn");
 
 if (
   !canvasEl ||
@@ -54,7 +54,7 @@ if (
   !settingsCameraIntensityEl ||
   !settingsCloseBtnEl
 ) {
-  throw new Error('Missing required DOM elements');
+  throw new Error("Missing required DOM elements");
 }
 
 const canvas = canvasEl;
@@ -83,17 +83,17 @@ const settingsTouchLayout = settingsTouchLayoutEl;
 const settingsCameraIntensity = settingsCameraIntensityEl;
 const settingsCloseBtn = settingsCloseBtnEl;
 
-const ctxMaybe = canvas.getContext('2d');
-if (!ctxMaybe) throw new Error('2D canvas context not available');
+const ctxMaybe = canvas.getContext("2d");
+if (!ctxMaybe) throw new Error("2D canvas context not available");
 const ctx = ctxMaybe;
 
-type Mode = 'menu' | 'playing' | 'paused' | 'gameover';
+type Mode = "menu" | "playing" | "paused" | "gameover";
 
-type TouchLayout = 'right' | 'left';
-type CameraIntensity = 'off' | 'low' | 'default';
+type TouchLayout = "right" | "left";
+type CameraIntensity = "off" | "low" | "default";
 
-type UiModal = null | 'pause' | 'settings';
-type Phase = 'aim' | 'firing' | 'impact' | 'gameover';
+type UiModal = null | "pause" | "settings";
+type Phase = "aim" | "firing" | "impact" | "gameover";
 
 type Weapon = {
   name: string;
@@ -174,41 +174,41 @@ const CAMERA_CUE_DECAY_SEC = 0.35;
 
 const weapons: Weapon[] = [
   {
-    name: 'Cannon',
+    name: "Cannon",
     blastRadius: 72,
     craterRadius: 56,
     maxDamage: 70,
     speedMultiplier: 1.0,
     projectileRadius: 4,
-    projectileColor: 'rgba(255, 230, 120, 0.95)',
+    projectileColor: "rgba(255, 230, 120, 0.95)",
   },
   {
-    name: 'Heavy',
+    name: "Heavy",
     blastRadius: 92,
     craterRadius: 72,
     maxDamage: 90,
     speedMultiplier: 0.85,
     projectileRadius: 5,
-    projectileColor: 'rgba(255, 190, 110, 0.95)',
+    projectileColor: "rgba(255, 190, 110, 0.95)",
   },
   {
-    name: 'Sniper',
+    name: "Sniper",
     blastRadius: 56,
     craterRadius: 36,
     maxDamage: 60,
     speedMultiplier: 1.25,
     projectileRadius: 3,
-    projectileColor: 'rgba(160, 220, 255, 0.95)',
+    projectileColor: "rgba(160, 220, 255, 0.95)",
   },
 ];
 
 const ORIGINAL_ASSETS = {
-  imageBg: '/original/images/char_318.png',
-  imageP1: '/original/images/char_230.png',
-  imageP2: '/original/images/char_237.png',
-  sfxUiClick: '/original/sounds/sound_121.mp3',
-  sfxFire: '/original/sounds/sound_35.mp3',
-  sfxImpact: '/original/sounds/sound_12.mp3',
+  imageBg: "/original/images/char_318.png",
+  imageP1: "/original/images/char_230.png",
+  imageP2: "/original/images/char_237.png",
+  sfxUiClick: "/original/sounds/sound_121.mp3",
+  sfxFire: "/original/sounds/sound_35.mp3",
+  sfxImpact: "/original/sounds/sound_12.mp3",
 } as const;
 
 const state: {
@@ -225,9 +225,9 @@ const state: {
   projectile: Projectile;
   camera: CameraState;
 } = {
-  mode: 'menu',
-  phase: 'aim',
-  message: '',
+  mode: "menu",
+  phase: "aim",
+  message: "",
   windAccel: 0,
   fuelLeft: TURN_FUEL_MAX,
   timeLeft: TURN_TIME_SEC,
@@ -248,16 +248,16 @@ const state: {
   },
 };
 
-const UI_SETTINGS_KEY = 'tanks.remakeWeb.settings.v1';
+const UI_SETTINGS_KEY = "tanks.remakeWeb.settings.v1";
 
 function defaultTouchEnabled() {
   // Good heuristic for phones/tablets; also fine for 2-in-1 devices.
-  return window.matchMedia?.('(pointer: coarse)').matches ?? false;
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
 function normalizeCameraIntensity(raw: unknown): CameraIntensity {
-  if (raw === 'off' || raw === 'low' || raw === 'default') return raw;
-  return 'default';
+  if (raw === "off" || raw === "low" || raw === "default") return raw;
+  return "default";
 }
 
 function loadUiSettings(): {
@@ -270,8 +270,8 @@ function loadUiSettings(): {
     if (!raw)
       return {
         touchEnabled: defaultTouchEnabled(),
-        touchLayout: 'right',
-        cameraIntensity: 'default',
+        touchLayout: "right",
+        cameraIntensity: "default",
       };
     const parsed = JSON.parse(raw) as Partial<{
       touchEnabled: boolean;
@@ -280,15 +280,15 @@ function loadUiSettings(): {
     }>;
     return {
       touchEnabled:
-        typeof parsed.touchEnabled === 'boolean' ? parsed.touchEnabled : defaultTouchEnabled(),
-      touchLayout: parsed.touchLayout === 'left' ? 'left' : 'right',
+        typeof parsed.touchEnabled === "boolean" ? parsed.touchEnabled : defaultTouchEnabled(),
+      touchLayout: parsed.touchLayout === "left" ? "left" : "right",
       cameraIntensity: normalizeCameraIntensity(parsed.cameraIntensity),
     };
   } catch {
     return {
       touchEnabled: defaultTouchEnabled(),
-      touchLayout: 'right',
-      cameraIntensity: 'default',
+      touchLayout: "right",
+      cameraIntensity: "default",
     };
   }
 }
@@ -313,7 +313,7 @@ const ui: {
   cameraIntensity: CameraIntensity;
 } = {
   modal: null,
-  modalReturnMode: 'menu',
+  modalReturnMode: "menu",
   ...loadUiSettings(),
 };
 
@@ -326,8 +326,8 @@ function persistUiSettings() {
 }
 
 function cameraMotionProfile() {
-  if (ui.cameraIntensity === 'off') return { followScale: 0, zoomScale: 0, shakeScale: 0 };
-  if (ui.cameraIntensity === 'low') return { followScale: 0.5, zoomScale: 0.45, shakeScale: 0.4 };
+  if (ui.cameraIntensity === "off") return { followScale: 0, zoomScale: 0, shakeScale: 0 };
+  if (ui.cameraIntensity === "low") return { followScale: 0.5, zoomScale: 0.45, shakeScale: 0.4 };
   return { followScale: 1, zoomScale: 1, shakeScale: 1 };
 }
 
@@ -344,7 +344,7 @@ const imageReady = {
 
 function createLoadedImage(src: string, onReady: () => void): HTMLImageElement {
   const img = new Image();
-  img.decoding = 'async';
+  img.decoding = "async";
   img.onload = () => onReady();
   img.onerror = () => onReady();
   img.src = src;
@@ -446,7 +446,7 @@ function initTanks() {
       aimDeg: 45,
       power: 520,
       weaponIdx: 0,
-      color: '#44e38f',
+      color: "#44e38f",
     },
     {
       id: 1,
@@ -457,7 +457,7 @@ function initTanks() {
       aimDeg: 45,
       power: 520,
       weaponIdx: 0,
-      color: '#ff6d6d',
+      color: "#ff6d6d",
     },
   ];
 }
@@ -465,9 +465,9 @@ function initTanks() {
 function startMatch() {
   regenTerrain();
   initTanks();
-  state.mode = 'playing';
-  state.phase = 'aim';
-  state.message = '';
+  state.mode = "playing";
+  state.phase = "aim";
+  state.message = "";
   state.projectile = { active: false, x: 0, y: 0, vx: 0, vy: 0, weaponIdx: 0 };
   state.cooldown = 0;
   state.currentTank = 0;
@@ -484,7 +484,7 @@ function startMatch() {
 
 function startTurn(tankIdx: 0 | 1) {
   state.currentTank = tankIdx;
-  state.phase = 'aim';
+  state.phase = "aim";
   state.fuelLeft = TURN_FUEL_MAX;
   state.timeLeft = TURN_TIME_SEC;
   state.windAccel = randRange(WIND_ACCEL_MIN, WIND_ACCEL_MAX);
@@ -517,7 +517,7 @@ function getMuzzleState(t: Tank, weapon: Weapon) {
 }
 
 function buildTrajectoryPreview(t: Tank): TrajectoryPoint[] {
-  if (state.mode !== 'playing' || state.phase !== 'aim') return [];
+  if (state.mode !== "playing" || state.phase !== "aim") return [];
   const weapon = weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]!;
   const muzzle = getMuzzleState(t, weapon);
 
@@ -561,7 +561,7 @@ function buildTrajectoryPreview(t: Tank): TrajectoryPoint[] {
   return points;
 }
 
-type HoldAction = 'move_left' | 'move_right' | 'aim_left' | 'aim_right' | 'power_up' | 'power_down';
+type HoldAction = "move_left" | "move_right" | "aim_left" | "aim_right" | "power_up" | "power_down";
 
 const touchHeld = new Set<HoldAction>();
 
@@ -581,8 +581,8 @@ function tryMoveTank(t: Tank, dt: number) {
   if (Math.abs(t.y - groundY) > 0.75) return;
 
   let dir = 0;
-  if (keyDown('KeyA') || actionDown('move_left')) dir -= 1;
-  if (keyDown('KeyD') || actionDown('move_right')) dir += 1;
+  if (keyDown("KeyA") || actionDown("move_left")) dir -= 1;
+  if (keyDown("KeyD") || actionDown("move_right")) dir += 1;
   if (dir === 0) return;
 
   let desiredX = clamp(t.x + dir * MOVE_SPEED * dt, TANK_R, WIDTH - TANK_R);
@@ -635,15 +635,15 @@ function tickTanks(dt: number) {
 
 function aimAndPowerTick(t: Tank, dt: number) {
   const angleDelta = ANGLE_SPEED_DEG_PER_SEC * dt;
-  if (keyDown('ArrowLeft') || actionDown('aim_left'))
+  if (keyDown("ArrowLeft") || actionDown("aim_left"))
     t.aimDeg = clamp(t.aimDeg - angleDelta, ANGLE_MIN, ANGLE_MAX);
-  if (keyDown('ArrowRight') || actionDown('aim_right'))
+  if (keyDown("ArrowRight") || actionDown("aim_right"))
     t.aimDeg = clamp(t.aimDeg + angleDelta, ANGLE_MIN, ANGLE_MAX);
 
   const powerDelta = POWER_SPEED_PER_SEC * dt;
-  if (keyDown('ArrowDown') || actionDown('power_down'))
+  if (keyDown("ArrowDown") || actionDown("power_down"))
     t.power = clamp(t.power - powerDelta, POWER_MIN, POWER_MAX);
-  if (keyDown('ArrowUp') || actionDown('power_up'))
+  if (keyDown("ArrowUp") || actionDown("power_up"))
     t.power = clamp(t.power + powerDelta, POWER_MIN, POWER_MAX);
 }
 
@@ -664,7 +664,7 @@ function tickCamera(dt: number) {
   let targetX = WIDTH * 0.5;
   let targetY = HEIGHT * 0.5;
 
-  if (state.mode === 'playing') {
+  if (state.mode === "playing") {
     if (state.projectile.active) {
       targetX = clamp(state.projectile.x, 0, WIDTH);
       targetY = clamp(state.projectile.y, 0, HEIGHT);
@@ -718,16 +718,16 @@ function fire(t: Tank) {
   state.projectile.y = muzzle.muzzleY;
   state.projectile.vx = muzzle.velX;
   state.projectile.vy = muzzle.velY;
-  state.phase = 'firing';
-  state.message = '';
+  state.phase = "firing";
+  state.message = "";
   triggerCameraCue(0.22);
   triggerCameraShake(0.12, 3.2);
   playSfx(audioCache.fire);
 }
 
 function requestFire() {
-  if (state.mode !== 'playing') return;
-  if (state.phase !== 'aim') return;
+  if (state.mode !== "playing") return;
+  if (state.phase !== "aim") return;
   if (ui.modal !== null) return;
   if (state.projectile.active) return;
   if (state.cooldown > 0) return;
@@ -766,7 +766,7 @@ function applyExplosionDamage(cx: number, cy: number, radius: number, maxDamage:
 
 function explodeAt(x: number, y: number) {
   state.projectile.active = false;
-  state.phase = 'impact';
+  state.phase = "impact";
   state.cooldown = EXPLOSION_COOLDOWN_SEC;
   triggerCameraCue(0.32);
   triggerCameraShake(0.28, 11.5);
@@ -782,9 +782,9 @@ function explodeAt(x: number, y: number) {
 function endTurnOrGame() {
   const alive = state.tanks.filter((t) => t.hp > 0);
   if (alive.length <= 1) {
-    state.mode = 'gameover';
-    state.phase = 'gameover';
-    state.message = alive.length === 1 ? `Player ${alive[0]!.id + 1} wins!` : 'Draw!';
+    state.mode = "gameover";
+    state.phase = "gameover";
+    state.message = alive.length === 1 ? `Player ${alive[0]!.id + 1} wins!` : "Draw!";
     ui.modal = null;
     pauseBtn.disabled = true;
     syncUi();
@@ -798,7 +798,7 @@ function endTurnOrGame() {
 function tickProjectile(dt: number) {
   const p = state.projectile;
   if (!p.active) return;
-  state.phase = 'firing';
+  state.phase = "firing";
 
   p.vx += state.windAccel * dt;
   p.vy += GRAVITY * dt;
@@ -831,12 +831,12 @@ function tickProjectile(dt: number) {
 }
 
 function tick(dt: number) {
-  if (state.mode !== 'playing') return;
+  if (state.mode !== "playing") return;
 
   tickTanks(dt);
 
   if (state.cooldown > 0) {
-    state.phase = 'impact';
+    state.phase = "impact";
     state.cooldown = Math.max(0, state.cooldown - dt);
     if (state.cooldown === 0) endTurnOrGame();
   }
@@ -854,12 +854,12 @@ function tick(dt: number) {
 
   state.timeLeft = Math.max(0, state.timeLeft - dt);
   if (state.timeLeft === 0) {
-    state.message = 'Timer expired!';
+    state.message = "Timer expired!";
     fire(t);
     return;
   }
 
-  state.phase = 'aim';
+  state.phase = "aim";
   tryMoveTank(t, dt);
   aimAndPowerTick(t, dt);
 }
@@ -888,8 +888,8 @@ function draw() {
 
   // Background
   const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  bg.addColorStop(0, '#0b1220');
-  bg.addColorStop(1, '#070a0f');
+  bg.addColorStop(0, "#0b1220");
+  bg.addColorStop(1, "#070a0f");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -901,7 +901,7 @@ function draw() {
   }
 
   // Terrain fill
-  ctx.fillStyle = '#162026';
+  ctx.fillStyle = "#162026";
   ctx.beginPath();
   ctx.moveTo(0, HEIGHT);
   for (let i = 0; i < state.terrainY.length; i++) {
@@ -912,7 +912,7 @@ function draw() {
   ctx.fill();
 
   // Terrain stroke
-  ctx.strokeStyle = '#3a4a55';
+  ctx.strokeStyle = "#3a4a55";
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let i = 0; i < state.terrainY.length; i++) {
@@ -924,7 +924,7 @@ function draw() {
   ctx.stroke();
 
   const activeTank =
-    state.mode === 'playing' && !state.projectile.active
+    state.mode === "playing" && !state.projectile.active
       ? (state.tanks[state.currentTank] ?? null)
       : null;
   const trajectoryPreview =
@@ -943,7 +943,7 @@ function draw() {
       ctx.clip();
       ctx.drawImage(sprite, t.x - TANK_R, t.y - TANK_R, TANK_R * 2, TANK_R * 2);
       ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
@@ -954,17 +954,17 @@ function draw() {
       ctx.arc(t.x, t.y, TANK_R, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
       ctx.arc(t.x, t.y, TANK_R - 6, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    if (state.mode === 'playing' && t.id === state.currentTank && !state.projectile.active) {
+    if (state.mode === "playing" && t.id === state.currentTank && !state.projectile.active) {
       const weapon = weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]!;
       const aim = getAimUnit(t);
       const muzzle = getMuzzleState(t, weapon);
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(t.x, t.y);
@@ -973,7 +973,7 @@ function draw() {
 
       if (trajectoryPreview.length > 0) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 235, 170, 0.6)';
+        ctx.strokeStyle = "rgba(255, 235, 170, 0.6)";
         ctx.lineWidth = 1.6;
         ctx.setLineDash([7, 7]);
         ctx.beginPath();
@@ -994,7 +994,7 @@ function draw() {
 
         const last = trajectoryPreview[trajectoryPreview.length - 1]!;
         if (last.impact) {
-          ctx.strokeStyle = 'rgba(255, 168, 122, 0.85)';
+          ctx.strokeStyle = "rgba(255, 168, 122, 0.85)";
           ctx.lineWidth = 1.4;
           ctx.beginPath();
           ctx.arc(last.x, last.y, 8, 0, Math.PI * 2);
@@ -1016,40 +1016,40 @@ function draw() {
 
   ctx.restore();
 
-  if (state.mode === 'menu') {
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  if (state.mode === "menu") {
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font =
-      '700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-    ctx.fillText('Tanks (Web Remake v1)', 110, 190);
-    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText("Tanks (Web Remake v1)", 110, 190);
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
     ctx.font =
-      '500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+      "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.fillText(
-      'Press Start to begin. Reimplemented rules with imported original assets.',
+      "Press Start to begin. Reimplemented rules with imported original assets.",
       110,
       230,
     );
   }
 
-  if (state.mode === 'gameover') {
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  if (state.mode === "gameover") {
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font =
-      '700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-    ctx.fillText(state.message || 'Game over', 110, 210);
-    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      "700 34px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText(state.message || "Game over", 110, 210);
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
     ctx.font =
-      '500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-    ctx.fillText('Press Reset or R to play again.', 110, 246);
+      "500 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText("Press Reset or R to play again.", 110, 246);
   }
 }
 
 function fmtWind() {
-  if (Math.abs(state.windAccel) < 0.001) return 'calm';
-  const arrow = state.windAccel > 0 ? '->' : '<-';
+  if (Math.abs(state.windAccel) < 0.001) return "calm";
+  const arrow = state.windAccel > 0 ? "->" : "<-";
   return `${arrow} ${Math.round(Math.abs(state.windAccel))}`;
 }
 
@@ -1058,7 +1058,7 @@ function updateHud() {
   const w = t ? weapons[clamp(t.weaponIdx, 0, weapons.length - 1)] : null;
   const lines: string[] = [];
   lines.push(`v${__APP_VERSION__}  mode=${state.mode}`);
-  if (state.mode !== 'menu') {
+  if (state.mode !== "menu") {
     lines.push(`phase=${state.phase}`);
     lines.push(
       `turn=P${state.currentTank + 1}  hp=[${Math.round(state.tanks[0]!.hp)},${Math.round(
@@ -1077,13 +1077,13 @@ function updateHud() {
     }
   }
   if (state.message) lines.push(state.message);
-  hud.textContent = lines.join(' | ');
+  hud.textContent = lines.join(" | ");
 
   // In-game HUD panel (more readable than the footer debug line).
-  hudPanel.hidden = state.mode === 'menu';
-  if (state.mode === 'menu') {
-    hudStats.textContent = '';
-    hudMessage.textContent = '';
+  hudPanel.hidden = state.mode === "menu";
+  if (state.mode === "menu") {
+    hudStats.textContent = "";
+    hudMessage.textContent = "";
     return;
   }
 
@@ -1101,8 +1101,8 @@ function updateHud() {
   } else {
     statLines.push(`Mode: ${state.mode}`);
   }
-  hudStats.textContent = statLines.join('\n');
-  hudMessage.textContent = state.message || '';
+  hudStats.textContent = statLines.join("\n");
+  hudMessage.textContent = state.message || "";
 }
 
 let settingsReturnToPause = false;
@@ -1110,13 +1110,13 @@ let settingsReturnToPause = false;
 function syncUi() {
   const hasModal = ui.modal !== null;
   modalLayer.hidden = !hasModal;
-  pauseModal.hidden = ui.modal !== 'pause';
-  settingsModal.hidden = ui.modal !== 'settings';
+  pauseModal.hidden = ui.modal !== "pause";
+  settingsModal.hidden = ui.modal !== "settings";
 
   // Topbar buttons
-  pauseBtn.disabled = state.mode === 'menu' || state.mode === 'gameover' || ui.modal === 'settings';
-  pauseBtn.textContent = state.mode === 'paused' ? 'Resume' : 'Pause';
-  settingsBtn.disabled = ui.modal === 'settings';
+  pauseBtn.disabled = state.mode === "menu" || state.mode === "gameover" || ui.modal === "settings";
+  pauseBtn.textContent = state.mode === "paused" ? "Resume" : "Pause";
+  settingsBtn.disabled = ui.modal === "settings";
 
   // Settings form state
   settingsTouchEnabled.checked = ui.touchEnabled;
@@ -1124,40 +1124,40 @@ function syncUi() {
   settingsCameraIntensity.value = ui.cameraIntensity;
 
   // Touch overlay
-  touchControls.hidden = !ui.touchEnabled || state.mode !== 'playing' || hasModal;
+  touchControls.hidden = !ui.touchEnabled || state.mode !== "playing" || hasModal;
   touchControls.dataset.layout = ui.touchLayout;
-  if (state.mode !== 'playing' || hasModal) touchHeld.clear();
+  if (state.mode !== "playing" || hasModal) touchHeld.clear();
 }
 
 function openPauseMenu() {
-  if (state.mode !== 'playing') return;
-  state.mode = 'paused';
-  ui.modal = 'pause';
+  if (state.mode !== "playing") return;
+  state.mode = "paused";
+  ui.modal = "pause";
   syncUi();
   updateHud();
   draw();
 }
 
 function resumeFromPause() {
-  if (state.mode !== 'paused') return;
+  if (state.mode !== "paused") return;
   ui.modal = null;
-  state.mode = 'playing';
+  state.mode = "playing";
   syncUi();
   updateHud();
   draw();
 }
 
 function togglePause() {
-  if (ui.modal === 'settings') return;
-  if (state.mode === 'playing') openPauseMenu();
-  else if (state.mode === 'paused') resumeFromPause();
+  if (ui.modal === "settings") return;
+  if (state.mode === "playing") openPauseMenu();
+  else if (state.mode === "paused") resumeFromPause();
 }
 
 function openSettings(returnToPause: boolean) {
   settingsReturnToPause = returnToPause;
   ui.modalReturnMode = state.mode;
-  ui.modal = 'settings';
-  if (state.mode === 'playing') state.mode = 'paused';
+  ui.modal = "settings";
+  if (state.mode === "playing") state.mode = "paused";
   syncUi();
   updateHud();
   draw();
@@ -1167,8 +1167,8 @@ function closeSettings() {
   ui.modal = null;
   state.mode = ui.modalReturnMode;
 
-  if (settingsReturnToPause && state.mode === 'paused') {
-    ui.modal = 'pause';
+  if (settingsReturnToPause && state.mode === "paused") {
+    ui.modal = "pause";
   }
   settingsReturnToPause = false;
 
@@ -1181,9 +1181,9 @@ function goToMainMenu() {
   ui.modal = null;
   settingsReturnToPause = false;
 
-  state.mode = 'menu';
-  state.phase = 'aim';
-  state.message = '';
+  state.mode = "menu";
+  state.phase = "aim";
+  state.message = "";
   state.cooldown = 0;
   state.projectile.active = false;
   state.camera.offsetX = 0;
@@ -1204,33 +1204,33 @@ function goToMainMenu() {
 }
 
 const pressed = new Set<string>();
-window.addEventListener('keydown', (e) => {
+window.addEventListener("keydown", (e) => {
   pressed.add(e.code);
 
-  if (e.code === 'KeyF') {
+  if (e.code === "KeyF") {
     toggleFullscreen().catch(() => {});
   }
 
-  if (e.code === 'Escape') {
+  if (e.code === "Escape") {
     // Close modals first; otherwise toggle pause.
-    if (ui.modal === 'settings') closeSettings();
+    if (ui.modal === "settings") closeSettings();
     else togglePause();
   }
 
-  if (e.code === 'KeyR') {
+  if (e.code === "KeyR") {
     onReset();
   }
 
-  if (state.mode === 'playing' && ui.modal === null && state.phase === 'aim') {
+  if (state.mode === "playing" && ui.modal === null && state.phase === "aim") {
     const t = state.tanks[state.currentTank];
     if (!t || t.hp <= 0) return;
-    if (e.code === 'Space') requestFire();
-    if (e.code === 'Digit1') t.weaponIdx = 0;
-    if (e.code === 'Digit2') t.weaponIdx = 1;
-    if (e.code === 'Digit3') t.weaponIdx = 2;
+    if (e.code === "Space") requestFire();
+    if (e.code === "Digit1") t.weaponIdx = 0;
+    if (e.code === "Digit2") t.weaponIdx = 1;
+    if (e.code === "Digit3") t.weaponIdx = 2;
   }
 });
-window.addEventListener('keyup', (e) => pressed.delete(e.code));
+window.addEventListener("keyup", (e) => pressed.delete(e.code));
 
 function onStart() {
   startMatch();
@@ -1244,7 +1244,7 @@ function onStart() {
 }
 
 function onReset() {
-  if (state.mode === 'menu') return;
+  if (state.mode === "menu") return;
   startMatch();
   ui.modal = null;
   pauseBtn.disabled = false;
@@ -1259,57 +1259,57 @@ async function toggleFullscreen() {
   else await document.exitFullscreen();
 }
 
-startBtn.addEventListener('click', () => {
+startBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   onStart();
 });
-resetBtn.addEventListener('click', () => {
+resetBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   onReset();
 });
-pauseBtn.addEventListener('click', () => {
+pauseBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   togglePause();
 });
-settingsBtn.addEventListener('click', () => {
+settingsBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   openSettings(false);
 });
-fullscreenBtn.addEventListener('click', () => toggleFullscreen().catch(() => {}));
+fullscreenBtn.addEventListener("click", () => toggleFullscreen().catch(() => {}));
 
-pauseResumeBtn.addEventListener('click', () => {
+pauseResumeBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   resumeFromPause();
 });
-pauseRestartBtn.addEventListener('click', () => {
+pauseRestartBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   onReset();
 });
-pauseSettingsBtn.addEventListener('click', () => {
+pauseSettingsBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   openSettings(true);
 });
-pauseMainMenuBtn.addEventListener('click', () => {
+pauseMainMenuBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   goToMainMenu();
 });
 
-settingsTouchEnabled.addEventListener('change', () => {
+settingsTouchEnabled.addEventListener("change", () => {
   playSfx(audioCache.uiClick);
   ui.touchEnabled = settingsTouchEnabled.checked;
   persistUiSettings();
   syncUi();
 });
-settingsTouchLayout.addEventListener('change', () => {
+settingsTouchLayout.addEventListener("change", () => {
   playSfx(audioCache.uiClick);
-  ui.touchLayout = settingsTouchLayout.value === 'left' ? 'left' : 'right';
+  ui.touchLayout = settingsTouchLayout.value === "left" ? "left" : "right";
   persistUiSettings();
   syncUi();
 });
-settingsCameraIntensity.addEventListener('change', () => {
+settingsCameraIntensity.addEventListener("change", () => {
   playSfx(audioCache.uiClick);
   ui.cameraIntensity = normalizeCameraIntensity(settingsCameraIntensity.value);
-  if (ui.cameraIntensity === 'off') {
+  if (ui.cameraIntensity === "off") {
     state.camera.offsetX = 0;
     state.camera.offsetY = 0;
     state.camera.zoom = 0;
@@ -1321,7 +1321,7 @@ settingsCameraIntensity.addEventListener('change', () => {
   persistUiSettings();
   syncUi();
 });
-settingsCloseBtn.addEventListener('click', () => {
+settingsCloseBtn.addEventListener("click", () => {
   playSfx(audioCache.uiClick);
   closeSettings();
 });
@@ -1335,28 +1335,28 @@ function bindHoldButton(button: HTMLElement, action: HoldAction) {
     event.preventDefault();
     touchHeld.delete(action);
   };
-  button.addEventListener('pointerdown', press);
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointercancel', release);
-  button.addEventListener('pointerleave', release);
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", release);
 }
 
 function bindTouchControls() {
-  const holdButtons = touchControls.querySelectorAll<HTMLElement>('[data-hold]');
+  const holdButtons = touchControls.querySelectorAll<HTMLElement>("[data-hold]");
   holdButtons.forEach((el) => {
     const actionRaw = el.dataset.hold as HoldAction | undefined;
     if (!actionRaw) return;
     bindHoldButton(el, actionRaw);
   });
 
-  const weaponButtons = touchControls.querySelectorAll<HTMLElement>('[data-weapon]');
+  const weaponButtons = touchControls.querySelectorAll<HTMLElement>("[data-weapon]");
   weaponButtons.forEach((el) => {
-    el.addEventListener('pointerdown', (event) => {
+    el.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-      if (state.mode !== 'playing' || state.phase !== 'aim' || ui.modal !== null) return;
+      if (state.mode !== "playing" || state.phase !== "aim" || ui.modal !== null) return;
       const t = state.tanks[state.currentTank];
       if (!t || t.hp <= 0) return;
-      const raw = Number(el.dataset.weapon ?? '0');
+      const raw = Number(el.dataset.weapon ?? "0");
       t.weaponIdx = clamp(Math.trunc(raw), 0, weapons.length - 1);
       playSfx(audioCache.uiClick);
       updateHud();
@@ -1364,9 +1364,9 @@ function bindTouchControls() {
     });
   });
 
-  const fireBtn = document.querySelector<HTMLElement>('#touch-fire');
+  const fireBtn = document.querySelector<HTMLElement>("#touch-fire");
   if (fireBtn) {
-    fireBtn.addEventListener('pointerdown', (event) => {
+    fireBtn.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       requestFire();
     });
@@ -1376,7 +1376,7 @@ function bindTouchControls() {
 function renderGameToText() {
   const t = state.tanks[state.currentTank];
   const payload = {
-    coordinateSystem: 'origin=(0,0) top-left, +x right, +y down',
+    coordinateSystem: "origin=(0,0) top-left, +x right, +y down",
     mode: state.mode,
     phase: state.phase,
     windAccel: state.windAccel,
@@ -1393,7 +1393,7 @@ function renderGameToText() {
       hp: tank.hp,
       aimDeg: tank.aimDeg,
       power: tank.power,
-      weapon: weapons[clamp(tank.weaponIdx, 0, weapons.length - 1)]?.name ?? '?',
+      weapon: weapons[clamp(tank.weaponIdx, 0, weapons.length - 1)]?.name ?? "?",
     })),
     projectile: state.projectile.active
       ? {
@@ -1407,7 +1407,7 @@ function renderGameToText() {
       ? {
           aimDeg: t.aimDeg,
           power: t.power,
-          weapon: weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]?.name ?? '?',
+          weapon: weapons[clamp(t.weaponIdx, 0, weapons.length - 1)]?.name ?? "?",
         }
       : null,
     ui: {

@@ -1,4 +1,4 @@
-export type ScaleMode = 'fit' | 'fill' | 'integer';
+export type ScaleMode = "fit" | "fill" | "integer";
 
 export type StageLayout = {
   width: number;
@@ -26,14 +26,14 @@ export function computeStageLayout(params: {
 
   const aspect = bw / bh;
 
-  if (mode === 'fill') {
+  if (mode === "fill") {
     const width = Math.ceil(Math.max(vw, vh * aspect));
     const height = Math.ceil(width / aspect);
     const scale = width / bw;
     return { width, height, scale };
   }
 
-  if (mode === 'integer') {
+  if (mode === "integer") {
     const maxScale = Math.min(vw / bw, vh / bh);
     if (maxScale >= 1) {
       const scaleInt = clampPositiveInt(maxScale);

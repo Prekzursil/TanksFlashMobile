@@ -1,21 +1,21 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const webRoot = path.resolve(scriptDir, '..');
+const webRoot = path.resolve(scriptDir, "..");
 
-const sourceDir = path.join(webRoot, 'node_modules', '@ruffle-rs', 'ruffle');
-const destDir = path.join(webRoot, 'public', 'ruffle');
+const sourceDir = path.join(webRoot, "node_modules", "@ruffle-rs", "ruffle");
+const destDir = path.join(webRoot, "public", "ruffle");
 
 async function copyFileIfChanged(sourcePath, destPath) {
   const [sourceStat, destStat] = await Promise.allSettled([fs.stat(sourcePath), fs.stat(destPath)]);
 
-  if (sourceStat.status !== 'fulfilled') {
+  if (sourceStat.status !== "fulfilled") {
     throw new Error(`Missing source file: ${sourcePath}`);
   }
 
-  const sameSize = destStat.status === 'fulfilled' && sourceStat.value.size === destStat.value.size;
+  const sameSize = destStat.status === "fulfilled" && sourceStat.value.size === destStat.value.size;
 
   if (sameSize) return false;
 
@@ -29,11 +29,11 @@ async function main() {
   } catch {
     console.error(
       [
-        'Missing Ruffle dependency files.',
+        "Missing Ruffle dependency files.",
         `Expected: ${sourceDir}`,
-        '',
-        'Run `npm install` first.',
-      ].join('\n'),
+        "",
+        "Run `npm install` first.",
+      ].join("\n"),
     );
     process.exitCode = 1;
     return;
@@ -46,7 +46,7 @@ async function main() {
 
   for (const entry of entries) {
     if (!entry.isFile()) continue;
-    if (entry.name === 'README.md') continue;
+    if (entry.name === "README.md") continue;
     const from = path.join(sourceDir, entry.name);
     const to = path.join(destDir, entry.name);
     const didCopy = await copyFileIfChanged(from, to);
