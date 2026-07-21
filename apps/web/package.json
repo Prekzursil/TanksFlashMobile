@@ -20,20 +20,20 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
-    "@ruffle-rs/ruffle": "0.3.0"
+    "@ruffle-rs/ruffle": "0.4.1"
   },
   "devDependencies": {
-    "@applitools/eyes-playwright": "^1.46.3",
-    "@chromatic-com/playwright": "^0.14.10",
+    "@applitools/eyes-playwright": "^1.47.11",
+    "@chromatic-com/playwright": "^0.14.11",
     "@playwright/test": "1.61.1",
-    "@eslint/js": "9.39.4",
-    "eslint": "9.39.4",
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.7.0",
     "chromatic": "^16.0.0",
     "playwright": "1.61.1",
-    "prettier": "3.8.4",
-    "typescript-eslint": "8.62.0",
+    "prettier": "3.9.6",
+    "typescript-eslint": "8.65.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.6"
   },
