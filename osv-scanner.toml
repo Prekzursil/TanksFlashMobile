@@ -20,3 +20,66 @@
 #   [[IgnoredVulns]]
 #   id = "GHSA-xxxx-xxxx-xxxx"
 #   # 2026-06-17 — <reason: unfixable upstream / not reachable in this product>.
+
+# ---------------------------------------------------------------------------
+# 2026-07-25 — brace-expansion DoS (CVE-2026-14257), advisory published
+# 2026-07-24. GENUINELY UNFIXABLE: no patched release exists on the dependency
+# lines our build tools pin, and the only patched version is a breaking major.
+#
+# Scope: dev/build only. osv-scanner reports every affected copy as
+# `brace-expansion (dev)`; no copy ships in the web, remake-web, or desktop
+# runtime bundle. Impact is an out-of-memory crash of a local/CI build process
+# on an adversarial glob pattern — not a user-facing runtime surface.
+#
+# Why no upgrade fixes it (verified 2026-07-25 against the npm registry):
+#   * The advisory range is `introduced: 0 → fixed: 5.0.8`, i.e. EVERY version
+#     below 5.0.8 is affected. The 1.x and 2.x maintenance lines top out at
+#     1.1.16 (dist-tag maintenance-v1) and 2.1.2 (maintenance-v2). No backport
+#     was published, so those copies can never become non-vulnerable.
+#   * Our four lockfiles already override the top-level `brace-expansion` to
+#     5.0.8. The 6 residual rows are NESTED copies forced by parents that pin an
+#     old `minimatch` major, which in turn pins `brace-expansion` ^1.1.7 / ^2.0.1
+#     / ^2.0.2:
+#       - @electron/asar@3.4.1     → minimatch ^3.0.4 → brace-expansion 1.1.16
+#       - @electron/universal@2.0.3 → minimatch ^9.0.3 → brace-expansion 2.1.2
+#       - dir-compare@4.2.0        → minimatch ^3.0.5 → brace-expansion 1.1.16
+#       - filelist@1.0.6           → minimatch ^5.0.1 → brace-expansion 2.1.2
+#       - glob@7.2.3               → minimatch ^3.1.1 → brace-expansion 1.1.16
+#       - test-exclude@7.0.2/glob@10.5.0 → minimatch ^9.0.4 → 2.1.2
+#       - eslint@9.39.4 / @eslint/eslintrc@3.3.5 / @eslint/config-array@0.21.2
+#                                  → minimatch ^3.1.5 → brace-expansion 1.1.16
+#   * Upgrading the parents does NOT clear it. `app-builder-lib@26.15.3` — the
+#     LATEST published electron-builder — EXACT-PINS `@electron/asar 3.4.1` and
+#     `@electron/universal 2.0.3` (no semver range), so the fixed 4.x / 3.x
+#     majors are unreachable. And `dir-compare@5.0.0` (latest) and
+#     `@eslint/eslintrc@3.3.6` (latest) still require `minimatch ^3.0.5` /
+#     `^3.1.5`. apps/desktop therefore cannot reach brace-expansion >= 5.0.8 by
+#     any published upgrade.
+#   * Both force-upgrade escape routes were REPRODUCED as build-breaking, not
+#     assumed:
+#       - forcing brace-expansion 5.0.8 tree-wide  → `TypeError: expand is not a
+#         function` (minimatch 3.1.2 calls a bare-function export; 1.x/2.x
+#         export a function, 5.x exports an object).
+#       - forcing minimatch 10.2.5 tree-wide       → `TypeError: mm is not a
+#         function` (same CJS-export shape change, seen from glob@7 / filelist).
+#
+# Measured effect of the pins this ignore accompanies (CI, PR #193):
+#   before: Total 24 packages affected by 33 known vulnerabilities (2 Critical, 26 High, 5 Medium)
+#   after:  Total  6 packages affected by  6 known vulnerabilities (0 Critical,  6 High, 0 Medium)
+# Both Criticals and 27 of 33 rows are cleared; the 6 below are the unfixable
+# remainder. Without this entry the deps gate can never go green, which blocks
+# every other security update in the repo — a strictly worse security posture.
+#
+# EXPIRES 2026-10-23 (~90 days). On that date osv-scanner stops honouring this
+# entry and the gate goes red again, forcing a re-review.
+# RE-CHECK AT EXPIRY: has minimatch / glob / electron-builder (app-builder-lib's
+# exact pins on @electron/asar + @electron/universal) / dir-compare /
+# @eslint/eslintrc / @vitest/coverage-v8 moved off brace-expansion <5? If yes,
+# drop this entry and take the real fix. Partial path noted: eslint 10.x drops
+# @eslint/eslintrc and uses minimatch ^10.2.5, which would clear the web and
+# remake-web rows — but it is a breaking major lint upgrade and does nothing for
+# apps/desktop, so it cannot on its own retire this entry.
+[[IgnoredVulns]]
+id = "GHSA-mh99-v99m-4gvg"
+ignoreUntil = 2026-10-23
+reason = "brace-expansion DoS (CVE-2026-14257), dev/build-scope only, genuinely unfixable: advisory range is introduced:0 -> fixed:5.0.8 and the 1.x/2.x lines top out at 1.1.16/2.1.2 with no backport, while the parents that pin them (app-builder-lib exact-pins @electron/asar 3.4.1 + @electron/universal 2.0.3; dir-compare and @eslint/eslintrc still need minimatch ^3.x at latest) cannot reach 5.0.8, and both force-upgrade routes were reproduced as build-breaking. Expires 2026-10-23; see the comment block above this entry in osv-scanner.toml for the full per-package analysis and the re-check list."
