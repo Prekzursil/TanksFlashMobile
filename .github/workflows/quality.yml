@@ -1,3 +1,4 @@
+# DO NOT MERGE - evidence branch for the quality-zero-platform v1 tag-move decision (paired A/B; sibling branch differs only in the reusable pin).
 name: quality
 
 # Lean 6-gate quality gate (ADDITIVE — see the lean-gate charter, decided
@@ -27,4 +28,4 @@ permissions:
 
 jobs:
   quality:
-    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@v1
+    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@main
