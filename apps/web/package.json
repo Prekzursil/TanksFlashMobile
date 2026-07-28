@@ -29,7 +29,7 @@
     "@eslint/js": "9.39.5",
     "eslint": "9.39.5",
     "eslint-config-prettier": "10.1.8",
-    "globals": "17.7.0",
+    "globals": "17.8.0",
     "chromatic": "^16.0.0",
     "playwright": "1.62.0",
     "prettier": "3.9.6",
