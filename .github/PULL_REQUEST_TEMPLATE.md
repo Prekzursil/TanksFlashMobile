@@ -6,22 +6,29 @@
 ## Risk
 
 - Risk level: `low | medium | high`
-- Regression surface (frontend/backend/infra/docs/security/release):
-- Security/runtime safety impact:
+- Regression surface (platforms/flows impacted):
+- Security/privacy/signing impact:
 
 ## Evidence
 
-- Deterministic verification command: `make verify`
-- Command output summary:
-- Any justified skips:
+- [ ] `make verify`
+- [ ] Additional platform-specific checks (if needed)
+
+### Commands / Results
+
+Paste exact commands and outcomes.
 
 ## Rollback
 
-- Rollback command or steps:
-- Data/schema/runtime rollback impact:
+- Rollback steps if this change causes regressions:
 
 ## Scope Guard
 
 - [ ] Change is minimal and task-focused
-- [ ] No unrelated refactors included
-- [ ] No secrets or private tokens added
+- [ ] No secrets/signing data introduced
+- [ ] Cross-platform artifact expectations remain valid
+- [ ] Docs updated when behavior changed
+
+## Linked Issues
+
+Closes #
