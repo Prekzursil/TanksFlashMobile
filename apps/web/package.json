@@ -35,7 +35,7 @@
     "prettier": "3.9.6",
     "typescript-eslint": "8.65.0",
     "typescript": "~5.9.3",
-    "vite": "^7.3.6"
+    "vite": "^7.3.7"
   },
   "overrides": {
     "brace-expansion@1": ">=1.1.16 <2.0.0",
