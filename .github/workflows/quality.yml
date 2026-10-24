@@ -1,30 +1,31 @@
+# QZP lean gate — zero tolerance (any finding of any severity fails).
+# Thin caller of quality-zero-platform's reusable workflow, pinned to an exact
+# commit. Gate changes happen in quality-zero-platform, never here; this repo
+# adopts them by bumping the pin below. See CONTRIBUTING.md.
 name: quality
-
-# Lean 6-gate quality gate (ADDITIVE — see the lean-gate charter, decided
-# 2026-06-16). This thin caller delegates to the shared reusable workflow in
-# Prekzursil/quality-zero-platform. The gate set is the closed charter:
-#   1. Lint+format+imports+sec-lint (autofix, via .pre-commit-config.yaml)
-#   2. Types (tsc --noEmit / basedpyright)
-#   3. Tests + coverage (strict 100% line+branch)
-#   4. SAST (opengrep, pinned in-repo ruleset under .quality/opengrep)
-#   5. Secrets (gitleaks, .gitleaks.toml allowlist) + push-protection
-#   6. Deps (osv-scanner.toml + Dependabot)
-#
-# It does NOT replace the existing fleet reusable workflows still wired in this
-# repo (quality-zero-platform.yml etc.); removal of the old SaaS machinery is
-# deferred to the migration runbook. Pinned to the template branch so this PR's
-# CI is real now; the runbook re-pins to a tag after the template merges.
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
-    branches: [main]
+    branches: ["main"]
+  # a merge queue's synthetic commit must report the required check too
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  # a pull request's runs share one group, so a newer push cancels the superseded
+  # run; every other event (a push, a merge-queue commit) gets a group of its own
+  # commit, so no commit's run is ever replaced while it waits or left untested
+  group: quality-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality:
-    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@v1
+    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@f84b146aca9432cd852092251d31fec3ab3169d7
+    with:
+      deps-severity-floor: any
