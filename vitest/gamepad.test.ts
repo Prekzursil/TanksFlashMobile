@@ -313,6 +313,30 @@ describe('createGamepadInput — enable/disable', () => {
     gp.dispose();
   });
 
+  it('covers the slot-nulls-out-while-held branch on line 247: releaseIndex fires', () => {
+    const { mapper, calls, held } = makeMapper();
+    const gp = createGamepadInput(mapper);
+    // Tick 1: press ArrowUp so activeByIndex has an entry for index 0.
+    gamepadsValue = [fakeGamepad({ buttons: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] })];
+    flushFrame();
+    expect(held.get('gamepad:0')?.has('ArrowUp')).toBe(true);
+    // Tick 2: the gamepad slot disappears from the snapshot array while the
+    // index is still active -> the `activeByIndex.has(index)` branch on the
+    // null-slot path must fire releaseIndex and drop the held input.
+    gamepadsValue = [null as unknown as Gamepad];
+    flushFrame();
+    expect(held.has('gamepad:0')).toBe(false);
+    expect(calls).toContain('releaseAll:gamepad:0');
+    // Tick 3: a null slot at an index with NO prior activeByIndex entry — the
+    // other side of the line-247 `if` (has() false -> skip releaseIndex, just
+    // continue).
+    const releaseCalls = calls.filter((c) => c.startsWith('release')).length;
+    gamepadsValue = [null as unknown as Gamepad, null as unknown as Gamepad];
+    flushFrame();
+    expect(calls.filter((c) => c.startsWith('release')).length).toBe(releaseCalls);
+    gp.dispose();
+  });
+
   it('runs the disabled tick branch: releases lingering slots and reschedules', () => {
     const { mapper, held } = makeMapper();
     const gp = createGamepadInput(mapper);

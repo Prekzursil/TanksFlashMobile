@@ -27,4 +27,4 @@ permissions:
 
 jobs:
   quality:
-    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@v1
+    uses: Prekzursil/quality-zero-platform/.github/workflows/reusable-quality.yml@b4fbe38470fd2831f86f194df5b638a271bae8b8

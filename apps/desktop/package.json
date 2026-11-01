@@ -17,16 +17,22 @@
     "package:win": "npm run sync:web && electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
-    "electron": "40.10.6",
+    "electron": "42.11.18",
     "electron-builder": "26.15.3"
   },
   "overrides": {
-    "brace-expansion@1": ">=1.1.16 <2.0.0",
-    "brace-expansion@2": ">=2.1.2 <3.0.0",
-    "brace-expansion@5": ">=5.0.8 <6.0.0",
-    "fast-uri": ">=3.1.4 <4.0.0",
-    "js-yaml": ">=4.3.0 <5.0.0",
-    "tar": ">=7.5.22 <8.0.0"
+    "@xmldom/xmldom@0.8": ">=0.8.15 <0.9.0",
+    "brace-expansion@1": ">=1.1.21 <2.0.0",
+    "brace-expansion@2": ">=2.1.7 <3.0.0",
+    "brace-expansion@5": ">=5.0.12 <6.0.0",
+    "fast-uri": ">=3.1.8 <4.0.0",
+    "glob@10": ">=14.0.2 <15.0.0",
+    "http-cache-semantics": ">=4.3.0 <5.0.0",
+    "js-yaml": ">=4.3.2 <5.0.0",
+    "minimatch@10": ">=11.0.1 <12.0.0",
+    "tar": ">=7.5.22 <8.0.0",
+    "undici@6": ">=6.28.1 <7.0.0",
+    "undici@7": ">=7.29.1 <8.0.0"
   },
   "build": {
     "appId": "com.prekzursil.tanks",

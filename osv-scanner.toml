@@ -22,64 +22,62 @@
 #   # 2026-06-17 — <reason: unfixable upstream / not reachable in this product>.
 
 # ---------------------------------------------------------------------------
-# 2026-07-25 — brace-expansion DoS (CVE-2026-14257), advisory published
-# 2026-07-24. GENUINELY UNFIXABLE: no patched release exists on the dependency
-# lines our build tools pin, and the only patched version is a breaking major.
-#
-# Scope: dev/build only. osv-scanner reports every affected copy as
-# `brace-expansion (dev)`; no copy ships in the web, remake-web, or desktop
-# runtime bundle. Impact is an out-of-memory crash of a local/CI build process
-# on an adversarial glob pattern — not a user-facing runtime surface.
-#
-# Why no upgrade fixes it (verified 2026-07-25 against the npm registry):
-#   * The advisory range is `introduced: 0 → fixed: 5.0.8`, i.e. EVERY version
-#     below 5.0.8 is affected. The 1.x and 2.x maintenance lines top out at
-#     1.1.16 (dist-tag maintenance-v1) and 2.1.2 (maintenance-v2). No backport
-#     was published, so those copies can never become non-vulnerable.
-#   * Our four lockfiles already override the top-level `brace-expansion` to
-#     5.0.8. The 6 residual rows are NESTED copies forced by parents that pin an
-#     old `minimatch` major, which in turn pins `brace-expansion` ^1.1.7 / ^2.0.1
-#     / ^2.0.2:
-#       - @electron/asar@3.4.1     → minimatch ^3.0.4 → brace-expansion 1.1.16
-#       - @electron/universal@2.0.3 → minimatch ^9.0.3 → brace-expansion 2.1.2
-#       - dir-compare@4.2.0        → minimatch ^3.0.5 → brace-expansion 1.1.16
-#       - filelist@1.0.6           → minimatch ^5.0.1 → brace-expansion 2.1.2
-#       - glob@7.2.3               → minimatch ^3.1.1 → brace-expansion 1.1.16
-#       - test-exclude@7.0.2/glob@10.5.0 → minimatch ^9.0.4 → 2.1.2
-#       - eslint@9.39.4 / @eslint/eslintrc@3.3.5 / @eslint/config-array@0.21.2
-#                                  → minimatch ^3.1.5 → brace-expansion 1.1.16
-#   * Upgrading the parents does NOT clear it. `app-builder-lib@26.15.3` — the
-#     LATEST published electron-builder — EXACT-PINS `@electron/asar 3.4.1` and
-#     `@electron/universal 2.0.3` (no semver range), so the fixed 4.x / 3.x
-#     majors are unreachable. And `dir-compare@5.0.0` (latest) and
-#     `@eslint/eslintrc@3.3.6` (latest) still require `minimatch ^3.0.5` /
-#     `^3.1.5`. apps/desktop therefore cannot reach brace-expansion >= 5.0.8 by
-#     any published upgrade.
-#   * Both force-upgrade escape routes were REPRODUCED as build-breaking, not
-#     assumed:
-#       - forcing brace-expansion 5.0.8 tree-wide  → `TypeError: expand is not a
-#         function` (minimatch 3.1.2 calls a bare-function export; 1.x/2.x
-#         export a function, 5.x exports an object).
-#       - forcing minimatch 10.2.5 tree-wide       → `TypeError: mm is not a
-#         function` (same CJS-export shape change, seen from glob@7 / filelist).
-#
-# Measured effect of the pins this ignore accompanies (CI, PR #193):
-#   before: Total 24 packages affected by 33 known vulnerabilities (2 Critical, 26 High, 5 Medium)
-#   after:  Total  6 packages affected by  6 known vulnerabilities (0 Critical,  6 High, 0 Medium)
-# Both Criticals and 27 of 33 rows are cleared; the 6 below are the unfixable
-# remainder. Without this entry the deps gate can never go green, which blocks
-# every other security update in the repo — a strictly worse security posture.
-#
-# EXPIRES 2026-10-23 (~90 days). On that date osv-scanner stops honouring this
-# entry and the gate goes red again, forcing a re-review.
-# RE-CHECK AT EXPIRY: has minimatch / glob / electron-builder (app-builder-lib's
-# exact pins on @electron/asar + @electron/universal) / dir-compare /
-# @eslint/eslintrc / @vitest/coverage-v8 moved off brace-expansion <5? If yes,
-# drop this entry and take the real fix. Partial path noted: eslint 10.x drops
-# @eslint/eslintrc and uses minimatch ^10.2.5, which would clear the web and
-# remake-web rows — but it is a breaking major lint upgrade and does nothing for
-# apps/desktop, so it cannot on its own retire this entry.
+# RETIRED 2026-11-01 — the 2026-07-25 brace-expansion (CVE-2026-14257,
+# GHSA-mh99-v99m-4gvg) ignore EXPIRED 2026-10-23 and is removed. Patched
+# backports now exist on every affected line (1.1.21 / 2.1.7 / 5.0.12, verified
+# against the npm registry), so all four package.json override floors were
+# raised to those versions instead of re-ignoring. The full per-parent analysis
+# from 2026-07-25 lives in git history (osv-scanner.toml @ main~).
+# ---------------------------------------------------------------------------
+
+# 2026-11-01 — extract-zip symlink path traversal (GHSA-7pqw-9j4j-h8q3) and
+# unvalidated symlink path traversal (GHSA-jmr9-qjv8-65gv). GENUINELY
+# UNFIXABLE: both advisories list `introduced: 0, last_affected: 2.0.1` and
+# 2.0.1 IS the latest published release (npm, verified 2026-11-01) — no patched
+# version exists to upgrade to. Scope: dev-only transitive under
+# @puppeteer/browsers (the Applitools visual-testing chain, apps/web); it only
+# runs when a developer downloads browsers for local e2e, never in CI and never
+# in the shipped web/desktop bundle. The advisories are additionally marked
+# withdrawn upstream. Re-check: if a patched extract-zip ships, drop these
+# entries and bump the dependency.
 [[IgnoredVulns]]
-id = "GHSA-mh99-v99m-4gvg"
-ignoreUntil = 2026-10-23
-reason = "brace-expansion DoS (CVE-2026-14257), dev/build-scope only, genuinely unfixable: advisory range is introduced:0 -> fixed:5.0.8 and the 1.x/2.x lines top out at 1.1.16/2.1.2 with no backport, while the parents that pin them (app-builder-lib exact-pins @electron/asar 3.4.1 + @electron/universal 2.0.3; dir-compare and @eslint/eslintrc still need minimatch ^3.x at latest) cannot reach 5.0.8, and both force-upgrade routes were reproduced as build-breaking. Expires 2026-10-23; see the comment block above this entry in osv-scanner.toml for the full per-package analysis and the re-check list."
+id = "GHSA-7pqw-9j4j-h8q3"
+reason = "extract-zip symlink path traversal; dev-only transitive under @puppeteer/browsers (Applitools e2e chain, apps/web), not shipped; genuinely unfixable — advisory range is introduced:0 -> last_affected:2.0.1 and 2.0.1 is the latest published release (verified 2026-11-01), and the advisory is withdrawn upstream. Re-review when a patched release ships."
+
+[[IgnoredVulns]]
+id = "GHSA-jmr9-qjv8-65gv"
+reason = "extract-zip unvalidated symlink path traversal; dev-only transitive under @puppeteer/browsers (Applitools e2e chain, apps/web), not shipped; genuinely unfixable — advisory range is introduced:0 -> last_affected:2.0.1 and 2.0.1 is the latest published release (verified 2026-11-01), and the advisory is withdrawn upstream. Re-review when a patched release ships."
+
+# 2026-11-01 — minimatch DoS via globparts amplification (GHSA-g3hv-75wg-m249,
+# 4 residual dev-only copies). PARTIALLY FIXED + GENUINELY UNFIXABLE REMAINDER:
+# the advisory range is `introduced: 0 -> fixed: 11.0.1` with NO backport to the
+# 3.x/5.x/9.x lines, and all copies that CAN reach 11 were moved there in this
+# same change (override `minimatch@10 -> >=11.0.1 <12` in all four
+# package.jsons; root/web/desktop/remake-web minimatch@10 and glob@10/glob@13
+# copies now resolve 11.0.3 / 14.0.3). Measured effect (osv-scanner 2.3.8,
+# 2026-11-01): GHSA-g3hv-75wg-m249 rows 9 -> 4.
+#
+# The 4 residual copies are pinned by parents that cannot reach 11.0.1:
+#   - apps/desktop @electron/asar@3.4.1 -> minimatch ^3.0.4 (app-builder-lib
+#     26.15.3 EXACT-PINS @electron/asar 3.4.1 — same lock verified 2026-07-25)
+#   - apps/desktop dir-compare@4.2.0 -> ^3.0.5 and glob@7.2.3 -> ^3.1.1
+#     (electron-builder chain; latest dir-compare still needs minimatch ^3)
+#   - apps/desktop filelist@1.0.6 -> ^5.0.1; @electron/universal@2.0.3 -> ^9.0.3
+#     (universal also exact-pinned by app-builder-lib)
+#   - apps/web eslint@9.39.5 / @eslint/eslintrc / @eslint/config-array ->
+#     minimatch ^3.1.5 (eslint 9 line; eslint 10 drops these but is a breaking
+#     major for typescript-eslint 8.65 — the July 2026 analysis, still true)
+# Force-upgrading minimatch to 11 under glob@7/filelist was REPRODUCED as
+# build-breaking on 2026-07-25 ("TypeError: mm is not a function" — CJS export
+# shape change), so the force route is not a fix.
+# Scope: dev/build-only copies; none ship in the web, remake-web, or desktop
+# runtime bundle.
+# EXPIRES 2027-01-30 (~90 days). RE-CHECK AT EXPIRY: (1) has electron-builder
+# moved off the @electron/asar + @electron/universal exact pins? (2) is there an
+# eslint 10-compatible typescript-eslint allowing the web eslint bump? (3) has
+# minimatch shipped a 3.x/5.x/9.x backport? If any: drop this entry and take the
+# real fix.
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-01-30
+reason = "minimatch globparts-amplification DoS; 4 residual dev-only copies under parents that cannot reach the only fixed version 11.0.1 (app-builder-lib exact-pins @electron/asar 3.4.1 and @electron/universal 2.0.3; dir-compare/glob@7/filelist pin minimatch ^3/^5; web eslint-9 chain pins ^3.1.5) while force-upgrading to 11 under glob@7/filelist was reproduced build-breaking on 2026-07-25; every copy that can reach 11.0.1 was moved there in the same change (9 rows -> 4). Expires 2027-01-30; see the comment block above for the full per-parent analysis and re-check list."
