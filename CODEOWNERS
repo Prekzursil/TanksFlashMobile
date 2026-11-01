@@ -1,0 +1,3 @@
+# Default ownership: everything routes to the repo owner.
+# alert:* / security findings auto-assign to the same owner.
+* @Prekzursil
