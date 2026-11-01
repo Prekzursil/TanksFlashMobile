@@ -64,22 +64,6 @@ updates:
   - dependencies
   - type:chore
   - area:ci
-- package-ecosystem: npm
-  directory: /apps/web/public/ruffle
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
-  groups:
-    npm-apps-web-public-ruffle-patch-minor:
-      patterns:
-      - '*'
-      update-types:
-      - patch
-      - minor
-  labels:
-  - dependencies
-  - type:chore
-  - area:ci
 - package-ecosystem: gradle
   directory: /android
   schedule:
