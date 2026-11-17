@@ -81,3 +81,20 @@ reason = "extract-zip unvalidated symlink path traversal; dev-only transitive un
 id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2027-01-30
 reason = "minimatch globparts-amplification DoS; 4 residual dev-only copies under parents that cannot reach the only fixed version 11.0.1 (app-builder-lib exact-pins @electron/asar 3.4.1 and @electron/universal 2.0.3; dir-compare/glob@7/filelist pin minimatch ^3/^5; web eslint-9 chain pins ^3.1.5) while force-upgrading to 11 under glob@7/filelist was reproduced build-breaking on 2026-07-25; every copy that can reach 11.0.1 was moved there in the same change (9 rows -> 4). Expires 2027-01-30; see the comment block above for the full per-parent analysis and re-check list."
+
+# extract-zip 2.0.1 (both advisories) — NO FIXED RELEASE EXISTS (2026-11-17):
+# the npm registry's maximum published version IS 2.0.1 (verified via
+# `npm view extract-zip versions`); both advisories list no patched version.
+# Reachability: dev+peer-only transitive of @puppeteer/browsers (browser
+# binaries for the Puppeteer test lane); the library never ships in any
+# app artifact. Re-check when a fixed extract-zip release appears and
+# @puppeteer/browsers picks it up.
+[[IgnoredVulns]]
+id = "GHSA-7pqw-9j4j-h8q3"
+ignoreUntil = 2027-02-28
+reason = "No fixed release exists (npm max = vulnerable 2.0.1); dev/peer-only via @puppeteer/browsers, never shipped."
+
+[[IgnoredVulns]]
+id = "GHSA-jmr9-qjv8-65gv"
+ignoreUntil = 2027-02-28
+reason = "No fixed release exists (npm max = vulnerable 2.0.1); dev/peer-only via @puppeteer/browsers, never shipped."
