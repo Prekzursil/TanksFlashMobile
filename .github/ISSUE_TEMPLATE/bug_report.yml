@@ -1,0 +1,46 @@
+name: Bug report
+description: Something is broken or behaving incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Security vulnerabilities are
+        NOT reported here — use the private channel linked in SECURITY.md.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, plus what you expected instead.
+      placeholder: The web build...
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - Web client (apps/web)
+        - Remake web client (apps/remake-web)
+        - Desktop shell (apps/desktop)
+        - Android (android/)
+        - iOS (ios/)
+        - Repo tooling / CI
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `npm --prefix apps/web run dev`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser/electron version, app version (VERSION file), anything else relevant.
+    validations:
+      required: false

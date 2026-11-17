@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability report (private)
+    url: https://github.com/Prekzursil/TanksFlashMobile/security/advisories/new
+    about: |
+      Report security vulnerabilities through private vulnerability reporting
+      (see SECURITY.md) — never via a public issue.
