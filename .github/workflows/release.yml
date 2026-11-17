@@ -75,7 +75,7 @@ jobs:
           zip -r "${OUT_DIR}/Tanks-${TAG}-web-dist.zip" .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-web
           path: release-out/Tanks-*-web-dist.zip
@@ -115,7 +115,7 @@ jobs:
           zip -r "${OUT_DIR}/Tanks-${TAG}-remake-web-dist.zip" .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-remake-web
           path: release-out/Tanks-*-remake-web-dist.zip
@@ -173,7 +173,7 @@ jobs:
           godot --headless --path "${WORKSPACE}/${PROJECT_PATH}" --export-release "macOS" "${OUT_DIR}/Tanks-${TAG}-remake-godot-macos.zip"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-remake-godot
           path: release-out/Tanks-*-remake-godot-*
@@ -250,7 +250,7 @@ jobs:
           Copy-Item $portableZip.FullName "$outDir/Tanks-$tag-windows-portable.zip" -Force
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-windows
           path: release-out/Tanks-*-windows-*
@@ -351,7 +351,7 @@ jobs:
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-android
           path: release-out/Tanks-*-android-*
@@ -430,7 +430,7 @@ jobs:
           echo "Created: $OUT_ZIP"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-ios
           path: |
