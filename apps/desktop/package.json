@@ -17,8 +17,8 @@
     "package:win": "npm run sync:web && electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
-    "electron": "45.3.0",
-    "electron-builder": "26.15.3"
+    "electron": "45.3.2",
+    "electron-builder": "26.18.0"
   },
   "overrides": {
     "@xmldom/xmldom@0.8": ">=0.8.15 <0.9.0",
