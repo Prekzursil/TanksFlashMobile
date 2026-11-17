@@ -1,61 +1,104 @@
 # Contributing to TanksFlashMobile
 
-Thanks for contributing! This repo runs the fleet's lean 6-gate quality standard
-([`Prekzursil/quality-zero-platform`](https://github.com/Prekzursil/quality-zero-platform),
-charter: `docs/BEST-CONFIG.md`). Every PR must pass CI; nothing merges red.
+Thanks for wanting to help! This guide explains how changes get into
+`Prekzursil/TanksFlashMobile` and the quality bar every change has to clear.
 
-## The gates (what CI runs on every PR)
+Bugs and feature requests go through the
+[issue tracker](https://github.com/Prekzursil/TanksFlashMobile/issues/new/choose).
+Anything that looks security-sensitive does **not** — follow
+[SECURITY.md](SECURITY.md) instead.
 
-Languages present in this checkout: TypeScript/JavaScript (root vitest suites,
-`apps/web`, `apps/remake-web`, `apps/desktop`) and Python (`scripts/*.py`).
+## The one rule
 
-| # | Gate | Tools (pinned in CI) |
-|---|------|----------------------|
-| 1 | Lint + format | oxlint 1.69.0 (lint) + biome 2.5.x (formatter-only) [ts/js]; ruff 0.15.17 (`ruff check` + `ruff format --check`) [py] |
-| 2 | Types | `tsc --noEmit` per tsconfig [ts]; basedpyright `standard` (`pyrightconfig.json`) [py] |
-| 3 | Tests + coverage | root `npm run test:coverage` (vitest 4 + @vitest/coverage-v8) — **STRICT 100% line AND branch** |
-| 4 | SAST | opengrep (curated ruleset or platform default) |
-| 5 | Secrets | gitleaks (allowlist presence never disables it) |
-| 6 | Deps | osv-scanner 2.3.8 (`osv-scanner.toml`) + Dependabot — every advisory blocks, `UNKNOWN` severity included |
+**Every gate must pass for the right reason. Never weaken a gate to pass it.**
 
-CodeQL (`extended`-class queries via the SHA-pinned wrapper in
-`.github/workflows/codeql.yml`) runs alongside as the security baseline and
-blocks merges that introduce any-severity CodeQL alerts.
+That means no lowered thresholds, no new ignore/allowlist entries, no
+`# noqa`, `# type: ignore`, `# pragma: no cover`, `eslint-disable` or
+`@ts-ignore` added just to go green, and no skipped or deleted tests. If a gate
+is genuinely wrong, say so in the pull request and fix the gate itself in
+[quality-zero-platform](https://github.com/Prekzursil/quality-zero-platform)
+(see [Changing the gates](#changing-the-gates-operator-only)).
 
-## Measured coverage scope (gate 3)
+## Workflow
 
-Measured (must stay 100% line + branch) — the first-party unit-testable web
-client modules, exercised by the suites in `vitest/`:
+1. Branch from `main` (external contributors: fork first).
+2. Make the change **together with the tests that exercise it** — in the same
+   commit or pull request, never "tests later".
+3. Run the gates locally (below) until every lane is green.
+4. Open a pull request and fill in the checklist from the pull-request
+   template; it maps 1:1 to what CI enforces.
+5. Every required check must be green, the branch must be up to date with
+   `main`, and every review conversation must be resolved before
+   merging.
 
-- `apps/web/src/{config,debug,gamepad,i18n,input,touchControls,viewport}.ts`
+## The gates — zero tolerance
 
-Declared exclusions (see the reasoned list in `vitest.config.ts`):
-`apps/web/src/main.ts` (browser bootstrap, an E2E surface covered by the
-Playwright specs in `apps/web/e2e/`), `apps/web/src/ruffle.d.ts` (ambient
-types), config/build tooling (`**/*.config.ts`, `scripts/**`, `*.mjs`/`*.cjs`).
-Python `scripts/` are dev tooling with no unit-test surface by design.
+CI runs the QZP lean gate: `.github/workflows/quality.yml` calls
+quality-zero-platform's `reusable-quality.yml`, pinned to an exact commit.
+A finding of **any** severity fails the gate — there is no
+"high and above only" floor anywhere.
 
-## Local commands
+| Gate | What runs | Passes when |
+| ---- | --------- | ----------- |
+| 1 · lint + format | ruff check + ruff format --check; oxlint --deny-warnings + biome format check | zero findings and zero format diffs |
+| 2 · types | basedpyright (standard mode); tsc --noEmit for every tsconfig | zero errors **and** zero warnings |
+| 3 · tests + coverage | the Python test suite under branch coverage; the `test:coverage` npm script + a coverage-number assert | every test passes at 100 % line **and** branch |
+| 4 · SAST | opengrep with the curated `.quality/opengrep` ruleset (seeded from QZP) | zero findings |
+| 5 · secrets | gitleaks | zero findings |
+| 6 · dependencies | osv-scanner on every lockfile and manifest (`osv-scanner.toml`) | zero known advisories, any severity |
 
+On top of the lean gate:
+
+- **CodeQL** — GitHub default setup with the *extended* query suite and the remote + local threat model, on every pull request and weekly; a pull request that introduces a code-scanning alert of any severity cannot be merged.
+- **Dependabot** — `.github/dependabot.yml` keeps every manifest tree on a weekly update rail.
+- **Java, Swift** — not measured by the lean gate; this repository's own CI workflow(s) test it and must be green too.
+
+## Running the gates locally
+
+```bash
+bash scripts/verify
 ```
-npm install                                  # root tooling (vitest suites live at repo root)
-npm run test:coverage                        # gate 3 exactly as CI runs it (100% L+B enforced)
-npx oxlint@1.69.0 --deny-warnings .          # gate 1 lint
-npx @biomejs/biome@2.5.0 ci --formatter-enabled=true --linter-enabled=false --assist-enabled=false .  # gate 1 format
-osv-scanner scan source --config=osv-scanner.toml --recursive .  # gate 6
-```
 
-Per-app: `npm --prefix apps/web run build` / `test`, same for `apps/remake-web`;
-`npm --prefix apps/desktop run package:win` builds the Electron shell.
+`scripts/verify` runs QZP's preflight at the exact commit that
+`.github/workflows/quality.yml` pins, so every CI lane runs locally with the
+same pinned tool versions. Run it from this repository's root before every
+push. A lane that cannot run locally (for example a missing toolchain) is
+reported as `SKIP`, never as a silent pass — CI will still run it.
 
-## Rules
+Language-specific test commands for quick iteration:
 
-- Never weaken a gate to make a branch green: fix the code, bump the dependency,
-  or (only for a genuinely unfixable advisory) add a dated, reasoned
-  `[[IgnoredVulns]]` entry to `osv-scanner.toml` with an expiry.
-- Tests ship with the change that needs them; coverage exclusions are declared,
-  never silent.
-- Dependency bumps that touch multiple lockfiles should land as one combined PR
-  (see #278) — single-package bumps strand the deps gate when other vulnerable
-  copies remain.
-- Do not push to `main`; everything lands through a PR.
+- Python: `python -m coverage run --branch -m unittest discover` then `python -m coverage report --fail-under=100 --show-missing`
+- JS/TS (`.`): `npm ci && npm run test:coverage`
+
+## Coverage: 100 % line **and** branch
+
+Coverage is measured on every lane that has source code, and the bar is 100 %
+of lines **and** 100 % of branches. Line-only 100 % is not enough: once
+branches are counted, line-clean code typically sits at 99.x % and still fails.
+Every new or changed line needs a test that executes it in the same change.
+
+## Dependencies
+
+Dependabot proposes updates weekly: minor and patch updates are grouped per
+ecosystem, security updates are grouped so one pull request can clear every
+open advisory, and major updates arrive one by one for review. Because the
+dependency gate fails on *any* known advisory, keep lockfiles current — an
+unmerged security update turns every other pull request red too.
+
+## Changing the gates (operator-only)
+
+The quality lanes are **not** defined in this repository. They live in
+[quality-zero-platform](https://github.com/Prekzursil/quality-zero-platform),
+which governs every repository in the fleet:
+
+- Gate changes happen in QZP, through a pull request — never by editing lanes
+  here and never by weakening a check locally.
+- This repository picks up a gate change when its `quality.yml` pin is bumped
+  to the QZP commit that contains it.
+- If a gate change turns this repository red, the fix belongs in the code (or,
+  if the gate is wrong, in QZP) — not in a local exception.
+
+## Code of conduct
+
+This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
+Report conduct violations privately via [private vulnerability reporting](https://github.com/Prekzursil/TanksFlashMobile/security/advisories/new) (a private channel to the maintainer) or through the maintainer's [GitHub profile](https://github.com/Prekzursil).
