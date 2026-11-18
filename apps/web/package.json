@@ -30,7 +30,7 @@
     "eslint": "9.39.5",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.14.0",
-    "chromatic": "^16.0.0",
+    "chromatic": "^18.14.4",
     "playwright": "1.65.0",
     "prettier": "3.9.10",
     "typescript-eslint": "8.72.2",
