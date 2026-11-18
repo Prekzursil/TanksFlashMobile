@@ -27,7 +27,7 @@
     "@chromatic-com/playwright": "^1.0.0",
     "@playwright/test": "1.65.1",
     "@eslint/js": "9.39.5",
-    "eslint": "9.39.5",
+    "eslint": "10.15.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "17.14.0",
     "chromatic": "^18.14.4",
