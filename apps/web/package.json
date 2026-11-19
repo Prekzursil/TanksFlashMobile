@@ -9,7 +9,7 @@
     "predev": "npm run sync:ruffle && npm run sync:swf",
     "prebuild": "npm run sync:ruffle && npm run sync:swf",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node ./node_modules/typescript7/bin/tsc && vite build",
     "preview": "vite preview",
     "test": "npm run test:smoke",
     "test:smoke": "node ./scripts/smoke_test.mjs",
@@ -34,7 +34,8 @@
     "playwright": "1.65.1",
     "prettier": "3.10.1",
     "typescript-eslint": "8.72.2",
-    "typescript": "~7.0.2",
+    "typescript": "~6.0.3",
+    "typescript7": "npm:typescript@~7.0.2",
     "vite": "^8.3.8"
   },
   "overrides": {
