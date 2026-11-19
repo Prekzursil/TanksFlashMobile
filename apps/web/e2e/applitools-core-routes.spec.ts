@@ -11,6 +11,20 @@ function numberOrZero(value: unknown): number {
   return 0;
 }
 
+/**
+ * `Eyes.close()` returns a runner-managed result whose shape varies across
+ * @applitools/eyes-playwright versions (class instances with getters OR plain
+ * serialized fields), so probe it structurally instead of `any`-casting.
+ */
+interface EyesCloseResultLike {
+  getUnresolved?: () => number;
+  unresolved?: number;
+  getMismatches?: () => number;
+  mismatches?: number;
+  getMissing?: () => number;
+  missing?: number;
+}
+
 function buildConfiguration(): Configuration {
   const configuration = new Configuration();
   configuration.setApiKey(process.env.APPLITOOLS_API_KEY || '');
@@ -64,15 +78,11 @@ test('capture wrapper shell states with Applitools', async ({ page }) => {
     await page.waitForTimeout(200);
     await eyes.check('Settings dialog', Target.window().fully());
 
-    const closeResult = await eyes.close();
+    const closeResult = (await eyes.close()) as unknown as EyesCloseResultLike;
     const payload = {
-      unresolved: numberOrZero(
-        (closeResult as any)?.getUnresolved?.() ?? (closeResult as any)?.unresolved,
-      ),
-      mismatches: numberOrZero(
-        (closeResult as any)?.getMismatches?.() ?? (closeResult as any)?.mismatches,
-      ),
-      missing: numberOrZero((closeResult as any)?.getMissing?.() ?? (closeResult as any)?.missing),
+      unresolved: numberOrZero(closeResult?.getUnresolved?.() ?? closeResult?.unresolved),
+      mismatches: numberOrZero(closeResult?.getMismatches?.() ?? closeResult?.mismatches),
+      missing: numberOrZero(closeResult?.getMissing?.() ?? closeResult?.missing),
     };
 
     fs.mkdirSync('applitools', { recursive: true });
